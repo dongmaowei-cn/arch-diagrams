@@ -10,25 +10,19 @@
 ## 模板信息
 
 - **模板文件**：`02-sequence.html`
-- **viewBox**：`1080 × 2680`（删 B 区后改为 **1080 × 1480**）
+- **viewBox**：`1080 × 1500`
 - **关键行号**
   - SVG 开始：365
   - A 区主图：377–608
-  - **B 区元素图鉴：609–846（删除）**
   - `</svg>`：847
   - `window.DIAGRAM_CONFIG`：927
 
-## 删除 B 区步骤
 
-1. Edit 删除 609–846 整段
-2. Edit 改第 365 行：
-   ```html
-   <svg class="diagram" id="diagram" width="1080" height="1480" viewBox="0 0 1080 1480" ...>
-   ```
-3. Edit 改 nodeData 顶部：
-   ```js
-   viewBox: { w: 1080, h: 1480 },
-   ```
+
+## 画法参考
+
+- **元素图鉴 + 怎么画**：[`templates/index.html#sequence`](../templates/index.html#sequence)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构
 
@@ -79,7 +73,7 @@
 ## 坐标约定
 
 ```
-viewBox 1080 × 1480 (删 B 区后)
+viewBox 1080 × 1500
 Actor 数量    : 推荐 3-5 个，超过 6 个考虑拆分
 Lifeline x   : 等距分布，例 120 / 300 / 520 / 740 / 960
 Actor 头 y   : 80-130
@@ -88,7 +82,7 @@ Phase frame  : 把同一阶段的消息圈起来，左上贴 tab
 Message y 间距: 30-40 px / 条
 ```
 
-## 改造步骤（5 步）
+## 改造步骤（3 步）（5 步）
 
 ### Step 1 · 复制
 ```bash
@@ -96,10 +90,8 @@ cp ~/.claude/skills/arch-diagrams/templates/02-sequence.html \
    <output-dir>/<scenario>-sequence.html
 ```
 
-### Step 2 · 删 B 区
-Edit 删除 609–846 行；同步改 svg height 和 viewBox 高度为 1480。
 
-### Step 3 · 改 A 区主图
+### Step 2 · 改 A 区主图
 1. 定 actor 列表与列位置（lifeline 间距 200~240）
 2. 画 actor 头（顶端 y=80-130）
 3. 画 lifeline 虚线
@@ -107,7 +99,7 @@ Edit 删除 609–846 行；同步改 svg height 和 viewBox 高度为 1480。
 5. 画 activation rect（要嵌套正确）
 6. 画消息边 + 标签
 
-### Step 4 · 同步 nodeData
+### Step 2 · 同步 nodeData
 为每个 actor 添加 nodeData：
 ```js
 'gateway': {
@@ -119,7 +111,7 @@ Edit 删除 609–846 行；同步改 svg height 和 viewBox 高度为 1480。
 }
 ```
 
-### Step 5 · 改外壳 + 自检
+### Step 3 · 改外壳 + 自检
 - `<title>` / `<h1>` / `.lead` / `.stat-row`
 - 自检：每个 actor 有 nodeData；activation 嵌套对；lifeline 长度 ≥ 最后消息 y
 

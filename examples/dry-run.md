@@ -1,7 +1,7 @@
 # Dry-run · 端到端示例
 
 > 用户一句话 → 最终交付 HTML 的完整动作链路。
-> 此示例展示了 skill 怎么在不打断用户的情况下，从需求到产物全自动跑完。
+> v2 模板已不内嵌 B 区 / panel.howto — 教学在 `templates/index.html`。
 
 ---
 
@@ -26,18 +26,22 @@
 ### Phase 2 · 读取 catalog
 
 ```
-Read ~/.claude/skills/arch-diagrams/catalog/01-flowchart.md
-Read ~/.claude/skills/arch-diagrams/shared/node-data-schema.md  (按需)
+Read $SKILL_DIR/catalog/01-flowchart.md
+Read $SKILL_DIR/shared/node-data-schema.md  (按需)
 ```
+
+画法参考（可选）：`templates/index.html#flowchart`
 
 ### Phase 3 · 复制模板
 
 ```bash
-cp ~/.claude/skills/arch-diagrams/templates/01-flowchart.html \
+cp $SKILL_DIR/templates/01-flowchart.html \
    ./online-order-flowchart.html
 ```
 
-### Phase 4 · 改造（按 catalog/01 步骤）
+> 不需要删 B 区 — v2 模板只有 A 区 + legend-group + detail panel。
+
+### Phase 4 · 改造（3 步）
 
 ```
 Edit  <title>          : 业务流程图 · 用户在线下单
@@ -46,32 +50,24 @@ Edit  <h1> + <em>      : 用户在线下单流程 — online order placement
 Edit  .lead            : 1-2 句业务背景
 Edit  .stat-row        : 12 节点 / 2 失败终态 / 3s P95
 
-Edit  <svg> height     : 1500 → 1020（去掉空白）
+Edit  <svg> height     : 1500 → 1020（A 区实际高度 + 60px 边距）
 
-Edit  A 区主图（行 293-438）替换为新节点 + 边
+Edit  A 区主图替换为新节点 + 边
   - 12 个 <g class="node ..."> 块
   - 边路径走正交折线（YES olive / NO rust / DB clay-dashed）
 
-Edit  NODE_DATA = { ... }
+Edit  nodeData = { ... }
   - 删原 17 个 key
   - 新增 12 个 key（每个 data-id 一个）
 ```
 
-（01 模板无 B 区，跳过 Step 2 + 2.5）
-
 ### Phase 5 · 自检
 
 ```bash
-# 自检 1：所有 data-id 都有 nodeData
-diff <(/usr/bin/grep -oE 'data-id="[^"]+"' online-order-flowchart.html | sort -u) \
-     <(/usr/bin/grep -oE "^  '[a-z-]+':" online-order-flowchart.html | sort -u)
-
-# 自检 2：viewBox 高度与 svg height 一致
-/usr/bin/grep "viewBox=\"0 0 1080" online-order-flowchart.html | head -1
-
-# 自检 3：搜不到原模板特有的 "提现" "UnionPay" 字样
-/usr/bin/grep -c "提现\|UnionPay" online-order-flowchart.html   # 应为 0
+bash $SKILL_DIR/shared/selftest.sh online-order-flowchart.html
 ```
+
+7 项检查一次全过（模板态 #6 自动跳过；产物必须 #6 PASS）。
 
 ### Phase 6 · 报告（一行）
 
@@ -100,10 +96,11 @@ diff <(/usr/bin/grep -oE 'data-id="[^"]+"' online-order-flowchart.html | sort -u
 | 情况 | 处理 |
 |---|---|
 | `pwd` 不可写 | 退到 `~/Desktop/` 并提示用户 |
-| 同名文件存在 | AskUserQuestion：覆盖 / 加后缀 / 取消 |
-| 用户说"画个图"但无场景 | AskUserQuestion：你想画什么场景？ |
-| 同场景多张图都合理 | AskUserQuestion：流程图 or 时序图？（带 preview） |
+| 同名文件存在 | 向用户确认：覆盖 / 加后缀 / 取消 |
+| 用户说"画个图"但无场景 | 向用户确认：你想画什么场景？ |
+| 同场景多张图都合理 | 向用户确认：流程图 or 时序图？（带 preview） |
 | 自检失败（节点 / data 不对齐） | 主动修复后再报告，不要把错误产物交付 |
+| 用户问"这个节点怎么画" | 引导打开 `templates/index.html#<type>` 看元素图鉴 + 画法 |
 
 ---
 

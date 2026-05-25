@@ -10,18 +10,27 @@
 ## 模板信息
 
 - **模板文件**：`01-flowchart.html`
-- **viewBox**：`1080 × 1500`（**这张图无 B 区，不用改 height**）
+- **viewBox**：`1080 × 1500`
 - **关键行号**
   - SVG 开始：285
   - A 区：294-440
   - `</svg>`：440
   - `window.DIAGRAM_CONFIG`：搜索定位（在最末 script 块）
 
-## 这张图的特殊性
 
-**01 是唯一没有 B 区元素图鉴的模板**。aside 用 `.legend-group` HTML 区域显示节点形状图例。
+## 画法参考
 
-→ 因此**跳过"删 B 区"步骤**，直接改 A 区即可。
+- **元素图鉴 + 怎么画**：[`templates/index.html#flowchart`](../templates/index.html#flowchart)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
+
+## 模板保留内容
+
+- A 区 SVG 主图
+- aside.panel.detail（点击节点弹详情）
+- aside.legend-group（紧凑图例，保留在模板内）
+- 外壳（topbar / footer / canvas-controls）
+
+> 元素图鉴 + 详细画法说明在 `templates/index.html#flowchart`。
 
 ## 节点类型（class）
 
@@ -64,40 +73,25 @@ viewBox 1080 × 1500
 M x1,y1 L x_mid,y1 L x_mid,y2 L x2,y2
 ```
 
-## 改造步骤（5 步）
+## 改造步骤（3 步）
 
 ### Step 1 · 复制
 ```bash
-cp ~/.claude/skills/arch-diagrams/templates/01-flowchart.html \
+cp $SKILL_DIR/templates/01-flowchart.html \
    <output-dir>/<scenario>-flowchart.html
 ```
 
-### Step 2 · 改 A 区主图（行 294-439）
-读原 A 区 → 删除所有原节点和边 → 按用户场景画新节点：
-
+### Step 2 · 改 A 区主图 + 同步 nodeData
 1. 顶端一个 START（`node term`）
 2. 主流程一系列 `node process`，关键步骤之间用 `node decision`
-3. 写库的步骤旁边画 `node db`，连 `edge db`
-4. 调外部接口用 `node io`
-5. 失败路径走 `edge no` 接 `node term fail`
-6. 成功终态 `node term success`
+3. 写库步骤旁画 `node db`；调外部接口用 `node io`
+4. 失败路径走 `edge no` 接 `node term fail`；成功终态 `node term success`
+5. 为每个新 `data-id` 添加 nodeData 项（schema 见 `shared/node-data-schema.md`）
+6. 若 A 区比模板矮，同步收紧 viewBox
 
-### Step 3 · 同步 nodeData
-找到 `window.DIAGRAM_CONFIG = { nodeData: { ... } }`：
-- 删除原 nodeData 所有项
-- 为每个新 `data-id` 添加项（schema 见 `shared/node-data-schema.md`）
-
-### Step 4 · 改外壳文字
-- `<title>`：`<场景> · 业务流程图`
-- `.eyebrow`：`Diagram 01 · 业务流程图`
-- `<h1>` + `<h1><em>`：场景中文 + 英文副标
-- `.lead`：1-2 句业务背景
-- `.stat-row` (如有)：节点数 / 判断数 / 分支数
-
-### Step 5 · 自检
-- [ ] 主流程从 START 走到至少一个 END
-- [ ] 每个判断菱形出两条边（YES + NO）
-- [ ] 所有 data-id 在 nodeData 有对应项
+### Step 3 · 改外壳 + 自检
+- `<title>` / `.eyebrow` / `<h1>` / `.lead` / `.stat-row`
+- 主流程从 START 到至少一个 END；每个判断菱形出 YES + NO 两条边
 
 ## 反例
 

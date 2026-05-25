@@ -439,7 +439,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="2680" viewBox="0 0 1080 2680" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="1500" viewBox="0 0 1080 1500" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
                 <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
@@ -694,244 +694,6 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               </g>
 
               <!-- ═══════════════════════════════════════════════════════ -->
-              <!-- 区 B · 垂直泳道元素图鉴                                     -->
-              <!-- ═══════════════════════════════════════════════════════ -->
-              <line class="section-divider" x1="40" y1="1450" x2="1040" y2="1450"/>
-              <text class="section-label" x="40" y="1488">B · 垂直泳道元素图鉴</text>
-              <text class="section-sub" x="40" y="1510">10 张卡片 · 对应主图中实际出现的全部 BPMN 形状 + 1 [ex] 扩展 · 点击任一卡查看说明</text>
-
-              <!-- ─── Row 1 ─── -->
-              <!-- B-01 Lane / Pool -->
-              <g class="node gallery-card-node" data-id="g-lane" tabindex="0">
-                <rect class="gallery-card" x="40" y="1520" width="500" height="220"/>
-                <text class="gallery-title" x="60" y="1550">① Lane / Pool · 泳道</text>
-                <rect class="gallery-tag-uml-bg" x="60" y="1560" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="92" y="1571" text-anchor="middle">BPMN 1.1</text>
-                <rect class="ribbon-shown-bg" x="130" y="1560" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="158" y="1571" text-anchor="middle">✓ × 4</text>
-                <!-- demo: 4 lane headers in mini -->
-                <line x1="80" y1="1610" x2="200" y2="1610" stroke="#87867F" stroke-width="2"/>
-                <rect x="80" y="1610" width="120" height="30" fill="#F0EEE6" stroke="#87867F" stroke-width="1"/>
-                <text class="vlane-body" x="140" y="1629" text-anchor="middle" fill="#3D3D3A">Customer</text>
-                <line x1="200" y1="1610" x2="320" y2="1610" stroke="#5C7CA3" stroke-width="2"/>
-                <rect x="200" y="1610" width="120" height="30" fill="#F0EEE6" stroke="#5C7CA3" stroke-width="1"/>
-                <text class="vlane-body" x="260" y="1629" text-anchor="middle" fill="#3E5673">Frontend</text>
-                <line x1="320" y1="1610" x2="440" y2="1610" stroke="#788C5D" stroke-width="2"/>
-                <rect x="320" y="1610" width="120" height="30" fill="#F0EEE6" stroke="#788C5D" stroke-width="1"/>
-                <text class="vlane-body" x="380" y="1629" text-anchor="middle" fill="#4E6440">Service</text>
-                <line x1="440" y1="1610" x2="520" y2="1610" stroke="#6B5B95" stroke-width="2"/>
-                <rect x="440" y="1610" width="80" height="30" fill="#F0EEE6" stroke="#6B5B95" stroke-width="1"/>
-                <text class="vlane-body" x="480" y="1629" text-anchor="middle" fill="#56407A">DB</text>
-                <text class="gallery-desc" x="60" y="1680">lane 横向 = 职能分工 · 每 lane 一列</text>
-                <text class="gallery-desc" x="60" y="1696">顶边 3px lane 色 · pool = 整个外框</text>
-                <text class="gallery-desc" x="60" y="1716" fill="#87867F">用法：每个参与方一条 lane · 顶边色与下属节点同色</text>
-              </g>
-
-              <!-- B-02 Phase column -->
-              <g class="node gallery-card-node" data-id="g-phase" tabindex="0">
-                <rect class="gallery-card" x="560" y="1520" width="480" height="220"/>
-                <text class="gallery-title" x="580" y="1550">② Phase · 阶段列</text>
-                <rect class="gallery-tag-uml-bg" x="580" y="1560" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="612" y="1571" text-anchor="middle">BPMN 1.2</text>
-                <rect class="ribbon-shown-bg" x="650" y="1560" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="678" y="1571" text-anchor="middle">✓ × 4</text>
-                <!-- demo: 4 phases stacked vertically (mini) -->
-                <rect x="600" y="1600" width="40" height="120" fill="#F7F6F1" stroke="#D1CFC5"/>
-                <text class="phase-num" x="620" y="1615" text-anchor="middle">01</text>
-                <text class="vlane-body" x="620" y="1635" text-anchor="middle">Init</text>
-                <text class="phase-num" x="620" y="1650" text-anchor="middle">02</text>
-                <text class="vlane-body" x="620" y="1670" text-anchor="middle">Valid</text>
-                <text class="phase-num" x="620" y="1685" text-anchor="middle">03</text>
-                <text class="vlane-body" x="620" y="1705" text-anchor="middle">Proc</text>
-                <rect x="660" y="1600" width="280" height="120" fill="none" stroke="#D1CFC5" stroke-dasharray="3 3"/>
-                <text class="gallery-desc" x="680" y="1620">phase 纵向 = 时间推进</text>
-                <text class="gallery-desc" x="680" y="1640">编号 01 / 02 / 03 / 04</text>
-                <text class="gallery-desc" x="680" y="1660">phase 名竖排 (vertical-rl)</text>
-                <text class="gallery-desc" x="680" y="1680">letter-spacing 16% 增加竖排呼吸感</text>
-                <text class="gallery-desc" x="680" y="1700" fill="#87867F">水平版反过来：phase 横、lane 纵</text>
-              </g>
-
-              <!-- ─── Row 2 ─── -->
-              <!-- B-03 Phase divider -->
-              <g class="node gallery-card-node" data-id="g-divider" tabindex="0">
-                <rect class="gallery-card" x="40" y="1760" width="500" height="220"/>
-                <text class="gallery-title" x="60" y="1790">③ Phase Divider · 阶段分隔线</text>
-                <rect class="gallery-tag-uml-bg" x="60" y="1800" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="92" y="1811" text-anchor="middle">BPMN 1.3</text>
-                <rect class="ribbon-shown-bg" x="130" y="1800" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="158" y="1811" text-anchor="middle">✓ × 3</text>
-                <!-- demo: dashed line + clay ↓ -->
-                <line x1="80" y1="1860" x2="240" y2="1860" stroke="#D1CFC5" stroke-width="1" stroke-dasharray="4 4"/>
-                <text class="phase-arrow" x="265" y="1864" text-anchor="middle">↓</text>
-                <line x1="290" y1="1860" x2="510" y2="1860" stroke="#D1CFC5" stroke-width="1" stroke-dasharray="4 4"/>
-                <text class="gallery-desc" x="60" y="1910">phase 之间用虚线 + 中点 clay ↓</text>
-                <text class="gallery-desc" x="60" y="1926">强化"时间推进"视觉</text>
-                <text class="gallery-desc" x="60" y="1946" fill="#87867F">虚线 4 4 dash · clay 箭头位于中点 · 不打断 lane divider</text>
-              </g>
-
-              <!-- B-04 Service Task (olive) -->
-              <g class="node gallery-card-node" data-id="g-service-task" tabindex="0">
-                <rect class="gallery-card" x="560" y="1760" width="480" height="220"/>
-                <text class="gallery-title" x="580" y="1790">④ Service Task · 后端任务</text>
-                <rect class="gallery-tag-uml-bg" x="580" y="1800" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="612" y="1811" text-anchor="middle">BPMN 2.1</text>
-                <rect class="ribbon-shown-bg" x="650" y="1800" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="678" y="1811" text-anchor="middle">✓ × 3</text>
-                <!-- demo: olive rect with step badge -->
-                <rect class="vlane-card service" x="620" y="1840" width="160" height="80"/>
-                <circle class="step-badge-bg" cx="776" cy="1842" r="10" stroke="#788C5D"/>
-                <text class="step-badge-text" x="776" y="1845.5" text-anchor="middle" fill="#788C5D">5</text>
-                <text class="vlane-title service" x="630" y="1862">Apply rules</text>
-                <text class="vlane-body" x="630" y="1880">Domain logic ·</text>
-                <text class="vlane-body" x="630" y="1894">prepare record</text>
-                <text class="vlane-body" x="630" y="1908">background work</text>
-                <text class="gallery-desc" x="800" y="1860">olive border + 10% tint</text>
-                <text class="gallery-desc" x="800" y="1876">step 角标 右上 · olive 描边</text>
-                <text class="gallery-desc" x="800" y="1892">title 12.5 serif · body 10 mono</text>
-                <text class="gallery-desc" x="800" y="1908">填充浅、文字深</text>
-                <text class="gallery-desc" x="800" y="1944" fill="#87867F">主图主力节点 · 7 个 step 中占 4 个</text>
-              </g>
-
-              <!-- ─── Row 3 ─── -->
-              <!-- B-05 Frontend / Customer 节点 -->
-              <g class="node gallery-card-node" data-id="g-actor-nodes" tabindex="0">
-                <rect class="gallery-card" x="40" y="2000" width="500" height="220"/>
-                <text class="gallery-title" x="60" y="2030">⑤ Actor Nodes · 4 色节点</text>
-                <rect class="gallery-tag-uml-bg" x="60" y="2040" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="92" y="2051" text-anchor="middle">BPMN 2.2</text>
-                <rect class="ribbon-shown-bg" x="130" y="2040" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="158" y="2051" text-anchor="middle">✓ × 9</text>
-                <!-- demo: 4 actor cards (mini) stacked -->
-                <rect class="vlane-card customer" x="60" y="2080" width="110" height="40"/>
-                <text class="vlane-title customer" x="68" y="2098">Customer</text>
-                <text class="vlane-body" x="68" y="2114">external · gray</text>
-                <rect class="vlane-card frontend" x="180" y="2080" width="110" height="40"/>
-                <text class="vlane-title frontend" x="188" y="2098">Frontend</text>
-                <text class="vlane-body" x="188" y="2114">client · blue</text>
-                <rect class="vlane-card service" x="60" y="2130" width="110" height="40"/>
-                <text class="vlane-title service" x="68" y="2148">Service</text>
-                <text class="vlane-body" x="68" y="2164">backend · olive</text>
-                <rect class="vlane-card database" x="180" y="2130" width="110" height="40"/>
-                <text class="vlane-title database" x="188" y="2148">Database</text>
-                <text class="vlane-body" x="188" y="2164">persist · plum</text>
-                <text class="gallery-desc" x="310" y="2098">每 lane 一色 + 同色描边</text>
-                <text class="gallery-desc" x="310" y="2118">填充透明度 8%-10%</text>
-                <text class="gallery-desc" x="310" y="2138">title 字色 = lane 暗色</text>
-                <text class="gallery-desc" x="310" y="2158">body 字色 = gray-700 通用</text>
-                <text class="gallery-desc" x="310" y="2190" fill="#87867F">节点色 ≠ lane 顶边色 = bug</text>
-              </g>
-
-              <!-- B-06 Decision Gateway -->
-              <g class="node gallery-card-node" data-id="g-decision" tabindex="0">
-                <rect class="gallery-card" x="560" y="2000" width="480" height="220"/>
-                <text class="gallery-title" x="580" y="2030">⑥ Decision · 决策菱形</text>
-                <rect class="gallery-tag-uml-bg" x="580" y="2040" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="612" y="2051" text-anchor="middle">BPMN 3.1</text>
-                <rect class="ribbon-shown-bg" x="650" y="2040" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="678" y="2051" text-anchor="middle">✓ × 1</text>
-                <!-- demo: clay-dashed diamond with yes/no -->
-                <polygon class="vlane-card decision" points="660,2110 730,2140 660,2170 590,2140"/>
-                <text class="vlane-title decision" x="660" y="2138" text-anchor="middle">valid?</text>
-                <text class="vlane-body" x="660" y="2153" text-anchor="middle" fill="#D97757">gateway</text>
-                <text class="edge-label yes" x="745" y="2125">[yes] →</text>
-                <text class="edge-label fail" x="745" y="2160">[no] → 400</text>
-                <text class="gallery-desc" x="590" y="2200">clay 虚线菱形 · 与普通节点拉开</text>
-                <text class="gallery-desc" x="800" y="2200">YES 走 olive guard · NO 走 rust fail</text>
-              </g>
-
-              <!-- ─── Row 4 ─── -->
-              <!-- B-07 Sequence Flow / Spine -->
-              <g class="node gallery-card-node" data-id="g-sequence" tabindex="0">
-                <rect class="gallery-card" x="40" y="2240" width="500" height="220"/>
-                <text class="gallery-title" x="60" y="2270">⑦ Sequence Flow · 序列流</text>
-                <rect class="gallery-tag-uml-bg" x="60" y="2280" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="92" y="2291" text-anchor="middle">BPMN 4.1</text>
-                <rect class="ribbon-shown-bg" x="130" y="2280" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="158" y="2291" text-anchor="middle">✓ × 10</text>
-                <!-- demo: olive spine + gray default + dotted -->
-                <line x1="80" y1="2340" x2="380" y2="2340" stroke="#788C5D" stroke-width="2.6"/>
-                <path d="M380,2340 L374,2336 L374,2344 z" fill="#788C5D"/>
-                <text class="vlane-body" x="80" y="2330" fill="#788C5D">spine · happy path</text>
-                <line x1="80" y1="2380" x2="380" y2="2380" stroke="#3D3D3A" stroke-width="1.4"/>
-                <path d="M380,2380 L374,2376 L374,2384 z" fill="#3D3D3A"/>
-                <text class="vlane-body" x="80" y="2370">default · 次要分支</text>
-                <line x1="80" y1="2420" x2="380" y2="2420" stroke="#B04A3F" stroke-width="1.4" stroke-dasharray="5 3"/>
-                <path d="M380,2420 L374,2416 L374,2424 z" fill="#B04A3F"/>
-                <text class="vlane-body" x="80" y="2410" fill="#B04A3F">fail · 错误终态分支</text>
-                <text class="gallery-desc" x="400" y="2340">olive 2.6px</text>
-                <text class="gallery-desc" x="400" y="2380">slate 1.4px</text>
-                <text class="gallery-desc" x="400" y="2420">rust dashed</text>
-              </g>
-
-              <!-- B-08 Message Flow (cross-lane, dashed + open circle) -->
-              <g class="node gallery-card-node" data-id="g-msg-flow" tabindex="0">
-                <rect class="gallery-card" x="560" y="2240" width="480" height="220"/>
-                <text class="gallery-title" x="580" y="2270">⑧ Message Flow · 消息流</text>
-                <rect class="gallery-tag-uml-bg" x="580" y="2280" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="612" y="2291" text-anchor="middle">BPMN 4.2</text>
-                <rect class="ribbon-shown-bg" x="650" y="2280" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="678" y="2291" text-anchor="middle">✓ × 1</text>
-                <!-- demo: plum dashed with open circle start + arrow end -->
-                <circle cx="600" cy="2340" r="4" fill="#FFFFFF" stroke="#6B5B95" stroke-width="1.2"/>
-                <line x1="606" y1="2340" x2="990" y2="2340" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="6 3"/>
-                <path d="M990,2340 L984,2336 L984,2344 z" fill="#6B5B95"/>
-                <text class="vlane-body" x="606" y="2330" fill="#6B5B95">email msg · 异步通知</text>
-                <text class="gallery-desc" x="600" y="2380">起点 = 空心圆 (圆心 = 发起者)</text>
-                <text class="gallery-desc" x="600" y="2398">终点 = 实心箭头</text>
-                <text class="gallery-desc" x="600" y="2416">plum 虚线 6 3 dash</text>
-                <text class="gallery-desc" x="600" y="2434" fill="#87867F">同 lane 内 = sequence · 跨业务参与方 = message</text>
-              </g>
-
-              <!-- ─── Row 5 ─── -->
-              <!-- B-09 Start / End Event -->
-              <g class="node gallery-card-node" data-id="g-events" tabindex="0">
-                <rect class="gallery-card" x="40" y="2480" width="500" height="170"/>
-                <text class="gallery-title" x="60" y="2510">⑨ Start / End · 起止事件</text>
-                <rect class="gallery-tag-uml-bg" x="60" y="2520" width="64" height="14"/>
-                <text class="gallery-tag-uml-text" x="92" y="2531" text-anchor="middle">BPMN 5.1</text>
-                <rect class="ribbon-shown-bg" x="130" y="2520" width="56" height="14"/>
-                <text class="ribbon-shown-text" x="158" y="2531" text-anchor="middle">✓ × 3</text>
-                <!-- demo: start (olive single thin) + end (rust thick) -->
-                <circle cx="100" cy="2580" r="14" fill="rgba(120,140,93,0.22)" stroke="#788C5D" stroke-width="1.4"/>
-                <text class="vlane-body" x="100" y="2614" text-anchor="middle" fill="#788C5D">start</text>
-                <text class="vlane-body" x="100" y="2628" text-anchor="middle" fill="#87867F">单细线</text>
-
-                <circle cx="200" cy="2580" r="14" fill="rgba(176,74,63,0.22)" stroke="#B04A3F" stroke-width="2.5"/>
-                <text class="vlane-body" x="200" y="2614" text-anchor="middle" fill="#B04A3F">end success</text>
-                <text class="vlane-body" x="200" y="2628" text-anchor="middle" fill="#87867F">粗双线</text>
-
-                <circle cx="320" cy="2580" r="14" fill="rgba(176,74,63,0.22)" stroke="#B04A3F" stroke-width="2.5"/>
-                <text class="vlane-body" x="320" y="2585" text-anchor="middle" fill="#B04A3F" font-weight="600">400</text>
-                <text class="vlane-body" x="320" y="2614" text-anchor="middle" fill="#B04A3F">end fail</text>
-                <text class="vlane-body" x="320" y="2628" text-anchor="middle" fill="#87867F">同符号 + 状态码</text>
-
-                <text class="gallery-desc" x="400" y="2580">起点 = olive 细圆</text>
-                <text class="gallery-desc" x="400" y="2600">终点 = rust 粗双线</text>
-                <text class="gallery-desc" x="400" y="2620">失败终态写状态码</text>
-              </g>
-
-              <!-- B-10 Annotation [ex] -->
-              <g class="node gallery-card-node" data-id="g-annotation-ex" tabindex="0">
-                <rect class="gallery-card" x="560" y="2480" width="480" height="170"/>
-                <text class="gallery-title" x="580" y="2510">⑩ Annotation [ex] · 注释 / 扩展</text>
-                <rect class="gallery-tag-ex-bg" x="580" y="2520" width="48" height="14"/>
-                <text class="gallery-tag-ex-text" x="604" y="2531" text-anchor="middle">[ex]</text>
-                <rect class="ribbon-ref-bg" x="634" y="2520" width="64" height="14"/>
-                <text class="ribbon-ref-text" x="666" y="2531" text-anchor="middle">仅图鉴</text>
-                <!-- demo: data flow dashed + ex badge -->
-                <rect class="vlane-card database" x="600" y="2560" width="120" height="40"/>
-                <text class="vlane-title database" x="608" y="2578">Email notify</text>
-                <text class="vlane-body" x="608" y="2594">msg flow 异步</text>
-                <rect class="ex-badge-bg" x="722" y="2562" width="22" height="14"/>
-                <text class="ex-badge-text" x="733" y="2573" text-anchor="middle">ex</text>
-                <text class="gallery-desc" x="600" y="2620">非标准 BPMN 节点 / 行为 = 挂 gold [ex] 角标</text>
-                <text class="gallery-desc" x="600" y="2636" fill="#87867F">例：邮件通知 · SLA 超时 · 异步分支 · 业务扩展</text>
-
-                <text class="gallery-desc" x="760" y="2575">SLA · 超时</text>
-                <text class="gallery-desc" x="760" y="2592">异步分支</text>
-                <text class="gallery-desc" x="760" y="2609">业务扩展</text>
-              </g>
-
             </svg>
           </div>
         </div>
@@ -960,21 +722,6 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="tags" id="d-tags">
           <span class="tag t-state">lane</span><span class="tag t-event">phase</span><span class="tag t-gate">decision</span><span class="tag t-process">flow</span>
         </div>
-      </div>
-
-      <div class="panel howto">
-        <div class="eyebrow">How to draw</div>
-        <h2>垂直泳道的八步骨架</h2>
-        <ol>
-          <li><b>选方向</b>：phase 横还是纵？此版 phase <u>纵向</u> (顶到底 = 时间)，lane 横向 (左到右 = 职能)。适合时间推进强、参与方少 (≤4) 的流程。</li>
-          <li><b>拉 phase column</b>：左侧 60-80px 留给 phase 编号 + 名字 · phase 名 vertical-rl 竖排 · letter-spacing 加大呼吸感。</li>
-          <li><b>划 lanes</b>：每 lane 一列 · 顶部 lane header 带 <u>3px lane 色顶边</u> · 与下属节点同色形成视觉锚定。</li>
-          <li><b>节点按 lane 着色</b>：customer = external gray · frontend = blue · service = olive · database = plum · 填充 8-10% · 描边同色 1.5px。</li>
-          <li><b>决策菱形特殊</b>：用 clay <u>虚线菱形</u> 与普通方形节点拉开 · YES 走 olive guard 边 · NO 走 rust fail 边。</li>
-          <li><b>边按类型选</b>：spine olive 2.6px = happy path · slate 1.4px = 次要分支 · rust dashed = 失败 · plum dashed + 空心圆起点 = message flow (跨业务参与方)。</li>
-          <li><b>phase divider</b>：相邻 phase 之间画虚线 4 4 dash + 中点 clay ↓ · 强化时间推进感 · 不打断 lane divider。</li>
-          <li><b>失败终态</b>：用 rust 粗双线圆 (stroke-width 2.5) + 圆内写状态码 (400 / 500) · 与 olive 起点细圆形成对仗。</li>
-        </ol>
       </div>
     </aside>
   </div>
@@ -1019,7 +766,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 2680 },
+  viewBox: { w: 1080, h: 1500 },
   exportName: '06-swimlane-vertical',
   nodeData: {
     'n1': { type: 'process', tagClass: 't-process', title: '① Customer · Submits request',
@@ -1084,52 +831,6 @@ queue.publish('email.record_created', {
 })</pre>` },
 
     // ─── Gallery cards ───
-    'g-lane': { type: 'lane', tagClass: 't-state', title: 'B-01 · Lane / Pool',
-      meta: ['BPMN 1.1', '主图实用 ×4', '横向布置'],
-      body: `<p><b>Lane (泳道)</b> = 一条职能/参与方 · <b>Pool (池)</b> = 整张图的外框。垂直版里 lane 横向排列，每 lane 一列。</p>
-        <p>关键：lane header 顶边 3px lane 色 · 与下属所有节点同色 · 节点色和顶边色一致 = 视觉锚定。</p>
-        <pre>每 lane 一职能 = 单一职责
-顶边色 = 节点色 = lane 色</pre>` },
-    'g-phase': { type: 'phase', tagClass: 't-state', title: 'B-02 · Phase Column',
-      meta: ['BPMN 1.2', '主图实用 ×4', '纵向布置'],
-      body: `<p>phase column 在左侧 60-80px · phase 编号横排 mono clay · phase 名 <u>vertical-rl 竖排</u> serif · letter-spacing 加大呼吸感。</p>
-        <pre>writing-mode: vertical-rl;
-text-orientation: upright;
-letter-spacing: 0.16em;</pre>` },
-    'g-divider': { type: 'divider', tagClass: 't-state', title: 'B-03 · Phase Divider',
-      meta: ['BPMN 1.3', '主图实用 ×3', '虚线 + clay ↓'],
-      body: `<p>相邻 phase 之间画虚线 + 中点 clay ↓ · 强化时间推进视觉 · 不打断 lane divider (lane 边界穿过 phase 边界)。</p>
-        <pre>stroke-dasharray: 4 4;
-stroke: var(--gray-300);
-中点: ↓ clay color</pre>` },
-    'g-service-task': { type: 'service-task', tagClass: 't-process', title: 'B-04 · Service Task',
-      meta: ['BPMN 2.1', '主图实用 ×3', '后端自动任务'],
-      body: `<p>backend 自动执行的任务 · olive 描边 + 10% 填充 · step badge 角标在右上 olive 描边圆。</p>
-        <p>三段文字：title (12.5px serif) + body (10px mono 多行)。</p>` },
-    'g-actor-nodes': { type: 'actor', tagClass: 't-process', title: 'B-05 · Actor Nodes · 4 色',
-      meta: ['BPMN 2.2', '主图实用 ×9', '按 lane 着色'],
-      body: `<p>每 lane 一色 — customer (gray) · frontend (blue) · service (olive) · database (plum)。填充 8-10% · 描边同色 1.5px · title 字色 = lane 暗色 · body = gray-700 通用。</p>
-        <p>常见 bug：节点色 ≠ lane 顶边色 = 视觉错位。</p>` },
-    'g-decision': { type: 'gateway', tagClass: 't-gate', title: 'B-06 · Decision Gateway',
-      meta: ['BPMN 3.1', '主图实用 ×1', 'clay 虚线菱形'],
-      body: `<p>分支决策点 · clay 虚线菱形 (stroke-dasharray 5 3) 与方形 task 拉开视觉。</p>
-        <p>出边：[yes] guard 走 olive 继续 spine · [no] 走 rust dashed 失败分支。</p>` },
-    'g-sequence': { type: 'flow', tagClass: 't-event', title: 'B-07 · Sequence Flow 3 类',
-      meta: ['BPMN 4.1', '主图实用 ×10', '同 lane 内连线'],
-      body: `<p><b>spine</b> olive 2.6px = happy path · <b>default</b> slate 1.4px = 次要分支 · <b>fail</b> rust 1.4px dashed 5 3 = 错误终态分支。</p>
-        <p>同 lane 内 / 同 pool 跨 lane 都用 sequence (实线)。跨业务参与方 → message flow (虚线)。</p>` },
-    'g-msg-flow': { type: 'flow', tagClass: 't-event', title: 'B-08 · Message Flow',
-      meta: ['BPMN 4.2', '主图实用 ×1', '跨业务参与方'],
-      body: `<p>跨业务参与方 (cross-pool / 异步消息) 用 message flow · plum 虚线 6 3 dash · <u>起点空心圆</u> (发起者) + 终点实心箭头。</p>
-        <p>本图里：Service 投递 email 队列 → 通知 customer。属于 [ex] 扩展行为。</p>` },
-    'g-events': { type: 'event', tagClass: 't-event', title: 'B-09 · Start / End Event',
-      meta: ['BPMN 5.1', '主图实用 ×3', '起止事件'],
-      body: `<p>start = olive 细圆 (stroke 1.4) · end success = rust 粗双线 (stroke 2.5) · end fail = 同符号 + 内写 HTTP 状态码 (400/500)。</p>
-        <p>细 vs 粗 = 流程"开"vs"关"的视觉力度差。</p>` },
-    'g-annotation-ex': { type: 'annotation', tagClass: 't-process', title: 'B-10 · Annotation [ex]',
-      meta: ['[ex] 扩展角标', '仅图鉴展示', '业务字段'],
-      body: `<p>非标准 BPMN 节点 / 行为挂 <b>gold [ex] 角标</b> — 例：邮件通知、SLA 阈值、超时、异步分支、业务扩展。</p>
-        <p>用法：在节点 / 边的标签旁挂 [ex] mini badge (gold 22×14)，与标准 BPMN 区分开。</p>` }
   }
 };
 </script>

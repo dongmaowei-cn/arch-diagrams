@@ -10,19 +10,19 @@
 ## 模板信息
 
 - **模板文件**：`06-swimlane-vertical.html`
-- **viewBox**：`1080 × 2680`（删 B 区后改为 **1080 × 1340**）
+- **viewBox**：`1080 × 1500`
 - **关键行号**
   - SVG 开始：442
   - A 区主图：460–695
-  - **B 区元素图鉴：696–934（删除）**
   - `</svg>`：935
   - `window.DIAGRAM_CONFIG`：1021
 
-## 删除 B 区步骤
 
-1. Edit 删除 696–934 整段
-2. 改 svg height/viewBox 高度为 1340
-3. 改 nodeData 顶部 `viewBox: { w: 1080, h: 1340 }`
+
+## 画法参考
+
+- **元素图鉴 + 怎么画**：[`templates/index.html#swimlane-v`](../templates/index.html#swimlane-v)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构
 
@@ -57,7 +57,7 @@ Phase 3│          │          │          │  [任务]  │
 ## 坐标约定
 
 ```
-viewBox 1080 × 1340 (删 B 区后)
+viewBox 1080 × 1500
 顶端 lane-header 高 60
 4 lane 时每 lane 宽 240
 phase 高 250~300
@@ -65,17 +65,24 @@ phase 高 250~300
 任务 cx = lane 中心
 ```
 
-## 改造步骤
+## 改造步骤（3 步）
 
-1. **复制**：`cp ~/.claude/skills/arch-diagrams/templates/06-swimlane-vertical.html <场景>-swimlane-vertical.html`
-2. **删 B 区**：696-934 + 改 svg height = 1340
-3. **改 A 区**：
-   - 决定 lane 数（横向角色，3-5）和 phase 数（纵向阶段，3-5）
-   - 改 lane-header 与 phase-band 容器
-   - 每个 phase × lane 格子里放任务
-   - 跨格子边走直角，主路径 spine 加粗
-4. **同步 nodeData**
-5. **改外壳**
+### Step 1 · 复制
+```bash
+cp $SKILL_DIR/templates/06-swimlane-vertical.html \
+   <output-dir>/<scenario>-swimlane-vertical.html
+```
+
+### Step 2 · 改 A 区主图 + 同步 nodeData
+1. 决定 lane 数（横向角色，3-5）和 phase 数（纵向阶段，3-5）
+2. 改 lane-header 与 phase-band 容器
+3. 每个 phase × lane 格子里放任务
+4. 跨格子边走直角，主路径 spine 加粗
+5. 同步 nodeData（默认 h=1500）
+
+### Step 3 · 改外壳 + 自检
+- `<title>` / `<h1>` / `.lead` / `.stat-row`
+- 自检：phase 分隔清晰；任务不跨出所属格子
 
 ## 反例
 

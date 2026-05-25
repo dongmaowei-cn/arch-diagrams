@@ -10,25 +10,19 @@
 ## 模板信息
 
 - **模板文件**：`04-system-architecture.html`
-- **viewBox**：`1080 × 2680`（删 B 区后改为 **1080 × 1300**）
+- **viewBox**：`1080 × 1500`
 - **关键行号**
   - SVG 开始：420
   - A 区主图：434–889
-  - **B 区元素图鉴：890–1145（删除）**
   - `</svg>`：1146
   - `window.DIAGRAM_CONFIG`：1247
 
-## 删除 B 区步骤
 
-1. Edit 删除 890–1145 整段
-2. Edit 改第 420 行：
-   ```html
-   <svg class="diagram" id="diagram" width="1080" height="1300" viewBox="0 0 1080 1300" ...>
-   ```
-3. Edit 改 nodeData 顶部：
-   ```js
-   viewBox: { w: 1080, h: 1300 },
-   ```
+
+## 画法参考
+
+- **元素图鉴 + 怎么画**：[`templates/index.html#architecture`](../templates/index.html#architecture)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构
 
@@ -110,7 +104,7 @@ tier 之间垂直 gap=20
 节点 y = tier-band y + 30
 ```
 
-## 改造步骤（5 步）
+## 改造步骤（3 步）（5 步）
 
 ### Step 1 · 复制
 ```bash
@@ -118,10 +112,8 @@ cp ~/.claude/skills/arch-diagrams/templates/04-system-architecture.html \
    <output-dir>/<scenario>-architecture.html
 ```
 
-### Step 2 · 删 B 区
-Edit 删除 890–1145 行；改 svg height 和 viewBox 高度。
 
-### Step 3 · 改 A 区主图
+### Step 2 · 改 A 区主图
 
 1. **规划层数**：常见 4-7 层。最少应包含：client / edge / service / data-store
 2. **改 section-label**：`A · <场景名> · N 层分层架构`
@@ -132,10 +124,10 @@ Edit 删除 890–1145 行；改 svg height 和 viewBox 高度。
 5. **画 spine 主路径**：用 `edge spine` 自上而下串起核心节点
 6. **画其它边**：DB 用 `edge db-edge`，cache 用 `edge cache-edge` 等
 
-### Step 4 · 同步 nodeData
+### Step 2 · 同步 nodeData
 每个节点都要有 nodeData 项，meta 三件套：tier 信息 / 技术栈 / 关键指标。
 
-### Step 5 · 改外壳 + 自检
+### Step 3 · 改外壳 + 自检
 - `<title>` / `.eyebrow` / `<h1>` / `.lead`
 - `.stat-row`：层数 / 节点数 / 峰值 QPS
 - 自检：tier-band 不重叠；节点不超出 tier-band；spine 连续

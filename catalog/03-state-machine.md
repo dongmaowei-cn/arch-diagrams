@@ -10,19 +10,19 @@
 ## 模板信息
 
 - **模板文件**：`03-state-machine.html`
-- **viewBox**：`1080 × 2660`（删 B 区后改为 **1080 × 1400**）
+- **viewBox**：`1080 × 1400`
 - **关键行号**
   - SVG 开始：419
   - A 区主图：435–692
-  - **B 区元素图鉴：693–988（删除）**
   - `</svg>`：989
   - `window.DIAGRAM_CONFIG`：1081
 
-## 删除 B 区步骤
 
-1. Edit 删除 693–988 整段
-2. Edit 改第 419 行 svg width/height/viewBox 为 1400
-3. Edit 改 nodeData 顶部 `viewBox: { w: 1080, h: 1400 }`
+
+## 画法参考
+
+- **元素图鉴 + 怎么画**：[`templates/index.html#state`](../templates/index.html#state)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 节点类型（state）
 
@@ -62,17 +62,25 @@
 主路径居中走 y 轴   : x=540
 ```
 
-## 改造步骤
+## 改造步骤（3 步）
 
-1. **复制**：`cp ~/.claude/skills/arch-diagrams/templates/03-state-machine.html <场景>-state-machine.html`
-2. **删 B 区**：693-988 + 改 svg height = 1400
-3. **画状态图**：
-   - 起始 initial dot（圆）
-   - 主路径状态从上到下，spine 串起
-   - 终态用同心圆（success/fail 各占一边）
-   - 守卫分支用 decision 菱形 + yes/no 出边
-4. **同步 nodeData**：每个 state 一项，`tagClass: 't-state'` / `'t-success'` / `'t-fail'`
-5. **改外壳**
+### Step 1 · 复制
+```bash
+cp $SKILL_DIR/templates/03-state-machine.html \
+   <output-dir>/<scenario>-state-machine.html
+```
+
+### Step 2 · 改 A 区主图 + 同步 nodeData
+1. 起始 initial dot（圆）— 只能一个
+2. 主路径状态从上到下，spine 串起
+3. 终态用同心圆（success/fail 各占一边）
+4. 守卫分支用 decision 菱形 + yes/no 出边
+5. 每个 state 在 nodeData 添加一项，`tagClass: 't-state'` / `'t-success'` / `'t-fail'`
+6. 若 A 区比模板矮，同步收紧 `<svg height>` / `viewBox` / `viewBox: { h }`
+
+### Step 3 · 改外壳 + 自检
+- `<title>` / `<h1>` / `.lead` / `.stat-row`
+- 自检：每个 state 有 nodeData；只有一个 initial；每条 transition 有 trigger
 
 ## 反例
 

@@ -9,19 +9,19 @@
 ## 模板信息
 
 - **模板文件**：`07-microservice.html`
-- **viewBox**：`1080 × 2660`（删 B 区后改为 **1080 × 1440**）
+- **viewBox**：`1080 × 1500`
 - **关键行号**
   - SVG 开始：467
   - A 区主图：484–930
-  - **B 区元素图鉴：931–1249（删除）**
   - `</svg>`：1250
   - `window.DIAGRAM_CONFIG`：1339
 
-## 删除 B 区步骤
 
-1. Edit 删除 931–1249 整段
-2. 改 svg height/viewBox 高度为 1440
-3. 改 nodeData 顶部 `viewBox: { w: 1080, h: 1440 }`
+
+## 画法参考
+
+- **元素图鉴 + 怎么画**：[`templates/index.html#microservice`](../templates/index.html#microservice)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构（行块布局）
 
@@ -55,17 +55,24 @@ K8s namespace 是个**虚线方框**包裹多个服务节点 + 一个 namespace 
 
 同 04 架构图：`edge sync-arch` / `edge rpc` / `edge async-event` / `edge db-edge` / `edge cache-edge` / `edge cdc` / `edge scrape` / `edge spine`。
 
-## 改造步骤
+## 改造步骤（3 步）
 
-1. **复制**：`cp ~/.claude/skills/arch-diagrams/templates/07-microservice.html <场景>-microservice.html`
-2. **删 B 区**：931-1249 + 改 svg height = 1440
-3. **改 A 区**：
-   - 定 row 列表（typical: clients / edge / gateway / bff / namespaces / data / infra）
-   - 改每个 `<g id="row-X">` 内容
-   - K8s namespace 用虚线 rect 包裹同 namespace 的服务
-   - 画主路径 spine（client → gateway → bff → core svc）
-4. **同步 nodeData**
-5. **改外壳**
+### Step 1 · 复制
+```bash
+cp $SKILL_DIR/templates/07-microservice.html \
+   <output-dir>/<scenario>-microservice.html
+```
+
+### Step 2 · 改 A 区主图 + 同步 nodeData
+1. 定 row 列表（clients / edge / gateway / bff / namespaces / data / infra）
+2. 改每个 `<g id="row-X">` 内容
+3. K8s namespace 用虚线 rect 包裹同 namespace 的服务
+4. 画主路径 spine（client → gateway → bff → core svc）
+5. 同步 nodeData（默认 h=1500）
+
+### Step 3 · 改外壳 + 自检
+- `<title>` / `<h1>` / `.lead` / `.stat-row`
+- 自检：sidecar 紧贴服务底部；观测面 scrape 边完整
 
 ## 反例
 

@@ -10,19 +10,19 @@
 ## 模板信息
 
 - **模板文件**：`06-swimlane.html`
-- **viewBox**：`1080 × 2660`（删 B 区后改为 **1080 × 1280**）
+- **viewBox**：`1080 × 1300`
 - **关键行号**
   - SVG 开始：446
   - A 区主图：465–805
-  - **B 区元素图鉴：806–1163（删除）**
   - `</svg>`：1164
   - `window.DIAGRAM_CONFIG`：1255
 
-## 删除 B 区步骤
 
-1. Edit 删除 806–1163 整段
-2. 改 svg height/viewBox 高度为 1280
-3. 改 nodeData 顶部 `viewBox: { w: 1080, h: 1280 }`
+
+## 画法参考
+
+- **元素图鉴 + 怎么画**：[`templates/index.html#swimlane`](../templates/index.html#swimlane)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构
 
@@ -69,7 +69,7 @@
 ## 坐标约定
 
 ```
-viewBox 1080 × 1280 (删 B 区后)
+viewBox 1080 × 1300
 pool-header x=40, w=40
 lane 区域 x=80, w=960
 每个 lane 高 120 (默认)，pool 总高 = 140 + 120 × lane 数
@@ -77,18 +77,24 @@ lane 区域 x=80, w=960
 任务节点 cy = lane 中心 y（lane_y + 60）
 ```
 
-## 改造步骤
+## 改造步骤（3 步）
 
-1. **复制**：`cp ~/.claude/skills/arch-diagrams/templates/06-swimlane.html <场景>-swimlane.html`
-2. **删 B 区**：806-1163 + 改 svg height = 1280
-3. **改 A 区**：
-   - 决定 lane 数量（角色数）和顺序
-   - 计算 pool 总高 = 140 起点 + 120 × N
-   - 改每个 lane-header 的 y 和 label
-   - 重画 lane-divider
-   - 节点按时间从左到右排，跨 lane 用直角路径
-4. **同步 nodeData**
-5. **改外壳**
+### Step 1 · 复制
+```bash
+cp $SKILL_DIR/templates/06-swimlane.html \
+   <output-dir>/<scenario>-swimlane.html
+```
+
+### Step 2 · 改 A 区主图 + 同步 nodeData
+1. 决定 lane 数量（角色数）和顺序
+2. 计算 pool 总高 = 140 起点 + 120 × N
+3. 改每个 lane-header 的 y 和 label；重画 lane-divider
+4. 节点按时间从左到右排，跨 lane 用直角路径
+5. 同步 nodeData（默认 h=1300）
+
+### Step 3 · 改外壳 + 自检
+- `<title>` / `<h1>` / `.lead` / `.stat-row`
+- 自检：每个 task 落在正确 lane；跨 lane 边用 message flow 虚线
 
 ## 反例
 

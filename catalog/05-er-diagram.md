@@ -7,23 +7,23 @@
 ## 模板信息
 
 - **模板文件**：`05-er-diagram.html`
-- **viewBox**：`1080 × 2680`（删 B 区后改为 **1080 × 800**）
+- **viewBox**：`1080 × 840`
 - **关键行号**
   - SVG 开始：400
   - A 区主图：417–610
-  - **B 区元素图鉴：611–909（删除）**
   - `</svg>`：910
   - `window.DIAGRAM_CONFIG`：993
 
-## 删除 B 区步骤
 
-1. Edit 删除 611–909 整段
-2. 改 svg height/viewBox 高度为 800
-3. 改 nodeData 顶部 `viewBox: { w: 1080, h: 800 }`
+
+## 画法参考
+
+- **元素图鉴 + 怎么画**：[`templates/index.html#er`](../templates/index.html#er)
+- 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 实体表格结构
 
-A 区主图被包在 `<g transform="translate(60 140)">` 里，内部坐标是 960×700 的子坐标系。
+A 区主图被包在 `<g transform="translate(60 140)">` 里，内部坐标是 960×630 的子坐标系（最底表 reviews 底部 y=630）。
 
 每个实体是一张"表格"：
 ```
@@ -55,17 +55,25 @@ A 区主图被包在 `<g transform="translate(60 140)">` 里，内部坐标是 9
 | 圆圈                | 0..1 可选 |
 | 两条短横在远端       | 强制 1 |
 
-## 改造步骤
+## 改造步骤（3 步）
 
-1. **复制**：`cp ~/.claude/skills/arch-diagrams/templates/05-er-diagram.html <场景>-er-diagram.html`
-2. **删 B 区**：611-909；svg height = 800
-3. **改 A 区**：
-   - 删 `<g transform>` 内部所有原表格和关系
-   - 按用户实体数量在 960×700 内布局（推荐 3×3 网格，单表 200×180）
-   - 每张表 6-8 行；主键挂 PK，外键挂 FK
-   - 画关系线 + crow's foot
-4. **同步 nodeData**：每张表一项，`tagClass: 't-entity'`，body 详细字段表
-5. **改外壳**
+### Step 1 · 复制
+```bash
+cp $SKILL_DIR/templates/05-er-diagram.html \
+   <output-dir>/<scenario>-er-diagram.html
+```
+
+### Step 2 · 改 A 区主图 + 同步 nodeData
+1. 删 `<g transform>` 内部所有原表格和关系
+2. 按用户实体数量在 viewBox 内布局（推荐 3×3 网格，单表 200×180）
+3. 每张表 6-8 行；主键挂 PK，外键挂 FK
+4. 画关系线 + crow's foot
+5. 每张表 nodeData 一项，`tagClass: 't-entity'`，body 详细字段表
+6. 若 A 区比模板矮，同步收紧 viewBox（默认 h=840；含 translate(60 140) 时绝对底 = 140 + 内部底）
+
+### Step 3 · 改外壳 + 自检
+- `<title>` / `<h1>` / `.lead` / `.stat-row`
+- 自检：每张表 data-id 与 nodeData 对齐；关系基数标注完整
 
 ## 反例
 

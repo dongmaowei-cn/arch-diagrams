@@ -38,7 +38,7 @@ echo "═══ arch-diagrams selftest: $FILE ═══"
 
 # 1. SVG data-id ↔ nodeData key 双向对齐
 SVG_IDS=$(/usr/bin/grep -oE 'data-id="[^${}"]+"' "$FILE" | sed -E 's/data-id="(.*)"/\1/' | sort -u)
-DATA_IDS=$(/usr/bin/grep -oE "^  '[a-z0-9-]+':" "$FILE" | sed -E "s/^  '(.*)':/\1/" | sort -u)
+DATA_IDS=$(/usr/bin/grep -oE "^ +'[a-zA-Z0-9_-]+': \{" "$FILE" | sed -E "s/^ +'(.*)': \{/\1/" | sort -u)
 
 ORPHAN_SVG=$(comm -23 <(echo "$SVG_IDS") <(echo "$DATA_IDS") || true)
 ORPHAN_DATA=$(comm -13 <(echo "$SVG_IDS") <(echo "$DATA_IDS") || true)
@@ -76,7 +76,7 @@ else
 fi
 
 # 4. nodeData 中无残留 g-* 伪节点
-if /usr/bin/grep -qE "^  'g-[a-z-]+':" "$FILE"; then
+if /usr/bin/grep -qE "^ +'g-[a-z-]+': \{" "$FILE"; then
   LEFT=$(/usr/bin/grep -oE "'g-[a-z-]+':" "$FILE" | sort -u | tr '\n' ' ')
   fail "nodeData 残留 g- 前缀伪节点：$LEFT"
 else
@@ -86,7 +86,7 @@ fi
 
 # 5. ER 模板特定残留（pk-marker/fk-marker 等）
 ER_PSEUDO="pk-marker|fk-marker|crows-foot|one-to-many|many-to-many|self-ref|field-markers"
-if /usr/bin/grep -qE "^  '($ER_PSEUDO)':" "$FILE" 2>/dev/null && /usr/bin/grep -q "er-diagram\|crowfoot\|er-edge" "$FILE"; then
+if /usr/bin/grep -qE "^ +'($ER_PSEUDO)': \{" "$FILE" 2>/dev/null && /usr/bin/grep -q "er-diagram\|crowfoot\|er-edge" "$FILE"; then
   fail "ER nodeData 残留教学伪节点"
 else
   echo "  ✓ ER 教学伪节点无残留"
@@ -94,12 +94,24 @@ else
 fi
 
 # 6. 外壳文字已替换（不应残留模板原场景的特征词）
-ORIG_KEYWORDS="提现审核|UnionPay|订单结算 idempotency|订单业务状态机|电商交易中台|订单业务 ER|电商订单跨部门|API 记录创建|电商微服务全景"
-if /usr/bin/grep -qE "<title>.*($ORIG_KEYWORDS)" "$FILE"; then
-  fail "<title> 仍是模板原场景标题，未替换"
+#    仅在"产物模式"下生效;模板本身就该带原场景标题,自动跳过。
+#    模板判定：文件路径含 templates/ 目录 且 文件名以 0?-*.html 命名。
+BASENAME=$(basename "$FILE")
+IS_TEMPLATE=0
+if [[ "$FILE" == *templates/* && "$BASENAME" =~ ^0[0-9]?-.*\.html$ ]]; then
+  IS_TEMPLATE=1
+fi
+
+if [[ "$IS_TEMPLATE" -eq 1 ]]; then
+  echo "  ○ 外壳文字检查 (跳过 · 模板态)"
 else
-  echo "  ✓ 外壳文字已替换"
-  PASS=$((PASS + 1))
+  ORIG_KEYWORDS="提现审核|UnionPay|订单结算 idempotency|订单业务状态机|电商交易中台|订单业务 ER|电商订单跨部门|API 记录创建|电商微服务全景"
+  if /usr/bin/grep -qE "<title>.*($ORIG_KEYWORDS)" "$FILE"; then
+    fail "<title> 仍是模板原场景标题，未替换"
+  else
+    echo "  ✓ 外壳文字已替换"
+    PASS=$((PASS + 1))
+  fi
 fi
 
 # 7. 不可见崩裂检查（基础 HTML/SVG 结构）

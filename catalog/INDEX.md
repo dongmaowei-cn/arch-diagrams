@@ -1,6 +1,7 @@
 # Catalog · 8 张图速查表
 
-模板源（**只读**）：`~/.claude/skills/arch-diagrams/templates/`
+模板源（**只读**）：`$SKILL_DIR/templates/`
+教学参考：`$SKILL_DIR/templates/index.html` — 8 个锚点 section,每张图含元素图鉴 + 画法说明
 
 ## 选型矩阵
 
@@ -15,20 +16,21 @@
 | "需求 → 设计 → 开发 → 测试" | 阶段 / 里程碑 / phase | **06 swimlane-vertical** |
 | "K8s ns / sidecar / istio / prom" | 微服务 / namespace / 运行时 | **07 microservice** |
 
-## 每图速查
+## 每图速查（v2 · B 区已迁移到 index.html）
 
-| ID | 文件 | viewBox | A 区行 | B 区行（删除） | nodeData 起点 | `</svg>` |
-|---|---|---|---|---|---|---|
-| 01 | `01-flowchart.html`           | 1080×1500 | 285-440 | 无 B 区          | (单独 script，搜索 `window.DIAGRAM_CONFIG`) | 440 |
-| 02 | `02-sequence.html`            | 1080×2680 | 365-608 | **609-846** 删   | 927  | 847 |
-| 03 | `03-state-machine.html`       | 1080×2660 | 419-692 | **693-988** 删   | 1081 | 989 |
-| 04 | `04-system-architecture.html` | 1080×2680 | 420-889 | **890-1145** 删  | 1247 | 1146 |
-| 05 | `05-er-diagram.html`          | 1080×2680 | 400-610 | **611-909** 删   | 993  | 910 |
-| 06H | `06-swimlane.html`           | 1080×2660 | 446-805 | **806-1163** 删  | 1255 | 1164 |
-| 06V | `06-swimlane-vertical.html`  | 1080×2680 | 442-695 | **696-934** 删   | 1021 | 935 |
-| 07 | `07-microservice.html`        | 1080×2660 | 467-930 | **931-1249** 删  | 1339 | 1250 |
+| ID | 文件 | viewBox | A 区行 | `</svg>` |
+|---|---|---|---|---|
+| 01 | `01-flowchart.html`           | 1080×1500 | 285-440 | 440 |
+| 02 | `02-sequence.html`            | 1080×1500 | 365-608 | 609 |
+| 03 | `03-state-machine.html`       | 1080×1400 | 419-692 | 693 |
+| 04 | `04-system-architecture.html` | 1080×1500 | 420-889 | 890 |
+| 05 | `05-er-diagram.html`          | 1080×840  | 400-610 | 611 |
+| 06H | `06-swimlane.html`           | 1080×1300 | 446-805 | 806 |
+| 06V | `06-swimlane-vertical.html`  | 1080×1500 | 442-695 | 696 |
+| 07 | `07-microservice.html`        | 1080×1500 | 467-930 | 931 |
 
-> **行号是模板原文行号**。删除 B 区后，需把 `<svg width="1080" height="2680">` 和 `viewBox="0 0 1080 2680"` 中的高度改为 A 区实际占用高度 + 60px 边距。各图推荐目标高度在自己的卡片里。
+> **B 区不再在模板里**。元素图鉴 + 画法说明在 `templates/index.html` 的 8 个锚点 section,见各图 catalog 卡片"画法参考"段。
+> 如果新场景的 A 区显著矮于上表 viewBox h,改造时同步收紧 `<svg height>` + `viewBox` + `viewBox: { w, h }`。
 
 ## 节点 class 清单（每图独有的类型）
 

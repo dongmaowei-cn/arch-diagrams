@@ -21,7 +21,7 @@
 
 ## 画法参考
 
-- **元素图鉴 + 怎么画**：[`templates/index.html#state`](../templates/index.html#state)
+- **元素图鉴 + 怎么画**：[`templates/gallery/03-state-machine.html`](../templates/gallery/03-state-machine.html)
 - 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 节点类型（state）

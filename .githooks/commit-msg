@@ -1,0 +1,17 @@
+#!/bin/sh
+# Personal project: no company requirement-ID prefix on commits.
+set -eu
+
+msg_file="${1:-}"
+if [ -z "${msg_file}" ] || [ ! -f "${msg_file}" ]; then
+  echo "commit-msg: message file not found" >&2
+  exit 1
+fi
+
+first_line="$(sed -n '1{s/\r$//;p;q;}' "${msg_file}")"
+if [ -z "${first_line}" ]; then
+  echo "commit-msg: commit message must not be empty" >&2
+  exit 1
+fi
+
+exit 0

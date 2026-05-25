@@ -21,7 +21,7 @@
 
 ## 画法参考
 
-- **元素图鉴 + 怎么画**：[`templates/index.html#sequence`](../templates/index.html#sequence)
+- **元素图鉴 + 怎么画**：[`templates/gallery/02-sequence.html`](../templates/gallery/02-sequence.html)
 - 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构

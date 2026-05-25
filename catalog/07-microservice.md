@@ -20,7 +20,7 @@
 
 ## 画法参考
 
-- **元素图鉴 + 怎么画**：[`templates/index.html#microservice`](../templates/index.html#microservice)
+- **元素图鉴 + 怎么画**：[`templates/gallery/07-microservice.html`](../templates/gallery/07-microservice.html)
 - 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构（行块布局）

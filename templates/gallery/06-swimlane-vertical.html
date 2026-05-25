@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>泳道图 · 垂直 · 元素图鉴与画法 · Engineering Diagram Library</title>
+<style>
+/* ════════════════════════════════════════════════════════════════
+   Engineering Diagram Library · INDEX
+   Visual language: ivory paper · clay/olive/rust accents · 衬线+等宽
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  --ivory:    #FAF7EF;
+  --paper:    #FFFFFF;
+  --slate:    #2A2A28;
+  --gray-700: #5B5A55;
+  --gray-500: #87867F;
+  --gray-300: #D9D6CC;
+  --gray-150: #EFEEE6;
+  --clay:     #D97757;
+  --olive:    #788C5D;
+  --rust:     #B04A3F;
+  --plum:     #6B5B86;
+  --gold:     #C4994E;
+  --teal:     #4E8C8C;
+  --serif:    'Source Serif 4', 'Iowan Old Style', Charter, Georgia, serif;
+  --sans:     -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono:     'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --shadow:   0 1px 2px rgba(42,42,40,0.03), 0 4px 16px rgba(42,42,40,0.04);
+  --row-zebra:#F7F5EE;
+}
+html[data-theme="dark"] {
+  --ivory:    #1A1916;
+  --paper:    #232220;
+  --slate:    #E8E5DC;
+  --gray-700: #B5B2A8;
+  --gray-500: #87867F;
+  --gray-300: #3D3C38;
+  --gray-150: #2D2C28;
+  --shadow:   0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.4);
+  --row-zebra:#1E1D1B;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--ivory); color: var(--slate);
+  font-family: var(--sans); -webkit-font-smoothing: antialiased; line-height: 1.55;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+/* ── Topbar ────────────────────────────────────────────────────── */
+.topbar { position: sticky; top: 0; z-index: 30; background: color-mix(in oklab, var(--ivory), transparent 8%); backdrop-filter: blur(12px); border-bottom: 1px solid var(--gray-300); }
+.topbar-inner { max-width: 1320px; margin: 0 auto; padding: 14px 36px; display: flex; align-items: center; gap: 16px; }
+.crumb { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--gray-500); text-transform: uppercase; }
+.crumb a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+.crumb .sep { color: var(--gray-300); margin: 0 8px; }
+.toolbar { margin-left: auto; display: flex; gap: 8px; }
+.pill-btn { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 17px; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; }
+.pill-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn svg { width: 12px; height: 12px; }
+.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 50%; cursor: pointer; transition: all 150ms ease; }
+.icon-btn:hover { border-color: var(--clay); color: var(--clay); }
+
+/* ── Hero ──────────────────────────────────────────────────────── */
+.hero { max-width: 1320px; margin: 0 auto; padding: 80px 36px 56px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--clay); text-transform: uppercase; margin-bottom: 18px; }
+h1.hero-title { font-family: var(--serif); font-weight: 500; font-size: 56px; letter-spacing: -0.018em; line-height: 1.1; margin-bottom: 22px; max-width: 880px; }
+h1.hero-title em { font-style: italic; color: var(--clay); font-weight: 400; }
+.hero-lead { font-size: 16.5px; line-height: 1.65; color: var(--gray-700); max-width: 720px; }
+.hero-meta { margin-top: 36px; display: flex; gap: 48px; padding-top: 28px; border-top: 1px solid var(--gray-300); }
+.hero-meta .stat .v { font-family: var(--serif); font-weight: 500; font-size: 28px; color: var(--slate); display: block; line-height: 1.1; margin-bottom: 4px; }
+.hero-meta .stat .l { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; color: var(--gray-500); text-transform: uppercase; }
+
+/* ── Catalog grid (10 launcher cards) ──────────────────────────── */
+.catalog { max-width: 1320px; margin: 0 auto; padding: 24px 36px 80px; }
+.catalog-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-300); }
+.catalog-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--gray-300); border: 1px solid var(--gray-300); }
+.catalog-card { display: flex; flex-direction: column; padding: 26px 24px 24px; background: var(--paper); text-decoration: none; color: var(--slate); transition: background 200ms ease; min-height: 196px; position: relative; }
+.catalog-card:hover { background: var(--ivory); }
+.catalog-card:hover .card-num { color: var(--clay); }
+.catalog-card .card-num { font-family: var(--serif); font-weight: 400; font-size: 32px; color: var(--gray-500); line-height: 1; margin-bottom: 18px; letter-spacing: -0.01em; transition: color 150ms ease; }
+.catalog-card h3 { font-family: var(--serif); font-weight: 500; font-size: 19px; line-height: 1.25; margin-bottom: 4px; letter-spacing: -0.006em; }
+.catalog-card .card-en { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--gray-500); text-transform: uppercase; margin-bottom: 14px; }
+.catalog-card .card-tag { font-size: 12.5px; line-height: 1.5; color: var(--gray-700); margin-top: auto; }
+.catalog-card .card-meta { position: absolute; top: 26px; right: 22px; font-family: var(--mono); font-size: 9.5px; color: var(--gray-500); letter-spacing: 0.06em; }
+
+/* ── Diagram section (per type) ────────────────────────────────── */
+.diagram-section { max-width: 1320px; margin: 0 auto; padding: 80px 36px 40px; border-top: 1px solid var(--gray-300); }
+.section-header { display: flex; align-items: baseline; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+.section-header .num { font-family: var(--serif); font-weight: 400; font-size: 48px; color: var(--clay); line-height: 1; letter-spacing: -0.02em; }
+.section-header h2 { font-family: var(--serif); font-weight: 500; font-size: 36px; line-height: 1.15; letter-spacing: -0.014em; flex-grow: 1; }
+.section-header h2 .en { font-family: var(--mono); font-size: 15px; color: var(--gray-500); letter-spacing: 0.04em; margin-left: 14px; font-weight: 400; }
+.template-link { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--slate); text-decoration: none; padding: 10px 18px; border: 1px solid var(--clay); border-radius: 20px; transition: all 150ms ease; white-space: nowrap; }
+.template-link:hover { background: var(--clay); color: white; }
+.section-intro { font-size: 15.5px; line-height: 1.7; color: var(--gray-700); max-width: 920px; margin-bottom: 40px; }
+.section-intro b { color: var(--slate); font-weight: 600; }
+
+/* ── Gallery block (B 区 SVG) ──────────────────────────────────── */
+.gallery-block { margin-bottom: 56px; }
+.block-label { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; margin-bottom: 6px; }
+.block-sub { font-size: 13.5px; color: var(--gray-700); margin-bottom: 22px; }
+.gallery-frame { border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); padding: 24px; box-shadow: var(--shadow); }
+.gallery-svg { width: 100%; height: auto; display: block; }
+.gallery-svg text { font-family: var(--sans); fill: var(--slate); }
+.gallery-svg .t-title { font-family: var(--sans); font-weight: 600; font-size: 13px; fill: var(--slate); }
+.gallery-svg .t-sub { font-family: var(--sans); font-size: 11px; fill: var(--gray-700); }
+.gallery-svg .t-mono-mini { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.06em; }
+.gallery-svg .t-mono-mini.muted { fill: var(--gray-500); }
+.gallery-svg .t-connector { font-family: var(--mono); font-weight: 600; font-size: 12px; fill: var(--clay); }
+.gallery-svg .gallery-title { font-family: var(--serif); font-weight: 500; font-size: 17px; fill: var(--slate); letter-spacing: -0.005em; }
+.gallery-svg .gallery-desc { font-family: var(--sans); font-size: 12px; fill: var(--gray-700); line-height: 1.5; }
+.gallery-svg .gallery-card { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; }
+.gallery-svg .gallery-tag-bg { fill: var(--gray-150); stroke: var(--gray-300); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg .gallery-tag-text { font-family: var(--mono); font-size: 9px; fill: var(--gray-700); letter-spacing: 0.06em; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.8; rx: 7; ry: 7; }
+.gallery-svg .ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.8; stroke-dasharray: 2 2; rx: 7; ry: 7; }
+.gallery-svg .ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg .edge { stroke: var(--gray-500); stroke-width: 1.2; fill: none; }
+.gallery-svg .edge.yes { stroke: var(--olive); stroke-width: 1.4; }
+.gallery-svg .edge.no { stroke: var(--rust); stroke-width: 1.4; }
+.gallery-svg .edge.db { stroke: var(--clay); stroke-width: 1.4; stroke-dasharray: 5 3; }
+.gallery-svg .t-lbl { font-family: var(--mono); font-size: 9.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg .t-lbl-yes { fill: var(--olive); }
+.gallery-svg .t-lbl-no { fill: var(--rust); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.attr-name { font-family: var(--mono); font-size: 12px; fill: var(--slate); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.attr-name { font-family: var(--mono); font-size: 12px; fill: var(--slate); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.attr-name { font-family: var(--mono); font-size: 12px; fill: var(--slate); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+
+/* ── How to draw block ─────────────────────────────────────────── */
+.howto-block { padding: 40px 44px 44px; background: var(--paper); border: 1px solid var(--gray-300); border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 36px; }
+.howto-steps { list-style: none; counter-reset: step; }
+.howto-steps li { counter-increment: step; padding: 18px 0 18px 60px; position: relative; font-size: 14.5px; color: var(--gray-700); line-height: 1.65; border-top: 1px dashed var(--gray-300); max-width: 920px; }
+.howto-steps li:first-child { border-top: none; padding-top: 6px; }
+.howto-steps li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 22px; font-family: var(--mono); font-weight: 500; font-size: 12px; color: var(--clay); letter-spacing: 0.06em; }
+.howto-steps li:first-child::before { top: 10px; }
+.howto-steps li b { font-weight: 600; color: var(--slate); }
+
+/* ── Section footer ────────────────────────────────────────────── */
+.section-footer { display: flex; gap: 16px; align-items: center; margin-top: 8px; padding-top: 24px; border-top: 1px solid var(--gray-300); }
+.template-link-large { font-family: var(--serif); font-weight: 500; font-size: 17px; color: var(--slate); text-decoration: none; padding: 14px 24px; background: var(--paper); border: 1.5px solid var(--clay); border-radius: 14px; transition: all 150ms ease; display: inline-flex; align-items: center; gap: 10px; }
+.template-link-large:hover { background: var(--clay); color: white; }
+.template-link-large .arrow { font-family: var(--mono); font-size: 14px; }
+.template-link-large .meta { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-left: 10px; letter-spacing: 0.04em; }
+.template-link-large:hover .meta { color: rgba(255,255,255,0.7); }
+
+/* ── Coming-soon placeholder section ───────────────────────────── */
+.placeholder-section { max-width: 1320px; margin: 0 auto; padding: 60px 36px; border-top: 1px solid var(--gray-300); display: flex; align-items: baseline; gap: 24px; }
+.placeholder-section .num { font-family: var(--serif); font-weight: 400; font-size: 32px; color: var(--gray-300); line-height: 1; }
+.placeholder-section h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--gray-500); }
+.placeholder-section .en { font-family: var(--mono); font-size: 12px; color: var(--gray-500); margin-left: 12px; letter-spacing: 0.04em; }
+.placeholder-section .link { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--gray-500); text-decoration: none; padding: 8px 14px; border: 1px dashed var(--gray-300); border-radius: 16px; }
+.placeholder-section .link:hover { border-color: var(--clay); color: var(--clay); }
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.site-footer { max-width: 1320px; margin: 80px auto 0; padding: 40px 36px 60px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 11px; color: var(--gray-500); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.site-footer a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+
+@media (max-width: 1100px) {
+  .catalog-grid { grid-template-columns: repeat(3, 1fr); }
+  h1.hero-title { font-size: 44px; }
+}
+@media (max-width: 720px) {
+  .catalog-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero { padding: 56px 22px 40px; }
+  .hero-meta { gap: 28px; flex-wrap: wrap; }
+  h1.hero-title { font-size: 34px; }
+  .section-header h2 { font-size: 26px; }
+  .section-header .num { font-size: 36px; }
+  .diagram-section, .catalog, .topbar-inner { padding-left: 22px; padding-right: 22px; }
+  .howto-block { padding: 28px 22px; }
+  .howto-steps li { padding-left: 44px; font-size: 13.5px; }
+}
+
+/* ── swimlane-v specific ── */
+/* ── swimlane-v (06-swimlane-vertical.html) ── */
+.gallery-svg .edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#slv-arrow); }
+.gallery-svg .edge.yes { stroke: var(--olive); marker-end: url(#slv-arrow-olive); }
+.gallery-svg .edge.no { stroke: var(--rust); stroke-dasharray: 5 4; marker-end: url(#slv-arrow-rust); }
+.gallery-svg .edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#slv-arrow-clay); }
+.gallery-svg .edge.async { stroke-dasharray: 6 3; }
+.gallery-svg .edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#slv-arrow-open); }
+.gallery-svg .edge.sync { stroke: var(--slate); marker-end: url(#slv-arrow-slate); }
+.gallery-svg .edge.msg { stroke: var(--plum); marker-end: url(#slv-arrow-plum); }
+.gallery-svg .edge.thick { stroke-width: 2.2; }
+.gallery-svg .edge.bidir { marker-start: url(#slv-arrow-rev); marker-end: url(#slv-arrow); }
+.gallery-svg .edge.no-arrow { marker-end: none; }
+.gallery-svg .edge.relation { stroke: var(--clay); stroke-width: 1.5; }
+.gallery-svg .edge.attr-link { stroke: var(--gray-500); stroke-width: 1.2; }
+.gallery-svg .edge.lane { stroke: var(--gray-300); stroke-width: 1; }
+.gallery-svg .annotation .bracket { fill: none; stroke: var(--gray-500); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.gallery-svg .annotation .leader { stroke: var(--gray-500); stroke-width: 1; stroke-dasharray: 2 3; }
+.gallery-svg .annotation .note { fill: color-mix(in oklab, var(--gold), transparent 92%); stroke: var(--gold); stroke-width: 1.2; }
+.gallery-svg .annotation .note-text { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+  .gallery-svg .pool-frame { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.5; rx: 14; ry: 14; }
+  .gallery-svg .lane-divider { stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg .lane-header-rule { stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg .phase-divider-rule { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 3 5; }
+  .gallery-svg .phase-col-rule { stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg text.lane-label { font-family: var(--serif); font-size: 13px; fill: var(--slate); font-weight: 500; }
+  .gallery-svg text.lane-sub { font-family: var(--mono); font-size: 10px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .gallery-svg text.lane-kicker { font-family: var(--mono); font-size: 10px; fill: var(--gray-500); letter-spacing: 0.14em; text-transform: uppercase; }
+  .gallery-svg text.phase-num { font-family: var(--mono); font-size: 12px; fill: var(--gray-500); font-weight: 600; letter-spacing: 0.08em; }
+  .gallery-svg text.phase-name { font-family: var(--serif); font-size: 13px; fill: var(--gray-700); letter-spacing: 0; }
+  .gallery-svg text.phase-sub { font-family: var(--mono); font-size: 9px; fill: var(--gray-500); letter-spacing: 0.06em; text-transform: uppercase; }
+  .gallery-svg text.cell-empty { font-family: var(--mono); font-size: 14px; fill: var(--gray-300); }
+  .gallery-svg .vlane-card { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.5; rx: 8; ry: 8; }
+  .gallery-svg .vlane-card.ok { fill: rgba(120,140,93,0.10); stroke: var(--olive); }
+  .gallery-svg .vlane-card.bad { fill: rgba(176,74,63,0.08); stroke: var(--rust); }
+  .gallery-svg .vlane-card.decision { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.4; }
+  .gallery-svg text.vlane-title { font-family: var(--serif); font-size: 12.5px; fill: var(--slate); font-weight: 600; }
+  .gallery-svg text.vlane-body { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+  .gallery-svg text.vlane-sub { font-family: var(--mono); font-size: 10px; fill: var(--gray-500); }
+  .gallery-svg text.vlane-title.decision { fill: var(--slate); }
+  .gallery-svg text.vlane-title.bad { fill: var(--rust); }
+  .gallery-svg .step-badge-ring { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1; }
+  .gallery-svg .step-badge-bg { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1; }
+  .gallery-svg text.step-badge-text { font-family: var(--mono); font-size: 10px; font-weight: 600; fill: var(--gray-700); }
+  .gallery-svg .event-start { fill: var(--gray-150); stroke: var(--gray-500); stroke-width: 1.4; }
+  .gallery-svg .event-end { fill: rgba(176,74,63,0.10); stroke: var(--rust); stroke-width: 1.8; }
+  .gallery-svg .event-end.ok { fill: rgba(120,140,93,0.12); stroke: var(--olive); }
+  .gallery-svg .vflow { fill: none; stroke: var(--gray-500); stroke-width: 1.5; marker-end: url(#slv-arrow); }
+  .gallery-svg .vflow.spine { stroke: var(--olive); stroke-width: 1.8; marker-end: url(#slv-arrow-olive); }
+  .gallery-svg .vflow.fail { stroke: var(--rust); stroke-width: 1.4; stroke-dasharray: 4 4; marker-end: url(#slv-arrow-rust); }
+  .gallery-svg .vflow.msg { stroke: var(--plum); stroke-width: 1.1; stroke-dasharray: 5 4; marker-end: url(#slv-arrow-plum); marker-start: url(#slv-circle-open-msg); opacity: 0.75; }
+  .gallery-svg .vflow.data { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 2 3; marker-end: url(#slv-arrow); opacity: 0.8; }
+  .gallery-svg text.edge-label { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-500); }
+  .gallery-svg text.edge-label.yes { fill: var(--olive); }
+  .gallery-svg text.edge-label.fail { fill: var(--rust); }
+  .gallery-svg .edge-label-bg { fill: var(--paper); }
+  .gallery-svg g.node:not(.gallery-card-node) .step-badge-ring,
+  .gallery-svg g.node:not(.gallery-card-node) .step-badge-bg { stroke: var(--gray-500) !important; }
+  .gallery-svg g.node:not(.gallery-card-node) text.step-badge-text { fill: var(--gray-700) !important; }
+  .gallery-svg text.gallery-svg-title { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.012em; }
+  .gallery-svg text.gallery-svg-sub { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .gallery-svg text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+  .gallery-svg text.section-sub { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .gallery-svg .section-divider { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+  .gallery-svg .ex-badge-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 1; rx: 3; ry: 3; }
+  .gallery-svg text.ex-badge-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); font-weight: 600; letter-spacing: 0.06em; }
+  .gallery-svg .gallery-card { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; }
+  .gallery-svg .gallery-card:hover { stroke: var(--clay); stroke-width: 1.8; }
+  .gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+  .gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+  .gallery-svg text.gallery-desc { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+  .gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+  .gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+  .gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+  .gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+  .gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+  .gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+  .gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+  .gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="crumb">
+      <a href="../index.html">Engineering Diagram Library</a>
+      <span class="sep">/</span>
+      <span style="color:var(--slate)">06V · 泳道图 · 垂直</span>
+    </div>
+    <div class="toolbar">
+      <button class="pill-btn" id="copyHtml" title="复制本页 HTML 源码">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V3a1 1 0 011-1h7"/></svg>HTML
+      </button>
+      <button class="icon-btn" id="themeToggle" title="切换主题">
+        <svg id="themeIconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg>
+        <svg id="themeIconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="display:none"><path d="M13 9.5A6 6 0 116.5 3a5 5 0 006.5 6.5z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section id="swimlane-v" class="diagram-section">
+  <div class="section-header">
+    <span class="num">06V</span>
+    <h2>泳道图 · 垂直<span class="en">Swimlane (Vertical) · BPMN 简化</span></h2>
+    <a class="template-link" href="../06-swimlane-vertical.html">→ 看完整范本</a>
+  </div>
+  <p class="section-intro">跨阶段流程 — <b>纵向是 phase(阶段/里程碑)</b>,<b>横向是 lane(角色/职责)</b>。适合表达"先有需求,再有设计,再有开发,再有测试"这类<b>有明确推进方向</b>的流程,与 06H "横向时间"互补。每个 phase 之间用粗虚线分隔,phase 内部是普通流程。</p>
+
+  <!-- ─── 元素图鉴 ─── -->
+  <div class="gallery-block">
+    <p class="block-label">元素图鉴 · Element Gallery</p>
+    <p class="block-sub">10 张卡 · 主图实际使用挂 olive ✓ 角标</p>
+    <div class="gallery-frame">
+                                          <svg class="gallery-svg" id="swimlane-v-gallery" viewBox="0 0 1080 1190" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="slv-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
+                <marker id="slv-arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="slv-arrow-olive-bold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="slv-arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+                <marker id="slv-arrow-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
+                <marker id="slv-arrow-plum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
+                <marker id="slv-arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C4994E"/></marker>
+                <marker id="slv-arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A8585"/></marker>
+                <marker id="slv-arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+                <marker id="slv-circle-open-msg" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="6" markerHeight="6" orient="auto"><circle cx="5" cy="5" r="3" fill="#FFFFFF" stroke="#6B5B95" stroke-width="1.2"/></marker>
+<marker id="slv-arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#87867F" stroke-width="1.4"/></marker>
+<marker id="slv-arrow-rev" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#87867F"/></marker>
+        </defs>
+        <g transform="translate(0 -1500)">
+          <g class="node gallery-card-node" data-id="g-lane" tabindex="0">
+                          <rect class="gallery-card" x="40" y="1520" width="500" height="220"/>
+                          <text class="gallery-title" x="60" y="1550">① Lane / Pool · 泳道</text>
+                          <rect class="gallery-tag-uml-bg" x="60" y="1560" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="92" y="1571" text-anchor="middle">BPMN 1.1</text>
+                          <rect class="ribbon-shown-bg" x="130" y="1560" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="158" y="1571" text-anchor="middle">✓ × 4</text>
+                          <!-- demo: 4 lane headers in mini -->
+                          <line x1="80" y1="1610" x2="200" y2="1610" stroke="#87867F" stroke-width="2"/>
+                          <rect x="80" y="1610" width="120" height="30" fill="#F0EEE6" stroke="#87867F" stroke-width="1"/>
+                          <text class="vlane-body" x="140" y="1629" text-anchor="middle" fill="#3D3D3A">Customer</text>
+                          <line x1="200" y1="1610" x2="320" y2="1610" stroke="#5C7CA3" stroke-width="2"/>
+                          <rect x="200" y="1610" width="120" height="30" fill="#F0EEE6" stroke="#5C7CA3" stroke-width="1"/>
+                          <text class="vlane-body" x="260" y="1629" text-anchor="middle" fill="#3E5673">Frontend</text>
+                          <line x1="320" y1="1610" x2="440" y2="1610" stroke="#788C5D" stroke-width="2"/>
+                          <rect x="320" y="1610" width="120" height="30" fill="#F0EEE6" stroke="#788C5D" stroke-width="1"/>
+                          <text class="vlane-body" x="380" y="1629" text-anchor="middle" fill="#4E6440">Service</text>
+                          <line x1="440" y1="1610" x2="520" y2="1610" stroke="#6B5B95" stroke-width="2"/>
+                          <rect x="440" y="1610" width="80" height="30" fill="#F0EEE6" stroke="#6B5B95" stroke-width="1"/>
+                          <text class="vlane-body" x="480" y="1629" text-anchor="middle" fill="#56407A">DB</text>
+                          <text class="gallery-desc" x="60" y="1680">lane 横向 = 职能分工 · 每 lane 一列</text>
+                          <text class="gallery-desc" x="60" y="1696">顶边 3px lane 色 · pool = 整个外框</text>
+                          <text class="gallery-desc" x="60" y="1716" fill="#87867F">用法：每个参与方一条 lane · 顶边色与下属节点同色</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-phase" tabindex="0">
+                          <rect class="gallery-card" x="560" y="1520" width="480" height="220"/>
+                          <text class="gallery-title" x="580" y="1550">② Phase · 阶段列</text>
+                          <rect class="gallery-tag-uml-bg" x="580" y="1560" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="612" y="1571" text-anchor="middle">BPMN 1.2</text>
+                          <rect class="ribbon-shown-bg" x="650" y="1560" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="678" y="1571" text-anchor="middle">✓ × 4</text>
+                          <!-- demo: 4 phases stacked vertically (mini) -->
+                          <rect x="600" y="1600" width="40" height="120" fill="#F7F6F1" stroke="#D1CFC5"/>
+                          <text class="phase-num" x="620" y="1615" text-anchor="middle">01</text>
+                          <text class="vlane-body" x="620" y="1635" text-anchor="middle">Init</text>
+                          <text class="phase-num" x="620" y="1650" text-anchor="middle">02</text>
+                          <text class="vlane-body" x="620" y="1670" text-anchor="middle">Valid</text>
+                          <text class="phase-num" x="620" y="1685" text-anchor="middle">03</text>
+                          <text class="vlane-body" x="620" y="1705" text-anchor="middle">Proc</text>
+                          <rect x="660" y="1600" width="280" height="120" fill="none" stroke="#D1CFC5" stroke-dasharray="3 3"/>
+                          <text class="gallery-desc" x="680" y="1620">phase 纵向 = 时间推进</text>
+                          <text class="gallery-desc" x="680" y="1640">编号 01 / 02 / 03 / 04</text>
+                          <text class="gallery-desc" x="680" y="1660">phase 名竖排 (vertical-rl)</text>
+                          <text class="gallery-desc" x="680" y="1680">letter-spacing 16% 增加竖排呼吸感</text>
+                          <text class="gallery-desc" x="680" y="1700" fill="#87867F">水平版反过来：phase 横、lane 纵</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-divider" tabindex="0">
+                          <rect class="gallery-card" x="40" y="1760" width="500" height="220"/>
+                          <text class="gallery-title" x="60" y="1790">③ Phase Divider · 阶段分隔线</text>
+                          <rect class="gallery-tag-uml-bg" x="60" y="1800" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="92" y="1811" text-anchor="middle">BPMN 1.3</text>
+                          <rect class="ribbon-shown-bg" x="130" y="1800" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="158" y="1811" text-anchor="middle">✓ × 3</text>
+                          <!-- demo: dashed line + clay ↓ -->
+                          <line x1="80" y1="1860" x2="240" y2="1860" stroke="#D1CFC5" stroke-width="1" stroke-dasharray="4 4"/>
+                          <text class="phase-arrow" x="265" y="1864" text-anchor="middle">↓</text>
+                          <line x1="290" y1="1860" x2="510" y2="1860" stroke="#D1CFC5" stroke-width="1" stroke-dasharray="4 4"/>
+                          <text class="gallery-desc" x="60" y="1910">phase 之间用虚线 + 中点 clay ↓</text>
+                          <text class="gallery-desc" x="60" y="1926">强化"时间推进"视觉</text>
+                          <text class="gallery-desc" x="60" y="1946" fill="#87867F">虚线 4 4 dash · clay 箭头位于中点 · 不打断 lane divider</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-service-task" tabindex="0">
+                          <rect class="gallery-card" x="560" y="1760" width="480" height="220"/>
+                          <text class="gallery-title" x="580" y="1790">④ Service Task · 后端任务</text>
+                          <rect class="gallery-tag-uml-bg" x="580" y="1800" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="612" y="1811" text-anchor="middle">BPMN 2.1</text>
+                          <rect class="ribbon-shown-bg" x="650" y="1800" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="678" y="1811" text-anchor="middle">✓ × 3</text>
+                          <!-- demo: olive rect with step badge -->
+                          <rect class="vlane-card service" x="620" y="1840" width="160" height="80"/>
+                          <circle class="step-badge-bg" cx="776" cy="1842" r="10" stroke="#788C5D"/>
+                          <text class="step-badge-text" x="776" y="1845.5" text-anchor="middle" fill="#788C5D">5</text>
+                          <text class="vlane-title service" x="630" y="1862">Apply rules</text>
+                          <text class="vlane-body" x="630" y="1880">Domain logic ·</text>
+                          <text class="vlane-body" x="630" y="1894">prepare record</text>
+                          <text class="vlane-body" x="630" y="1908">background work</text>
+                          <text class="gallery-desc" x="800" y="1860">olive border + 10% tint</text>
+                          <text class="gallery-desc" x="800" y="1876">step 角标 右上 · olive 描边</text>
+                          <text class="gallery-desc" x="800" y="1892">title 12.5 serif · body 10 mono</text>
+                          <text class="gallery-desc" x="800" y="1908">填充浅、文字深</text>
+                          <text class="gallery-desc" x="800" y="1944" fill="#87867F">主图主力节点 · 7 个 step 中占 4 个</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-actor-nodes" tabindex="0">
+                          <rect class="gallery-card" x="40" y="2000" width="500" height="220"/>
+                          <text class="gallery-title" x="60" y="2030">⑤ Actor Nodes · 4 色节点</text>
+                          <rect class="gallery-tag-uml-bg" x="60" y="2040" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="92" y="2051" text-anchor="middle">BPMN 2.2</text>
+                          <rect class="ribbon-shown-bg" x="130" y="2040" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="158" y="2051" text-anchor="middle">✓ × 9</text>
+                          <!-- demo: 4 actor cards (mini) stacked -->
+                          <rect class="vlane-card customer" x="60" y="2080" width="110" height="40"/>
+                          <text class="vlane-title customer" x="68" y="2098">Customer</text>
+                          <text class="vlane-body" x="68" y="2114">external · gray</text>
+                          <rect class="vlane-card frontend" x="180" y="2080" width="110" height="40"/>
+                          <text class="vlane-title frontend" x="188" y="2098">Frontend</text>
+                          <text class="vlane-body" x="188" y="2114">client · blue</text>
+                          <rect class="vlane-card service" x="60" y="2130" width="110" height="40"/>
+                          <text class="vlane-title service" x="68" y="2148">Service</text>
+                          <text class="vlane-body" x="68" y="2164">backend · olive</text>
+                          <rect class="vlane-card database" x="180" y="2130" width="110" height="40"/>
+                          <text class="vlane-title database" x="188" y="2148">Database</text>
+                          <text class="vlane-body" x="188" y="2164">persist · plum</text>
+                          <text class="gallery-desc" x="310" y="2098">每 lane 一色 + 同色描边</text>
+                          <text class="gallery-desc" x="310" y="2118">填充透明度 8%-10%</text>
+                          <text class="gallery-desc" x="310" y="2138">title 字色 = lane 暗色</text>
+                          <text class="gallery-desc" x="310" y="2158">body 字色 = gray-700 通用</text>
+                          <text class="gallery-desc" x="310" y="2190" fill="#87867F">节点色 ≠ lane 顶边色 = bug</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-decision" tabindex="0">
+                          <rect class="gallery-card" x="560" y="2000" width="480" height="220"/>
+                          <text class="gallery-title" x="580" y="2030">⑥ Decision · 决策菱形</text>
+                          <rect class="gallery-tag-uml-bg" x="580" y="2040" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="612" y="2051" text-anchor="middle">BPMN 3.1</text>
+                          <rect class="ribbon-shown-bg" x="650" y="2040" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="678" y="2051" text-anchor="middle">✓ × 1</text>
+                          <!-- demo: clay-dashed diamond with yes/no -->
+                          <polygon class="vlane-card decision" points="660,2110 730,2140 660,2170 590,2140"/>
+                          <text class="vlane-title decision" x="660" y="2138" text-anchor="middle">valid?</text>
+                          <text class="vlane-body" x="660" y="2153" text-anchor="middle" fill="#D97757">gateway</text>
+                          <text class="edge-label yes" x="745" y="2125">[yes] →</text>
+                          <text class="edge-label fail" x="745" y="2160">[no] → 400</text>
+                          <text class="gallery-desc" x="590" y="2200">clay 虚线菱形 · 与普通节点拉开</text>
+                          <text class="gallery-desc" x="800" y="2200">YES 走 olive guard · NO 走 rust fail</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-sequence" tabindex="0">
+                          <rect class="gallery-card" x="40" y="2240" width="500" height="220"/>
+                          <text class="gallery-title" x="60" y="2270">⑦ Sequence Flow · 序列流</text>
+                          <rect class="gallery-tag-uml-bg" x="60" y="2280" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="92" y="2291" text-anchor="middle">BPMN 4.1</text>
+                          <rect class="ribbon-shown-bg" x="130" y="2280" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="158" y="2291" text-anchor="middle">✓ × 10</text>
+                          <!-- demo: olive spine + gray default + dotted -->
+                          <line x1="80" y1="2340" x2="380" y2="2340" stroke="#788C5D" stroke-width="2.6"/>
+                          <path d="M380,2340 L374,2336 L374,2344 z" fill="#788C5D"/>
+                          <text class="vlane-body" x="80" y="2330" fill="#788C5D">spine · happy path</text>
+                          <line x1="80" y1="2380" x2="380" y2="2380" stroke="#3D3D3A" stroke-width="1.4"/>
+                          <path d="M380,2380 L374,2376 L374,2384 z" fill="#3D3D3A"/>
+                          <text class="vlane-body" x="80" y="2370">default · 次要分支</text>
+                          <line x1="80" y1="2420" x2="380" y2="2420" stroke="#B04A3F" stroke-width="1.4" stroke-dasharray="5 3"/>
+                          <path d="M380,2420 L374,2416 L374,2424 z" fill="#B04A3F"/>
+                          <text class="vlane-body" x="80" y="2410" fill="#B04A3F">fail · 错误终态分支</text>
+                          <text class="gallery-desc" x="400" y="2340">olive 2.6px</text>
+                          <text class="gallery-desc" x="400" y="2380">slate 1.4px</text>
+                          <text class="gallery-desc" x="400" y="2420">rust dashed</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-msg-flow" tabindex="0">
+                          <rect class="gallery-card" x="560" y="2240" width="480" height="220"/>
+                          <text class="gallery-title" x="580" y="2270">⑧ Message Flow · 消息流</text>
+                          <rect class="gallery-tag-uml-bg" x="580" y="2280" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="612" y="2291" text-anchor="middle">BPMN 4.2</text>
+                          <rect class="ribbon-shown-bg" x="650" y="2280" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="678" y="2291" text-anchor="middle">✓ × 1</text>
+                          <!-- demo: plum dashed with open circle start + arrow end -->
+                          <circle cx="600" cy="2340" r="4" fill="#FFFFFF" stroke="#6B5B95" stroke-width="1.2"/>
+                          <line x1="606" y1="2340" x2="990" y2="2340" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="6 3"/>
+                          <path d="M990,2340 L984,2336 L984,2344 z" fill="#6B5B95"/>
+                          <text class="vlane-body" x="606" y="2330" fill="#6B5B95">email msg · 异步通知</text>
+                          <text class="gallery-desc" x="600" y="2380">起点 = 空心圆 (圆心 = 发起者)</text>
+                          <text class="gallery-desc" x="600" y="2398">终点 = 实心箭头</text>
+                          <text class="gallery-desc" x="600" y="2416">plum 虚线 6 3 dash</text>
+                          <text class="gallery-desc" x="600" y="2434" fill="#87867F">同 lane 内 = sequence · 跨业务参与方 = message</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-events" tabindex="0">
+                          <rect class="gallery-card" x="40" y="2480" width="500" height="170"/>
+                          <text class="gallery-title" x="60" y="2510">⑨ Start / End · 起止事件</text>
+                          <rect class="gallery-tag-uml-bg" x="60" y="2520" width="64" height="14"/>
+                          <text class="gallery-tag-uml-text" x="92" y="2531" text-anchor="middle">BPMN 5.1</text>
+                          <rect class="ribbon-shown-bg" x="130" y="2520" width="56" height="14"/>
+                          <text class="ribbon-shown-text" x="158" y="2531" text-anchor="middle">✓ × 3</text>
+                          <!-- demo: start (olive single thin) + end (rust thick) -->
+                          <circle cx="100" cy="2580" r="14" fill="rgba(120,140,93,0.22)" stroke="#788C5D" stroke-width="1.4"/>
+                          <text class="vlane-body" x="100" y="2614" text-anchor="middle" fill="#788C5D">start</text>
+                          <text class="vlane-body" x="100" y="2628" text-anchor="middle" fill="#87867F">单细线</text>
+
+                          <circle cx="200" cy="2580" r="14" fill="rgba(176,74,63,0.22)" stroke="#B04A3F" stroke-width="2.5"/>
+                          <text class="vlane-body" x="200" y="2614" text-anchor="middle" fill="#B04A3F">end success</text>
+                          <text class="vlane-body" x="200" y="2628" text-anchor="middle" fill="#87867F">粗双线</text>
+
+                          <circle cx="320" cy="2580" r="14" fill="rgba(176,74,63,0.22)" stroke="#B04A3F" stroke-width="2.5"/>
+                          <text class="vlane-body" x="320" y="2585" text-anchor="middle" fill="#B04A3F" font-weight="600">400</text>
+                          <text class="vlane-body" x="320" y="2614" text-anchor="middle" fill="#B04A3F">end fail</text>
+                          <text class="vlane-body" x="320" y="2628" text-anchor="middle" fill="#87867F">同符号 + 状态码</text>
+
+                          <text class="gallery-desc" x="400" y="2580">起点 = olive 细圆</text>
+                          <text class="gallery-desc" x="400" y="2600">终点 = rust 粗双线</text>
+                          <text class="gallery-desc" x="400" y="2620">失败终态写状态码</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-annotation-ex" tabindex="0">
+                          <rect class="gallery-card" x="560" y="2480" width="480" height="170"/>
+                          <text class="gallery-title" x="580" y="2510">⑩ Annotation [ex] · 注释 / 扩展</text>
+                          <rect class="gallery-tag-ex-bg" x="580" y="2520" width="48" height="14"/>
+                          <text class="gallery-tag-ex-text" x="604" y="2531" text-anchor="middle">[ex]</text>
+                          <rect class="ribbon-ref-bg" x="634" y="2520" width="64" height="14"/>
+                          <text class="ribbon-ref-text" x="666" y="2531" text-anchor="middle">仅图鉴</text>
+                          <!-- demo: data flow dashed + ex badge -->
+                          <rect class="vlane-card database" x="600" y="2560" width="120" height="40"/>
+                          <text class="vlane-title database" x="608" y="2578">Email notify</text>
+                          <text class="vlane-body" x="608" y="2594">msg flow 异步</text>
+                          <rect class="ex-badge-bg" x="722" y="2562" width="22" height="14"/>
+                          <text class="ex-badge-text" x="733" y="2573" text-anchor="middle">ex</text>
+                          <text class="gallery-desc" x="600" y="2620">非标准 BPMN 节点 / 行为 = 挂 gold [ex] 角标</text>
+                          <text class="gallery-desc" x="600" y="2636" fill="#87867F">例：邮件通知 · SLA 超时 · 异步分支 · 业务扩展</text>
+
+                          <text class="gallery-desc" x="760" y="2575">SLA · 超时</text>
+                          <text class="gallery-desc" x="760" y="2592">异步分支</text>
+                          <text class="gallery-desc" x="760" y="2609">业务扩展</text>
+                        </g>
+
+            
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ─── How to draw ─── -->
+  <div class="howto-block">
+    <p class="block-label">怎么画 · How to draw</p>
+    <p class="block-sub">泳道图 · 垂直的骨架</p>
+    <ol class="howto-steps">
+      <li><b>选方向</b>：phase 横还是纵？此版 phase <u>纵向</u> (顶到底 = 时间)，lane 横向 (左到右 = 职能)。适合时间推进强、参与方少 (≤4) 的流程。</li>
+      <li><b>拉 phase column</b>：左侧 60-80px 留给 phase 编号 + 名字 · phase 名 vertical-rl 竖排 · letter-spacing 加大呼吸感。</li>
+      <li><b>划 lanes</b>：每 lane 一列 · 顶部 lane header 带 <u>3px lane 色顶边</u> · 与下属节点同色形成视觉锚定。</li>
+      <li><b>节点按 lane 着色</b>：customer = external gray · frontend = blue · service = olive · database = plum · 填充 8-10% · 描边同色 1.5px。</li>
+      <li><b>决策菱形特殊</b>：用 clay <u>虚线菱形</u> 与普通方形节点拉开 · YES 走 olive guard 边 · NO 走 rust fail 边。</li>
+      <li><b>边按类型选</b>：spine olive 2.6px = happy path · slate 1.4px = 次要分支 · rust dashed = 失败 · plum dashed + 空心圆起点 = message flow (跨业务参与方)。</li>
+      <li><b>phase divider</b>：相邻 phase 之间画虚线 4 4 dash + 中点 clay ↓ · 强化时间推进感 · 不打断 lane divider。</li>
+      <li><b>失败终态</b>：用 rust 粗双线圆 (stroke-width 2.5) + 圆内写状态码 (400 / 500) · 与 olive 起点细圆形成对仗。</li>
+    </ol>
+  </div>
+
+  <div class="section-footer">
+    <a class="template-link-large" href="../06-swimlane-vertical.html">
+      <span class="arrow">→</span>
+      <span>看完整范本</span>
+      <span class="meta">API 记录创建 · 4 phase × 4 lane · 阶段化推进</span>
+    </a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span>Engineering Diagram Library · 06V · 泳道图 · 垂直</span>
+  <span><a href="../index.html">← 返回总览</a> · <a href="../06-swimlane-vertical.html">→ 看完整范本</a></span>
+</footer>
+
+<script>
+// ── Theme toggle ─────────────────────────────────────────────
+const themeToggle = document.getElementById('themeToggle');
+const themeIconSun = document.getElementById('themeIconSun');
+const themeIconMoon = document.getElementById('themeIconMoon');
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeIconSun.style.display  = theme === 'dark' ? 'none' : '';
+  themeIconMoon.style.display = theme === 'dark' ? '' : 'none';
+  try { localStorage.setItem('edl-theme', theme); } catch(e) {}
+}
+applyTheme((function(){
+  try { return localStorage.getItem('edl-theme') || 'light'; } catch(e) { return 'light'; }
+})());
+themeToggle.addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+});
+
+// ── Copy HTML ────────────────────────────────────────────────
+const copyHtml = document.getElementById('copyHtml');
+copyHtml.addEventListener('click', async () => {
+  const original = copyHtml.innerHTML;
+  try {
+    await navigator.clipboard.writeText('<!doctype html>\n' + document.documentElement.outerHTML);
+    copyHtml.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg>已复制';
+    copyHtml.style.color = 'var(--olive)';
+    copyHtml.style.borderColor = 'var(--olive)';
+    setTimeout(() => {
+      copyHtml.innerHTML = original;
+      copyHtml.style.color = '';
+      copyHtml.style.borderColor = '';
+    }, 1800);
+  } catch (e) {
+    copyHtml.textContent = '复制失败';
+    setTimeout(() => { copyHtml.innerHTML = original; }, 1800);
+  }
+});
+</script>
+</body>
+</html>

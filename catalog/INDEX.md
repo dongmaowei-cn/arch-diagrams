@@ -1,7 +1,9 @@
 # Catalog · 8 张图速查表
 
+**给用户选型**：打开 [`templates/index.html`](../templates/index.html) — 10 张卡片，每张可进 **图鉴 · 画法**（`gallery/`）或 **范本**（`0X-*.html`），比文字列表更直观。
+
 模板源（**只读**）：`$SKILL_DIR/templates/`
-教学参考：`$SKILL_DIR/templates/index.html` — 8 个锚点 section,每张图含元素图鉴 + 画法说明
+教学参考：`$SKILL_DIR/templates/index.html` 导航总览；每张图的**元素图鉴 + 画法**在 `$SKILL_DIR/templates/gallery/0X-*.html`（单文件内联 CSS/JS）
 
 ## 选型矩阵
 
@@ -16,7 +18,7 @@
 | "需求 → 设计 → 开发 → 测试" | 阶段 / 里程碑 / phase | **06 swimlane-vertical** |
 | "K8s ns / sidecar / istio / prom" | 微服务 / namespace / 运行时 | **07 microservice** |
 
-## 每图速查（v2 · B 区已迁移到 index.html）
+## 每图速查（v2 · B 区在 gallery/）
 
 | ID | 文件 | viewBox | A 区行 | `</svg>` |
 |---|---|---|---|---|
@@ -29,7 +31,7 @@
 | 06V | `06-swimlane-vertical.html`  | 1080×1500 | 442-695 | 696 |
 | 07 | `07-microservice.html`        | 1080×1500 | 467-930 | 931 |
 
-> **B 区不再在模板里**。元素图鉴 + 画法说明在 `templates/index.html` 的 8 个锚点 section,见各图 catalog 卡片"画法参考"段。
+> **B 区不再在模板里**。元素图鉴 + 画法说明在 `templates/gallery/0X-*.html`，总览入口见 `templates/index.html`。
 > 如果新场景的 A 区显著矮于上表 viewBox h,改造时同步收紧 `<svg height>` + `viewBox` + `viewBox: { w, h }`。
 
 ## 节点 class 清单（每图独有的类型）

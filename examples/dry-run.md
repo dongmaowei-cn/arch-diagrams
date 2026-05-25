@@ -1,11 +1,26 @@
 # Dry-run · 端到端示例
 
 > 用户一句话 → 最终交付 HTML 的完整动作链路。
-> v2 模板已不内嵌 B 区 / panel.howto — 教学在 `templates/index.html`。
+> v2 模板已不内嵌 B 区 / panel.howto — 教学在 `templates/gallery/0X-*.html`，总览见 `templates/index.html`。
 
 ---
 
-## 场景
+## 场景 A · 图型未定
+
+```
+用户输入：
+> 我想画一张图，讲我们订单怎么结算的
+```
+
+### Phase 0 · 给用户 index（优先）
+
+- 给出路径：`$SKILL_DIR/templates/index.html`
+- 说明：10 张卡片可预览范本；「图鉴 · 画法」看节点说明，「范本 →」看完整样式
+- 根据用户描述倾向推荐 01 流程图 vs 06 泳道图，但让用户在 index 里确认
+
+---
+
+## 场景 B · 图型已定
 
 ```
 用户输入：
@@ -30,7 +45,7 @@ Read $SKILL_DIR/catalog/01-flowchart.md
 Read $SKILL_DIR/shared/node-data-schema.md  (按需)
 ```
 
-画法参考（可选）：`templates/index.html#flowchart`
+画法参考（可选）：`templates/gallery/01-flowchart.html`
 
 ### Phase 3 · 复制模板
 
@@ -100,7 +115,7 @@ bash $SKILL_DIR/shared/selftest.sh online-order-flowchart.html
 | 用户说"画个图"但无场景 | 向用户确认：你想画什么场景？ |
 | 同场景多张图都合理 | 向用户确认：流程图 or 时序图？（带 preview） |
 | 自检失败（节点 / data 不对齐） | 主动修复后再报告，不要把错误产物交付 |
-| 用户问"这个节点怎么画" | 引导打开 `templates/index.html#<type>` 看元素图鉴 + 画法 |
+| 用户问"这个节点怎么画" | 引导打开 `templates/gallery/0X-<type>.html` 看元素图鉴 + 画法 |
 
 ---
 

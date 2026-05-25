@@ -21,7 +21,7 @@
 
 ## 画法参考
 
-- **元素图鉴 + 怎么画**：[`templates/index.html#architecture`](../templates/index.html#architecture)
+- **元素图鉴 + 怎么画**：[`templates/gallery/04-system-architecture.html`](../templates/gallery/04-system-architecture.html)
 - 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 容器结构

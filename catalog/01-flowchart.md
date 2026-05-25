@@ -20,7 +20,7 @@
 
 ## 画法参考
 
-- **元素图鉴 + 怎么画**：[`templates/index.html#flowchart`](../templates/index.html#flowchart)
+- **元素图鉴 + 怎么画**：[`templates/gallery/01-flowchart.html`](../templates/gallery/01-flowchart.html)
 - 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 模板保留内容
@@ -30,7 +30,7 @@
 - aside.legend-group（紧凑图例，保留在模板内）
 - 外壳（topbar / footer / canvas-controls）
 
-> 元素图鉴 + 详细画法说明在 `templates/index.html#flowchart`。
+> 元素图鉴 + 详细画法说明在 `templates/gallery/01-flowchart.html`。
 
 ## 节点类型（class）
 

@@ -22,7 +22,7 @@ license: MIT
 每次画图都生成一个**新文件**，禁止改 templates/ 里的源文件。
 
 > **v2 重构**：模板已经不再内嵌 B 区元素图鉴 / panel.howto 教学内容。
-> 教学全部集中在 `templates/index.html`（带 8 个锚点 section：`#flowchart`/`#sequence`/`#state`/`#architecture`/`#er`/`#swimlane`/`#swimlane-v`/`#microservice`）。
+> 教学拆分为 `templates/index.html`（薄导航）+ `templates/gallery/0X-*.html`（每张图一个「元素图鉴 + 画法」页，单文件内联 CSS/JS，无外链）。
 > 模板本身只保留：A 区主图 + aside.panel.detail + aside.legend-group + 外壳。
 
 ## 0 · 模板源（skill 内部、只读）
@@ -49,6 +49,30 @@ TEMPLATES_DIR = $SKILL_DIR/templates
 
 判断不了时，用当前 agent 的提问机制给 2 个最接近的图型 + 一句话说明。**绝对不要**自己猜后给一张错的图。
 
+### 给用户 index · 自助看模版、快速选型
+
+用户**想画图**（尤其还没说清要哪种图）时，先把总览页给他，比口头描述 8 种图型更高效：
+
+```
+路径：$SKILL_DIR/templates/index.html
+打开：用浏览器直接打开该文件（file:// 或本地静态服务均可）
+```
+
+index 上 **10 张 catalog 卡片**，每张提供两条入口：
+
+| 链接 | 作用 |
+|---|---|
+| **图鉴 · 画法** → `gallery/0X-*.html` | 看这种图有哪些节点/边、六步怎么画 |
+| **范本 →** → `0X-*.html` | 看完整可交互范本长什么样 |
+
+**推荐话术**（图型未定时先发 index，再简短补一句）：
+
+> 可以先打开 `templates/index.html` 浏览 10 种图型和范本样式；点「图鉴 · 画法」看元素说明，点「范本 →」看完整示例。选定图型后告诉我场景，我按对应模板给你出图。
+
+- **图型未明确**：先给 index，等用户选定或从对话里推断，再进入复制改造流程。
+- **图型已明确**（如「画订单结算流程图」）：可直接开干；若用户还想对比其他图型，再补发 index。
+- **不要**把 index / gallery 当交付物复制进用户场景图 — 它们只是选型与教学参考。
+
 ## 2 · 工作流（3 步，全自动执行）
 
 每张图详细改造步骤见对应 `catalog/0X-*.md`。整体框架：
@@ -62,7 +86,7 @@ cp $TEMPLATES_DIR/0X-<type>.html <output-dir>/<scenario>-<type>.html
 - 文件名样例：`user-login-sequence.html`、`order-state-machine.html`
 
 > **不需要再删 B 区**。模板已不内嵌教学图鉴。
-> 如果想看元素清单和画法说明,引导用户打开 `templates/index.html#<type>`。
+> 如果想看元素清单和画法说明,引导用户打开 `templates/gallery/0X-<type>.html`（或从 `templates/index.html` 总览进入）。
 
 ### Step 2 · 替换 A 区主图 + 同步 nodeData
 按对应 catalog 卡片的"节点种类清单"和"坐标系约定"，重写 A 区 SVG 内容。
@@ -91,7 +115,7 @@ cp $TEMPLATES_DIR/0X-<type>.html <output-dir>/<scenario>-<type>.html
 2. **不改 viewBox 宽度** — 永远是 1080
 3. **不改 chrome**（topbar / aside / canvas-controls / theme toggle / export buttons）
 4. **不改 `<script>` 末尾的渲染逻辑**（只改 `nodeData` 内容）
-5. **不要从 `templates/index.html` 拷元素图鉴的卡片到模板主图** — index.html 的图鉴是教学示例,颜色比例与主图错位,不可复用
+5. **不要从 `templates/gallery/` 拷元素图鉴的卡片到模板主图** — gallery 页的图鉴是教学示例,颜色比例与主图错位,不可复用
 6. **不改节点的标准尺寸** — 模板的节点宽高已经定调，**不要为了"填满 canvas"或"让画面更饱满"私自加大节点**。文字装不下就**精简文字**（缩写、分行、把详情挪到 aside `body`），不要拉宽节点。各图节点标准尺寸见对应 catalog 卡片"坐标约定"段。
 
 ## 4 · 自检清单（输出前必须过）
@@ -113,7 +137,7 @@ bash $SKILL_DIR/shared/selftest.sh <output.html>
 
 任一不通过就修复后再跑，直到全过才报告产物。
 
-> 3/4/5 项作为防御性检查保留:防止用户从 index.html 误粘 B 区图鉴内容进产物。
+> 3/4/5 项作为防御性检查保留:防止用户从 gallery 页误粘 B 区图鉴内容进产物。
 
 ## 5 · 共享词汇表
 
@@ -136,19 +160,29 @@ bash $SKILL_DIR/shared/selftest.sh <output.html>
 
 ## 7 · 触发后的最小响应
 
+### 图型未定时
+
+```
+0) 给用户 templates/index.html 路径 + 浏览器打开方式（见 §1「给用户 index」）
+1) 等用户选定图型，或从描述推断最接近的一种
+2) 进入下方「图型已定时」流程
+```
+
+### 图型已定时
+
 不啰嗦。用户给"图型 + 场景"后直接执行：
 
 ```
 1) cp 模板 → 新文件
-2) Read 新文件相关行
+2) Read 新文件相关行 + 对应 catalog/0X-*.md
 3) Edit 改 A 区 + 改 nodeData + 改外壳（必要时收紧 viewBox）
 4) 自检
 5) 报一行：✓ 已生成 <文件路径>（节点 N / 边 M）
 ```
 
-只在以下情况向用户确认：
-- 用户没说图型也没描述清楚场景（"画个图"）
-- 同一场景有 2 张图都合理（如"用户登录" → 流程图 or 时序图？）
+只在以下情况向用户确认（**仍可先给 index 辅助选型**）：
+- 用户没说图型也没描述清楚场景（"画个图"）→ **先发 index**，再问 1 句场景
+- 同一场景有 2 张图都合理（如"用户登录" → 流程图 or 时序图？）→ **给 index** 让用户点两张范本对比
 - 已有同名输出文件，问是否覆盖
 
 否则**全自动**，结果直接交付。

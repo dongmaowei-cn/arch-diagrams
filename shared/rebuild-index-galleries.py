@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild index.html B-zone galleries (02-07) from backup templates."""
+"""Rebuild gallery/*.html B-zone SVG (02-07) from backup templates."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 BACKUP_DIR = Path("/Users/dongmaowei/workspace/arch-diagrams 2/templates")
-INDEX_PATH = Path(__file__).resolve().parent.parent / "templates" / "index.html"
+GALLERY_DIR = Path(__file__).resolve().parent.parent / "templates" / "gallery"
 
 SECTIONS = [
     ("02-sequence.html", "sequence", "seq"),
@@ -19,7 +19,6 @@ SECTIONS = [
     ("07-microservice.html", "microservice", "ms"),
 ]
 
-# Shared gallery chrome + cross-template text styles (from backup templates style block 1)
 SHARED_GALLERY_CSS = """
 /* ── Shared gallery chrome (all diagram sections) ── */
 .gallery-svg .gallery-card-node { cursor: pointer; }
@@ -55,7 +54,6 @@ SHARED_GALLERY_CSS = """
 .gallery-svg text.attr-name { font-family: var(--mono); font-size: 12px; fill: var(--slate); }
 """.strip()
 
-# Shared defs missing from some templates but referenced by edge.return / edge.bidir CSS
 EXTRA_MARKERS = """
 <marker id="arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#87867F" stroke-width="1.4"/></marker>
 <marker id="arrow-rev" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#87867F"/></marker>
@@ -145,7 +143,6 @@ def extract_defs(html: str) -> str:
 
 
 def fix_svg_u_tags(svg: str) -> str:
-    """HTML inline tags inside SVG <text> break rendering; convert to tspan."""
     svg = re.sub(
         r"<u>(.*?)</u>",
         r'<tspan text-decoration="underline">\1</tspan>',
@@ -175,15 +172,15 @@ def ensure_extra_markers(defs_inner: str) -> str:
     return EXTRA_MARKERS
 
 
-def inject_row_zebra_var(index_html: str) -> str:
-    if re.search(r":root\s*\{[^}]*--row-zebra\s*:", index_html):
-        return index_html
-    index_html = index_html.replace(
+def inject_row_zebra_var(html: str) -> str:
+    if re.search(r":root\s*\{[^}]*--row-zebra\s*:", html):
+        return html
+    html = html.replace(
         "  --shadow:   0 1px 2px rgba(42,42,40,0.03), 0 4px 16px rgba(42,42,40,0.04);\n}",
         "  --shadow:   0 1px 2px rgba(42,42,40,0.03), 0 4px 16px rgba(42,42,40,0.04);\n  --row-zebra:#F7F5EE;\n}",
         1,
     )
-    return index_html.replace(
+    return html.replace(
         "  --shadow:   0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.4);\n}",
         "  --shadow:   0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.4);\n  --row-zebra:#1E1D1B;\n}",
         1,
@@ -204,70 +201,53 @@ def build_gallery_svg(section_id: str, prefix: str, body: str, offset: int, heig
     )
 
 
-def build_section_css(section_id: str, prefix: str, html: str) -> str:
+def build_section_css(prefix: str, html: str) -> str:
     styles = extract_style_blocks(html)
     if len(styles) < 2:
         return ""
     shared = extract_shared_edge_css(styles[0])
     specific = extract_diagram_specific_css(styles[1])
     merged = shared + "\n" + specific
-    merged = prefix_marker_urls(merged, prefix)
-    scoped_lines = []
-    for line in merged.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("/*"):
-            scoped_lines.append(line)
-            continue
-        if stripped.startswith(".gallery-svg"):
-            scoped_lines.append(f"#{section_id} {line}")
-        else:
-            scoped_lines.append(line)
-    return "\n".join(scoped_lines)
+    return prefix_marker_urls(merged, prefix)
 
 
-def replace_gallery_frame(index_html: str, section_id: str, new_svg: str) -> str:
+def replace_gallery_frame(gallery_html: str, section_id: str, new_svg: str) -> str:
     pattern = (
         rf'(<section id="{re.escape(section_id)}"[\s\S]*?<div class="gallery-frame">\s*)'
         rf'<svg class="gallery-svg"[\s\S]*?</svg>'
         rf'(\s*</div>)'
     )
-    updated, n = re.subn(pattern, rf"\1{new_svg}\2", index_html, count=1)
+    updated, n = re.subn(pattern, rf"\1{new_svg}\2", gallery_html, count=1)
     if n != 1:
         raise ValueError(f"Failed to replace gallery for section {section_id}")
     return updated
 
 
-def replace_overlay_css(index_html: str, css_block: str) -> str:
-    start = index_html.find("/* ── Per-template gallery")
-    end = index_html.find("/* ── How to draw block")
-    if start == -1 or end == -1:
-        raise ValueError("Could not locate CSS overlay region")
-    return index_html[:start] + css_block + "\n\n" + index_html[end:]
-
-
-def inject_shared_gallery_css(index_html: str) -> str:
-    marker = ".gallery-svg .t-lbl-no { fill: var(--rust); }"
-    if marker not in index_html:
-        raise ValueError("Could not locate gallery base CSS")
-    if "gallery-tag-uml-bg" in index_html.split(marker)[0][-2000:]:
-        return index_html
-    return index_html.replace(marker, marker + "\n" + SHARED_GALLERY_CSS, 1)
+def replace_section_css(gallery_html: str, section_id: str, css_block: str) -> str:
+    markers = [
+        f"/* ── {section_id} specific ── */",
+        f"/* ── {section_id} (",
+    ]
+    start = -1
+    for marker in markers:
+        start = gallery_html.find(marker)
+        if start != -1:
+            break
+    howto = gallery_html.find("/* ── How to draw block")
+    if start == -1 or howto == -1:
+        raise ValueError(f"Could not locate CSS region for {section_id}")
+    return (
+        gallery_html[:start]
+        + f"/* ── {section_id} specific ── */\n{css_block.rstrip()}\n\n"
+        + gallery_html[howto:]
+    )
 
 
 def main() -> None:
-    index_html = read_text(INDEX_PATH)
-    index_html = inject_row_zebra_var(index_html)
-    index_html = inject_shared_gallery_css(index_html)
-
-    css_parts = [
-        "/* ── Per-template gallery shape CSS (from backup templates) ── */",
-        SHARED_GALLERY_CSS,
-        "",
-        "/* Edge + shape rules scoped per section (marker ids prefixed) */",
-    ]
-    gallery_css = []
-
     for filename, section_id, prefix in SECTIONS:
+        gallery_path = GALLERY_DIR / filename
+        gallery_html = inject_row_zebra_var(read_text(gallery_path))
+
         html = read_text(BACKUP_DIR / filename)
         body = fix_svg_u_tags(extract_b_zone_svg(html))
         body = prefix_inline_markers(body, prefix)
@@ -275,16 +255,11 @@ def main() -> None:
         height = normalized_height(body, offset)
         defs_inner = ensure_extra_markers(extract_defs(html))
         svg = build_gallery_svg(section_id, prefix, body, offset, height, defs_inner)
-        index_html = replace_gallery_frame(index_html, section_id, svg)
-        section_css = build_section_css(section_id, prefix, html)
-        gallery_css.append(f"/* ── {section_id} ({filename}) ── */\n{section_css}")
-        print(f"  ✓ {section_id}: offset={offset} viewBox=0 0 1080 {height}")
-
-    css_parts.extend(gallery_css)
-    css_block = "\n\n".join(css_parts)
-    index_html = replace_overlay_css(index_html, css_block)
-    INDEX_PATH.write_text(index_html, encoding="utf-8")
-    print(f"Updated {INDEX_PATH}")
+        gallery_html = replace_gallery_frame(gallery_html, section_id, svg)
+        section_css = build_section_css(prefix, html)
+        gallery_html = replace_section_css(gallery_html, section_id, section_css)
+        gallery_path.write_text(gallery_html, encoding="utf-8")
+        print(f"  ✓ gallery/{filename}: offset={offset} viewBox=0 0 1080 {height}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>泳道图 · 水平 · 元素图鉴与画法 · Engineering Diagram Library</title>
+<style>
+/* ════════════════════════════════════════════════════════════════
+   Engineering Diagram Library · INDEX
+   Visual language: ivory paper · clay/olive/rust accents · 衬线+等宽
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  --ivory:    #FAF7EF;
+  --paper:    #FFFFFF;
+  --slate:    #2A2A28;
+  --gray-700: #5B5A55;
+  --gray-500: #87867F;
+  --gray-300: #D9D6CC;
+  --gray-150: #EFEEE6;
+  --clay:     #D97757;
+  --olive:    #788C5D;
+  --rust:     #B04A3F;
+  --plum:     #6B5B86;
+  --gold:     #C4994E;
+  --teal:     #4E8C8C;
+  --serif:    'Source Serif 4', 'Iowan Old Style', Charter, Georgia, serif;
+  --sans:     -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono:     'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --shadow:   0 1px 2px rgba(42,42,40,0.03), 0 4px 16px rgba(42,42,40,0.04);
+  --row-zebra:#F7F5EE;
+}
+html[data-theme="dark"] {
+  --ivory:    #1A1916;
+  --paper:    #232220;
+  --slate:    #E8E5DC;
+  --gray-700: #B5B2A8;
+  --gray-500: #87867F;
+  --gray-300: #3D3C38;
+  --gray-150: #2D2C28;
+  --shadow:   0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.4);
+  --row-zebra:#1E1D1B;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--ivory); color: var(--slate);
+  font-family: var(--sans); -webkit-font-smoothing: antialiased; line-height: 1.55;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+/* ── Topbar ────────────────────────────────────────────────────── */
+.topbar { position: sticky; top: 0; z-index: 30; background: color-mix(in oklab, var(--ivory), transparent 8%); backdrop-filter: blur(12px); border-bottom: 1px solid var(--gray-300); }
+.topbar-inner { max-width: 1320px; margin: 0 auto; padding: 14px 36px; display: flex; align-items: center; gap: 16px; }
+.crumb { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--gray-500); text-transform: uppercase; }
+.crumb a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+.crumb .sep { color: var(--gray-300); margin: 0 8px; }
+.toolbar { margin-left: auto; display: flex; gap: 8px; }
+.pill-btn { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 17px; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; }
+.pill-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn svg { width: 12px; height: 12px; }
+.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 50%; cursor: pointer; transition: all 150ms ease; }
+.icon-btn:hover { border-color: var(--clay); color: var(--clay); }
+
+/* ── Hero ──────────────────────────────────────────────────────── */
+.hero { max-width: 1320px; margin: 0 auto; padding: 80px 36px 56px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--clay); text-transform: uppercase; margin-bottom: 18px; }
+h1.hero-title { font-family: var(--serif); font-weight: 500; font-size: 56px; letter-spacing: -0.018em; line-height: 1.1; margin-bottom: 22px; max-width: 880px; }
+h1.hero-title em { font-style: italic; color: var(--clay); font-weight: 400; }
+.hero-lead { font-size: 16.5px; line-height: 1.65; color: var(--gray-700); max-width: 720px; }
+.hero-meta { margin-top: 36px; display: flex; gap: 48px; padding-top: 28px; border-top: 1px solid var(--gray-300); }
+.hero-meta .stat .v { font-family: var(--serif); font-weight: 500; font-size: 28px; color: var(--slate); display: block; line-height: 1.1; margin-bottom: 4px; }
+.hero-meta .stat .l { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; color: var(--gray-500); text-transform: uppercase; }
+
+/* ── Catalog grid (10 launcher cards) ──────────────────────────── */
+.catalog { max-width: 1320px; margin: 0 auto; padding: 24px 36px 80px; }
+.catalog-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-300); }
+.catalog-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--gray-300); border: 1px solid var(--gray-300); }
+.catalog-card { display: flex; flex-direction: column; padding: 26px 24px 24px; background: var(--paper); text-decoration: none; color: var(--slate); transition: background 200ms ease; min-height: 196px; position: relative; }
+.catalog-card:hover { background: var(--ivory); }
+.catalog-card:hover .card-num { color: var(--clay); }
+.catalog-card .card-num { font-family: var(--serif); font-weight: 400; font-size: 32px; color: var(--gray-500); line-height: 1; margin-bottom: 18px; letter-spacing: -0.01em; transition: color 150ms ease; }
+.catalog-card h3 { font-family: var(--serif); font-weight: 500; font-size: 19px; line-height: 1.25; margin-bottom: 4px; letter-spacing: -0.006em; }
+.catalog-card .card-en { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--gray-500); text-transform: uppercase; margin-bottom: 14px; }
+.catalog-card .card-tag { font-size: 12.5px; line-height: 1.5; color: var(--gray-700); margin-top: auto; }
+.catalog-card .card-meta { position: absolute; top: 26px; right: 22px; font-family: var(--mono); font-size: 9.5px; color: var(--gray-500); letter-spacing: 0.06em; }
+
+/* ── Diagram section (per type) ────────────────────────────────── */
+.diagram-section { max-width: 1320px; margin: 0 auto; padding: 80px 36px 40px; border-top: 1px solid var(--gray-300); }
+.section-header { display: flex; align-items: baseline; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+.section-header .num { font-family: var(--serif); font-weight: 400; font-size: 48px; color: var(--clay); line-height: 1; letter-spacing: -0.02em; }
+.section-header h2 { font-family: var(--serif); font-weight: 500; font-size: 36px; line-height: 1.15; letter-spacing: -0.014em; flex-grow: 1; }
+.section-header h2 .en { font-family: var(--mono); font-size: 15px; color: var(--gray-500); letter-spacing: 0.04em; margin-left: 14px; font-weight: 400; }
+.template-link { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--slate); text-decoration: none; padding: 10px 18px; border: 1px solid var(--clay); border-radius: 20px; transition: all 150ms ease; white-space: nowrap; }
+.template-link:hover { background: var(--clay); color: white; }
+.section-intro { font-size: 15.5px; line-height: 1.7; color: var(--gray-700); max-width: 920px; margin-bottom: 40px; }
+.section-intro b { color: var(--slate); font-weight: 600; }
+
+/* ── Gallery block (B 区 SVG) ──────────────────────────────────── */
+.gallery-block { margin-bottom: 56px; }
+.block-label { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; margin-bottom: 6px; }
+.block-sub { font-size: 13.5px; color: var(--gray-700); margin-bottom: 22px; }
+.gallery-frame { border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); padding: 24px; box-shadow: var(--shadow); }
+.gallery-svg { width: 100%; height: auto; display: block; }
+.gallery-svg text { font-family: var(--sans); fill: var(--slate); }
+.gallery-svg .t-title { font-family: var(--sans); font-weight: 600; font-size: 13px; fill: var(--slate); }
+.gallery-svg .t-sub { font-family: var(--sans); font-size: 11px; fill: var(--gray-700); }
+.gallery-svg .t-mono-mini { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.06em; }
+.gallery-svg .t-mono-mini.muted { fill: var(--gray-500); }
+.gallery-svg .t-connector { font-family: var(--mono); font-weight: 600; font-size: 12px; fill: var(--clay); }
+.gallery-svg .gallery-title { font-family: var(--serif); font-weight: 500; font-size: 17px; fill: var(--slate); letter-spacing: -0.005em; }
+.gallery-svg .gallery-desc { font-family: var(--sans); font-size: 12px; fill: var(--gray-700); line-height: 1.5; }
+.gallery-svg .gallery-card { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; }
+.gallery-svg .gallery-tag-bg { fill: var(--gray-150); stroke: var(--gray-300); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg .gallery-tag-text { font-family: var(--mono); font-size: 9px; fill: var(--gray-700); letter-spacing: 0.06em; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.8; rx: 7; ry: 7; }
+.gallery-svg .ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.8; stroke-dasharray: 2 2; rx: 7; ry: 7; }
+.gallery-svg .ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg .edge { stroke: var(--gray-500); stroke-width: 1.2; fill: none; }
+.gallery-svg .edge.yes { stroke: var(--olive); stroke-width: 1.4; }
+.gallery-svg .edge.no { stroke: var(--rust); stroke-width: 1.4; }
+.gallery-svg .edge.db { stroke: var(--clay); stroke-width: 1.4; stroke-dasharray: 5 3; }
+.gallery-svg .t-lbl { font-family: var(--mono); font-size: 9.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg .t-lbl-yes { fill: var(--olive); }
+.gallery-svg .t-lbl-no { fill: var(--rust); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.attr-name { font-family: var(--mono); font-size: 12px; fill: var(--slate); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.attr-name { font-family: var(--mono); font-size: 12px; fill: var(--slate); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.attr-name { font-family: var(--mono); font-size: 12px; fill: var(--slate); }
+/* ── Shared gallery chrome (all diagram sections) ── */
+.gallery-svg .gallery-card-node { cursor: pointer; }
+.gallery-svg .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.gallery-svg .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.gallery-svg text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .gallery-tag-ie-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.gallery-svg text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.gallery-svg text.state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+.gallery-svg text.state-body.do { fill: var(--olive); }
+.gallery-svg text.state-body.defer { fill: var(--plum); }
+.gallery-svg text.state-body.internal { fill: var(--teal); }
+.gallery-svg .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+.gallery-svg text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.gallery-svg text.edge-label.plum { fill: var(--plum); }
+.gallery-svg text.edge-label.trigger { fill: var(--slate); }
+.gallery-svg text.edge-label.guard { fill: var(--olive); font-style: italic; }
+.gallery-svg text.edge-label.action { fill: var(--clay); }
+.gallery-svg text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.gallery-svg text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.gallery-svg text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+.gallery-svg text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+
+/* ── How to draw block ─────────────────────────────────────────── */
+.howto-block { padding: 40px 44px 44px; background: var(--paper); border: 1px solid var(--gray-300); border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 36px; }
+.howto-steps { list-style: none; counter-reset: step; }
+.howto-steps li { counter-increment: step; padding: 18px 0 18px 60px; position: relative; font-size: 14.5px; color: var(--gray-700); line-height: 1.65; border-top: 1px dashed var(--gray-300); max-width: 920px; }
+.howto-steps li:first-child { border-top: none; padding-top: 6px; }
+.howto-steps li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 22px; font-family: var(--mono); font-weight: 500; font-size: 12px; color: var(--clay); letter-spacing: 0.06em; }
+.howto-steps li:first-child::before { top: 10px; }
+.howto-steps li b { font-weight: 600; color: var(--slate); }
+
+/* ── Section footer ────────────────────────────────────────────── */
+.section-footer { display: flex; gap: 16px; align-items: center; margin-top: 8px; padding-top: 24px; border-top: 1px solid var(--gray-300); }
+.template-link-large { font-family: var(--serif); font-weight: 500; font-size: 17px; color: var(--slate); text-decoration: none; padding: 14px 24px; background: var(--paper); border: 1.5px solid var(--clay); border-radius: 14px; transition: all 150ms ease; display: inline-flex; align-items: center; gap: 10px; }
+.template-link-large:hover { background: var(--clay); color: white; }
+.template-link-large .arrow { font-family: var(--mono); font-size: 14px; }
+.template-link-large .meta { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-left: 10px; letter-spacing: 0.04em; }
+.template-link-large:hover .meta { color: rgba(255,255,255,0.7); }
+
+/* ── Coming-soon placeholder section ───────────────────────────── */
+.placeholder-section { max-width: 1320px; margin: 0 auto; padding: 60px 36px; border-top: 1px solid var(--gray-300); display: flex; align-items: baseline; gap: 24px; }
+.placeholder-section .num { font-family: var(--serif); font-weight: 400; font-size: 32px; color: var(--gray-300); line-height: 1; }
+.placeholder-section h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--gray-500); }
+.placeholder-section .en { font-family: var(--mono); font-size: 12px; color: var(--gray-500); margin-left: 12px; letter-spacing: 0.04em; }
+.placeholder-section .link { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--gray-500); text-decoration: none; padding: 8px 14px; border: 1px dashed var(--gray-300); border-radius: 16px; }
+.placeholder-section .link:hover { border-color: var(--clay); color: var(--clay); }
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.site-footer { max-width: 1320px; margin: 80px auto 0; padding: 40px 36px 60px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 11px; color: var(--gray-500); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.site-footer a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+
+@media (max-width: 1100px) {
+  .catalog-grid { grid-template-columns: repeat(3, 1fr); }
+  h1.hero-title { font-size: 44px; }
+}
+@media (max-width: 720px) {
+  .catalog-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero { padding: 56px 22px 40px; }
+  .hero-meta { gap: 28px; flex-wrap: wrap; }
+  h1.hero-title { font-size: 34px; }
+  .section-header h2 { font-size: 26px; }
+  .section-header .num { font-size: 36px; }
+  .diagram-section, .catalog, .topbar-inner { padding-left: 22px; padding-right: 22px; }
+  .howto-block { padding: 28px 22px; }
+  .howto-steps li { padding-left: 44px; font-size: 13.5px; }
+}
+
+/* ── swimlane specific ── */
+/* ── swimlane (06-swimlane.html) ── */
+.gallery-svg .edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#slh-arrow); }
+.gallery-svg .edge.yes { stroke: var(--olive); marker-end: url(#slh-arrow-olive); }
+.gallery-svg .edge.no { stroke: var(--rust); stroke-dasharray: 5 4; marker-end: url(#slh-arrow-rust); }
+.gallery-svg .edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#slh-arrow-clay); }
+.gallery-svg .edge.async { stroke-dasharray: 6 3; }
+.gallery-svg .edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#slh-arrow-open); }
+.gallery-svg .edge.sync { stroke: var(--slate); marker-end: url(#slh-arrow-slate); }
+.gallery-svg .edge.msg { stroke: var(--plum); marker-end: url(#slh-arrow-plum); }
+.gallery-svg .edge.thick { stroke-width: 2.2; }
+.gallery-svg .edge.bidir { marker-start: url(#slh-arrow-rev); marker-end: url(#slh-arrow); }
+.gallery-svg .edge.no-arrow { marker-end: none; }
+.gallery-svg .edge.relation { stroke: var(--clay); stroke-width: 1.5; }
+.gallery-svg .edge.attr-link { stroke: var(--gray-500); stroke-width: 1.2; }
+.gallery-svg .edge.lane { stroke: var(--gray-300); stroke-width: 1; }
+.gallery-svg .annotation .bracket { fill: none; stroke: var(--gray-500); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.gallery-svg .annotation .leader { stroke: var(--gray-500); stroke-width: 1; stroke-dasharray: 2 3; }
+.gallery-svg .annotation .note { fill: color-mix(in oklab, var(--gold), transparent 92%); stroke: var(--gold); stroke-width: 1.2; }
+.gallery-svg .annotation .note-text { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+  .gallery-svg .pool { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.5; rx: 0; }
+  .gallery-svg .pool-header { fill: color-mix(in oklab, var(--slate), transparent 92%); stroke: var(--gray-700); stroke-width: 1.5; }
+  .gallery-svg .lane-divider { stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg .lane-header { fill: var(--gray-150); stroke: var(--gray-700); stroke-width: 1.2; }
+  .gallery-svg text.lane-label { font-family: var(--serif); font-size: 13px; fill: var(--slate); font-weight: 500; }
+  .gallery-svg text.pool-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; fill: var(--slate); font-weight: 600; text-transform: uppercase; }
+  .gallery-svg .event-start { fill: color-mix(in oklab, var(--olive), transparent 78%); stroke: var(--olive); stroke-width: 1.4; }
+  .gallery-svg .event-end-bpmn { fill: color-mix(in oklab, var(--rust), transparent 78%); stroke: var(--rust); stroke-width: 2.5; }
+  .gallery-svg .event-intermediate { fill: var(--paper); stroke: var(--gold); stroke-width: 1.4; }
+  .gallery-svg .event-icon { fill: var(--gray-700); stroke: none; }
+  .gallery-svg .task-rect { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.2; rx: 8; ry: 8; }
+  .gallery-svg .task-rect.user { fill: color-mix(in oklab, var(--plum), transparent 92%); stroke: var(--plum); }
+  .gallery-svg .task-rect.service { fill: color-mix(in oklab, var(--olive), transparent 92%); stroke: var(--olive); }
+  .gallery-svg .task-rect.send { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+  .gallery-svg .task-rect.manual { fill: color-mix(in oklab, var(--teal), transparent 90%); stroke: var(--teal); }
+  .gallery-svg .task-rect.script { fill: color-mix(in oklab, var(--clay), transparent 90%); stroke: var(--clay); }
+  .gallery-svg .task-rect.subprocess { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.6; }
+  .gallery-svg text.task-name { font-family: var(--serif); font-size: 12px; fill: var(--slate); }
+  .gallery-svg text.task-sub { font-family: var(--mono); font-size: 9.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .gallery-svg text.task-icon-mini { font-size: 12px; fill: var(--gray-700); }
+  .gallery-svg .gateway-shape { fill: var(--paper); stroke: var(--gold); stroke-width: 1.4; }
+  .gallery-svg text.gateway-mark { font-family: var(--serif); font-size: 18px; fill: var(--gold); font-weight: 600; }
+  .gallery-svg text.gateway-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+  .gallery-svg .seq-flow { stroke: var(--gray-700); stroke-width: 1.4; fill: none; marker-end: url(#slh-arrow); }
+  .gallery-svg .seq-flow.spine { stroke: var(--olive); stroke-width: 2.6; marker-end: url(#slh-arrow-olive-bold); }
+  .gallery-svg .msg-flow { stroke: var(--plum); stroke-width: 1.2; stroke-dasharray: 6 3; fill: none; marker-end: url(#slh-arrow-plum-msg); marker-start: url(#slh-circle-open); }
+  .gallery-svg .seq-flow.default-flow { stroke: var(--gray-700); stroke-width: 1.2; }
+  .gallery-svg .seq-flow.cond { stroke: var(--gray-700); stroke-width: 1.2; }
+  .gallery-svg text.flow-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+  .gallery-svg .flow-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+  .gallery-svg .data-obj { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.2; }
+  .gallery-svg .data-store-top { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.2; }
+  .gallery-svg .data-store-side { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.2; }
+  .gallery-svg text.gallery-svg-title { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.012em; }
+  .gallery-svg text.gallery-svg-sub { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .gallery-svg text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+  .gallery-svg text.section-sub { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .gallery-svg .section-divider { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+  .gallery-svg .ex-badge-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 1; rx: 3; ry: 3; }
+  .gallery-svg text.ex-badge-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); font-weight: 600; letter-spacing: 0.06em; }
+  .gallery-svg .gallery-card { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; }
+  .gallery-svg .gallery-card:hover { stroke: var(--clay); stroke-width: 1.8; }
+  .gallery-svg .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+  .gallery-svg text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+  .gallery-svg text.gallery-desc { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+  .gallery-svg .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+  .gallery-svg text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+  .gallery-svg .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+  .gallery-svg text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+  .gallery-svg .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+  .gallery-svg text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+  .gallery-svg .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+  .gallery-svg text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .gallery-svg .pool-header { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg .pool { stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg .lane-header { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg .lane-divider { stroke: var(--gray-300); stroke-width: 1; }
+  .gallery-svg text.pool-label { fill: var(--gray-500); font-weight: 500; }
+  .gallery-svg g.node:not(.gallery-card-node) .task-rect { fill: var(--paper) !important; stroke: var(--gray-300) !important; stroke-width: 1 !important; }
+  .gallery-svg g.node:not(.gallery-card-node) .task-rect.subprocess { stroke-width: 1.4 !important; }
+  .gallery-svg g.node:not(.gallery-card-node) .gateway-shape { stroke: var(--gray-700) !important; stroke-width: 1.2 !important; }
+  .gallery-svg g.node:not(.gallery-card-node) text.gateway-mark { fill: var(--gray-700) !important; }
+  .gallery-svg g.node:not(.gallery-card-node) .event-intermediate { fill: var(--paper) !important; stroke: var(--gray-700) !important; }
+  .gallery-svg text.flow-label { fill: var(--gray-500); font-weight: 500; }
+  .gallery-svg .flow-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; }
+  .gallery-svg .seq-flow { stroke: var(--gray-500); stroke-width: 1; }
+  .gallery-svg .seq-flow.spine { stroke: var(--olive); stroke-width: 1.8; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="crumb">
+      <a href="../index.html">Engineering Diagram Library</a>
+      <span class="sep">/</span>
+      <span style="color:var(--slate)">06H · 泳道图 · 水平</span>
+    </div>
+    <div class="toolbar">
+      <button class="pill-btn" id="copyHtml" title="复制本页 HTML 源码">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V3a1 1 0 011-1h7"/></svg>HTML
+      </button>
+      <button class="icon-btn" id="themeToggle" title="切换主题">
+        <svg id="themeIconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg>
+        <svg id="themeIconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="display:none"><path d="M13 9.5A6 6 0 116.5 3a5 5 0 006.5 6.5z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section id="swimlane" class="diagram-section">
+  <div class="section-header">
+    <span class="num">06H</span>
+    <h2>泳道图 · 水平<span class="en">Swimlane (Horizontal) · BPMN 简化</span></h2>
+    <a class="template-link" href="../06-swimlane.html">→ 看完整范本</a>
+  </div>
+  <p class="section-intro">跨部门 / 跨角色的协作流程,<b>横向是时间</b>,<b>纵向是角色</b>(pool 切分,内含多条 lane)。每个任务用 BPMN 风格的 task / gateway / event 表达,任务必须严格落在自己角色的 lane 里 — <b>谁的事在谁的泳道</b>。跨泳道的箭头表示协作交付(message flow,虚线);同泳道箭头表示顺序流(sequence flow,实线)。</p>
+
+  <!-- ─── 元素图鉴 ─── -->
+  <div class="gallery-block">
+    <p class="block-label">元素图鉴 · Element Gallery</p>
+    <p class="block-sub">10 张卡 · 主图实际使用挂 olive ✓ 角标</p>
+    <div class="gallery-frame">
+                                          <svg class="gallery-svg" id="swimlane-gallery" viewBox="0 0 1080 1188" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="slh-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
+                <marker id="slh-arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="slh-arrow-olive-bold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="slh-arrow-plum-msg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
+                <marker id="slh-arrow-plum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
+                <marker id="slh-arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+                <marker id="slh-arrow-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
+                <marker id="slh-arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C4994E"/></marker>
+                <marker id="slh-arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A8585"/></marker>
+                <marker id="slh-arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+                <marker id="slh-circle-open" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="6" markerHeight="6" orient="auto"><circle cx="5" cy="5" r="3" fill="#FFFFFF" stroke="#6B5B95" stroke-width="1.2"/></marker>
+<marker id="slh-arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#87867F" stroke-width="1.4"/></marker>
+<marker id="slh-arrow-rev" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#87867F"/></marker>
+        </defs>
+        <g transform="translate(0 -1460)">
+          <g class="node gallery-card-node" data-id="g-pool-lane" tabindex="0">
+                          <rect class="gallery-card" x="40" y="1480" width="500" height="200"/>
+                          <text class="gallery-title" x="60" y="1508">Pool · Lane · 池与泳道</text>
+                          <rect class="gallery-tag-uml-bg" x="458" y="1494" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="493" y="1505" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="458" y="1514" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="493" y="1524" text-anchor="middle">主图 ✓ × 6</text>
+                          <text class="gallery-desc" x="60" y="1538">Pool = 业务参与方（一个组织/系统）· Lane = pool 内部的角色细分（部门/服务）</text>
+                          <!-- Demo: pool with 2 lanes -->
+                          <rect x="60" y="1568" width="460" height="100" fill="none" stroke="#3D3D3A" stroke-width="1.5"/>
+                          <rect x="60" y="1568" width="32" height="100" fill="color-mix(in oklab, #141413, transparent 92%)" stroke="#3D3D3A" stroke-width="1.5"/>
+                          <text class="pool-label" x="76" y="1618" text-anchor="middle" transform="rotate(-90 76 1618)" font-size="10">POOL · 业务系统</text>
+                          <rect x="92" y="1568" width="80" height="50" fill="#F0EEE6" stroke="#87867F"/>
+                          <text class="lane-label" x="132" y="1590" text-anchor="middle" font-size="11">Lane 1</text>
+                          <text class="task-sub" x="132" y="1604" text-anchor="middle">User</text>
+                          <rect x="92" y="1618" width="80" height="50" fill="#F0EEE6" stroke="#87867F"/>
+                          <text class="lane-label" x="132" y="1640" text-anchor="middle" font-size="11">Lane 2</text>
+                          <text class="task-sub" x="132" y="1654" text-anchor="middle">Service</text>
+                          <text class="task-sub" x="200" y="1600">→ 同 pool 内</text>
+                          <text class="task-sub" x="200" y="1614">  用 sequence flow</text>
+                          <text class="task-sub" x="200" y="1628">→ 跨 pool</text>
+                          <text class="task-sub" x="200" y="1642">  必须用 message flow</text>
+                          <text class="attr-name" x="60" y="1672">主图 ✓ 6 lanes: 用户/订单服务/支付/仓库/配送/财务</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-start-events" tabindex="0">
+                          <rect class="gallery-card" x="560" y="1480" width="480" height="200"/>
+                          <text class="gallery-title" x="580" y="1508">Start event · 起始事件 (3 类)</text>
+                          <rect class="gallery-tag-uml-bg" x="956" y="1494" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="991" y="1505" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="956" y="1514" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="991" y="1524" text-anchor="middle">主图 ✓ none</text>
+                          <text class="gallery-desc" x="580" y="1538">单细圆 + 内部图标区分触发类型 — none / message / timer / signal / conditional</text>
+                          <!-- none start -->
+                          <circle cx="640" cy="1590" r="18" fill="color-mix(in oklab, #788C5D, transparent 78%)" stroke="#788C5D" stroke-width="1.4"/>
+                          <text class="task-sub" x="640" y="1622" text-anchor="middle" font-weight="600">none</text>
+                          <text class="task-sub" x="640" y="1636" text-anchor="middle">默认手动启动</text>
+                          <!-- message start -->
+                          <circle cx="740" cy="1590" r="18" fill="color-mix(in oklab, #788C5D, transparent 78%)" stroke="#788C5D" stroke-width="1.4"/>
+                          <rect x="731" y="1585" width="18" height="10" fill="none" stroke="#3D3D3A" stroke-width="1"/>
+                          <path d="M731,1585 L740,1592 L749,1585" fill="none" stroke="#3D3D3A" stroke-width="1"/>
+                          <text class="task-sub" x="740" y="1622" text-anchor="middle" font-weight="600">message</text>
+                          <text class="task-sub" x="740" y="1636" text-anchor="middle">收到消息触发</text>
+                          <!-- timer start -->
+                          <circle cx="840" cy="1590" r="18" fill="color-mix(in oklab, #788C5D, transparent 78%)" stroke="#788C5D" stroke-width="1.4"/>
+                          <circle cx="840" cy="1590" r="11" fill="none" stroke="#3D3D3A" stroke-width="1"/>
+                          <line x1="840" y1="1583" x2="840" y2="1590" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <line x1="840" y1="1590" x2="846" y2="1592" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <text class="task-sub" x="840" y="1622" text-anchor="middle" font-weight="600">timer</text>
+                          <text class="task-sub" x="840" y="1636" text-anchor="middle">定时启动</text>
+                          <!-- signal -->
+                          <circle cx="940" cy="1590" r="18" fill="color-mix(in oklab, #788C5D, transparent 78%)" stroke="#788C5D" stroke-width="1.4"/>
+                          <path d="M940,1582 L948,1596 L932,1596 Z" fill="none" stroke="#3D3D3A" stroke-width="1"/>
+                          <text class="task-sub" x="940" y="1622" text-anchor="middle" font-weight="600">signal</text>
+                          <text class="task-sub" x="940" y="1636" text-anchor="middle">广播信号</text>
+                          <text class="attr-name" x="580" y="1670">边线<tspan text-decoration="underline">细</tspan> = start（与 end 的<tspan text-decoration="underline">粗双线</tspan>区别） · 主图用 none start</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-end-events" tabindex="0">
+                          <rect class="gallery-card" x="40" y="1712" width="500" height="200"/>
+                          <text class="gallery-title" x="60" y="1740">End event · 终止事件 (3 类)</text>
+                          <rect class="gallery-tag-uml-bg" x="458" y="1726" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="493" y="1737" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="458" y="1746" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="493" y="1756" text-anchor="middle">主图 ✓ × 2</text>
+                          <text class="gallery-desc" x="60" y="1770">粗双线圆 + 内部图标 — none / message / terminate / error / signal</text>
+                          <!-- none end -->
+                          <circle cx="120" cy="1822" r="18" fill="color-mix(in oklab, #B04A3F, transparent 78%)" stroke="#B04A3F" stroke-width="2.5"/>
+                          <text class="task-sub" x="120" y="1854" text-anchor="middle" font-weight="600">none</text>
+                          <text class="task-sub" x="120" y="1868" text-anchor="middle">流程正常结束</text>
+                          <!-- message end -->
+                          <circle cx="220" cy="1822" r="18" fill="color-mix(in oklab, #B04A3F, transparent 78%)" stroke="#B04A3F" stroke-width="2.5"/>
+                          <rect x="211" y="1817" width="18" height="10" fill="#3D3D3A" stroke="#3D3D3A"/>
+                          <path d="M211,1817 L220,1824 L229,1817" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                          <text class="task-sub" x="220" y="1854" text-anchor="middle" font-weight="600">message</text>
+                          <text class="task-sub" x="220" y="1868" text-anchor="middle">结束 + 发消息</text>
+                          <!-- terminate -->
+                          <circle cx="320" cy="1822" r="18" fill="color-mix(in oklab, #B04A3F, transparent 78%)" stroke="#B04A3F" stroke-width="2.5"/>
+                          <circle cx="320" cy="1822" r="8" fill="#3D3D3A"/>
+                          <text class="task-sub" x="320" y="1854" text-anchor="middle" font-weight="600">terminate</text>
+                          <text class="task-sub" x="320" y="1868" text-anchor="middle">立刻终结所有支路</text>
+                          <!-- error -->
+                          <circle cx="420" cy="1822" r="18" fill="color-mix(in oklab, #B04A3F, transparent 78%)" stroke="#B04A3F" stroke-width="2.5"/>
+                          <path d="M412,1817 L420,1828 L416,1820 L424,1830" fill="none" stroke="#3D3D3A" stroke-width="1.4"/>
+                          <text class="task-sub" x="420" y="1854" text-anchor="middle" font-weight="600">error</text>
+                          <text class="task-sub" x="420" y="1868" text-anchor="middle">抛错 (可被父进程接)</text>
+                          <text class="attr-name" x="60" y="1898">主图: end (正常完成) + end-fail × 缺货分支</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-tasks" tabindex="0">
+                          <rect class="gallery-card" x="560" y="1712" width="480" height="200"/>
+                          <text class="gallery-title" x="580" y="1740">Task 类型 5 种 · 圆角矩形 + 左上角图标</text>
+                          <rect class="gallery-tag-uml-bg" x="956" y="1726" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="991" y="1737" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="956" y="1746" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="991" y="1756" text-anchor="middle">主图 ✓ 5 类俱全</text>
+                          <text class="gallery-desc" x="580" y="1770">所有 task 都是<tspan font-weight="600">圆角矩形</tspan>，靠左上角 8×8px 小图标区分语义</text>
+                          <!-- 5 task type minis arranged in grid -->
+                          <g transform="translate(20 0)">
+                            <rect x="580" y="1790" width="74" height="32" rx="6" fill="color-mix(in oklab, #6B5B95, transparent 92%)" stroke="#6B5B95" stroke-width="1.2"/>
+                            <text class="task-icon-mini" x="586" y="1803">👤</text>
+                            <text class="task-name" x="617" y="1810" text-anchor="middle" font-size="11">User</text>
+                            <text class="task-sub" x="617" y="1838" text-anchor="middle">人工执行</text>
+                  
+                            <rect x="666" y="1790" width="74" height="32" rx="6" fill="color-mix(in oklab, #788C5D, transparent 92%)" stroke="#788C5D" stroke-width="1.2"/>
+                            <text class="task-icon-mini" x="672" y="1803">⚙</text>
+                            <text class="task-name" x="703" y="1810" text-anchor="middle" font-size="11">Service</text>
+                            <text class="task-sub" x="703" y="1838" text-anchor="middle">系统调用</text>
+
+                            <rect x="752" y="1790" width="74" height="32" rx="6" fill="color-mix(in oklab, #C4994E, transparent 88%)" stroke="#C4994E" stroke-width="1.2"/>
+                            <text class="task-icon-mini" x="758" y="1803">✉</text>
+                            <text class="task-name" x="789" y="1810" text-anchor="middle" font-size="11">Send</text>
+                            <text class="task-sub" x="789" y="1838" text-anchor="middle">外发消息</text>
+
+                            <rect x="838" y="1790" width="74" height="32" rx="6" fill="color-mix(in oklab, #4A8585, transparent 90%)" stroke="#4A8585" stroke-width="1.2"/>
+                            <text class="task-icon-mini" x="844" y="1803">✋</text>
+                            <text class="task-name" x="875" y="1810" text-anchor="middle" font-size="11">Manual</text>
+                            <text class="task-sub" x="875" y="1838" text-anchor="middle">线下操作</text>
+
+                            <rect x="580" y="1855" width="74" height="32" rx="6" fill="color-mix(in oklab, #D97757, transparent 90%)" stroke="#D97757" stroke-width="1.2"/>
+                            <text class="task-icon-mini" x="586" y="1868">⌗</text>
+                            <text class="task-name" x="617" y="1875" text-anchor="middle" font-size="11">Script</text>
+                            <text class="task-sub" x="617" y="1903" text-anchor="middle">引擎内脚本</text>
+
+                            <rect x="666" y="1855" width="74" height="32" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.2" stroke-dasharray="3 2"/>
+                            <text class="task-icon-mini" x="672" y="1868">📥</text>
+                            <text class="task-name" x="703" y="1875" text-anchor="middle" font-size="11">Receive</text>
+                            <text class="task-sub" x="703" y="1903" text-anchor="middle">外收消息</text>
+
+                            <rect x="752" y="1855" width="74" height="32" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.2" stroke-dasharray="3 2"/>
+                            <text class="task-icon-mini" x="758" y="1868">⚙</text>
+                            <text class="task-name" x="789" y="1875" text-anchor="middle" font-size="11">Business</text>
+                            <text class="task-sub" x="789" y="1903" text-anchor="middle">Rule (DMN)</text>
+                          </g>
+                        <g class="node gallery-card-node" data-id="g-gateways" tabindex="0">
+                          <rect class="gallery-card" x="40" y="1944" width="500" height="200"/>
+                          <text class="gallery-title" x="60" y="1972">Gateway · 4 类菱形门</text>
+                          <rect class="gallery-tag-uml-bg" x="458" y="1958" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="493" y="1969" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="458" y="1978" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="493" y="1988" text-anchor="middle">主图 ✓ × 3</text>
+                          <text class="gallery-desc" x="60" y="2002">小菱形 + 内部 × / + / ○+◇ / ○+✦ 区分分支语义</text>
+                          <!-- XOR -->
+                          <path d="M100,2070 L122,2048 L144,2070 L122,2092 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <text class="gateway-mark" x="122" y="2078" text-anchor="middle">×</text>
+                          <text class="attr-name" x="122" y="2110" text-anchor="middle" font-weight="600">XOR</text>
+                          <text class="attr-name" x="122" y="2124" text-anchor="middle">if/else</text>
+                          <!-- AND -->
+                          <path d="M220,2070 L242,2048 L264,2070 L242,2092 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <text class="gateway-mark" x="242" y="2078" text-anchor="middle">+</text>
+                          <text class="attr-name" x="242" y="2110" text-anchor="middle" font-weight="600">AND</text>
+                          <text class="attr-name" x="242" y="2124" text-anchor="middle">parallel</text>
+                          <!-- OR -->
+                          <path d="M340,2070 L362,2048 L384,2070 L362,2092 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <circle cx="362" cy="2070" r="7" fill="none" stroke="#C4994E" stroke-width="1.4"/>
+                          <text class="attr-name" x="362" y="2110" text-anchor="middle" font-weight="600">OR</text>
+                          <text class="attr-name" x="362" y="2124" text-anchor="middle">inclusive</text>
+                          <!-- Event-based -->
+                          <path d="M460,2070 L482,2048 L504,2070 L482,2092 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <circle cx="482" cy="2070" r="8" fill="none" stroke="#C4994E" stroke-width="1.4"/>
+                          <polygon points="477,2065 487,2065 489,2073 484,2078 475,2073" fill="none" stroke="#C4994E" stroke-width="1"/>
+                          <text class="attr-name" x="482" y="2110" text-anchor="middle" font-weight="600">Event</text>
+                          <text class="attr-name" x="482" y="2124" text-anchor="middle">based</text>
+                          <text class="attr-name" x="60" y="2156">XOR · AND 主图都用了 · OR / Event-based 仅图鉴</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-flows" tabindex="0">
+                          <rect class="gallery-card" x="560" y="1944" width="480" height="200"/>
+                          <text class="gallery-title" x="580" y="1972">Sequence vs Message Flow · 两种连接线</text>
+                          <rect class="gallery-tag-uml-bg" x="956" y="1958" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="991" y="1969" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="956" y="1978" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="991" y="1988" text-anchor="middle">主图 ✓ 全用</text>
+                          <text class="gallery-desc" x="580" y="2002">同 pool 内 = sequence flow（实线）· 跨 pool = message flow（虚线带圆头）</text>
+                          <!-- sequence flow demo -->
+                          <text class="attr-name" x="600" y="2042" font-weight="600">sequence flow (实线 · 同 pool)</text>
+                          <rect x="600" y="2056" width="60" height="28" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.2"/>
+                          <text class="task-name" x="630" y="2074" text-anchor="middle" font-size="11">A</text>
+                          <line x1="660" y1="2070" x2="730" y2="2070" stroke="#3D3D3A" stroke-width="1.4" marker-end="url(#slh-arrow)"/>
+                          <rect x="730" y="2056" width="60" height="28" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.2"/>
+                          <text class="task-name" x="760" y="2074" text-anchor="middle" font-size="11">B</text>
+                          <text class="task-sub" x="600" y="2098">主图 ✓ 大多数</text>
+                          <!-- message flow demo -->
+                          <text class="attr-name" x="600" y="2120" font-weight="600">message flow (虚线 + 圆头 · 跨 pool)</text>
+                          <rect x="600" y="2134" width="60" height="28" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.2"/>
+                          <text class="task-name" x="630" y="2152" text-anchor="middle" font-size="11">A</text>
+                          <line x1="660" y1="2148" x2="730" y2="2148" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="6 3" marker-start="url(#slh-circle-open)" marker-end="url(#slh-arrow-plum-msg)"/>
+                          <rect x="730" y="2134" width="60" height="28" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.2"/>
+                          <text class="task-name" x="760" y="2152" text-anchor="middle" font-size="11">B</text>
+                          <text class="task-sub" x="600" y="2174">主图 ✓ 银行回执</text>
+                          <!-- default flow -->
+                          <text class="attr-name" x="850" y="2042" font-weight="600">default flow</text>
+                          <line x1="850" y1="2056" x2="990" y2="2056" stroke="#3D3D3A" stroke-width="1.4" marker-end="url(#slh-arrow)"/>
+                          <line x1="858" y1="2050" x2="867" y2="2062" stroke="#3D3D3A" stroke-width="1"/>
+                          <text class="task-sub" x="850" y="2074">短斜线 = else 默认</text>
+                          <text class="attr-name" x="850" y="2106" font-weight="600">conditional flow</text>
+                          <line x1="850" y1="2120" x2="990" y2="2120" stroke="#3D3D3A" stroke-width="1.4" marker-end="url(#slh-arrow)"/>
+                          <path d="M850,2114 L856,2120 L850,2126 L844,2120 Z" fill="#FFFFFF" stroke="#3D3D3A"/>
+                          <text class="task-sub" x="850" y="2138">起点小菱形 = 条件</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-data" tabindex="0">
+                          <rect class="gallery-card" x="40" y="2176" width="500" height="200"/>
+                          <text class="gallery-title" x="60" y="2204">Data Object · Data Store · 数据流</text>
+                          <rect class="gallery-tag-uml-bg" x="458" y="2190" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="493" y="2201" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="458" y="2210" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="493" y="2220" text-anchor="middle">主图 ✓ × 2</text>
+                          <text class="gallery-desc" x="60" y="2234">document = data object (临时单据) · cylinder = data store (持久库)</text>
+                          <!-- data object -->
+                          <path d="M120,2266 L160,2266 L172,2278 L172,2336 L120,2336 Z M160,2266 L160,2278 L172,2278" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <text class="task-sub" x="146" y="2306" text-anchor="middle">Order</text>
+                          <text class="task-sub" x="146" y="2320" text-anchor="middle">.doc</text>
+                          <text class="task-name" x="146" y="2358" text-anchor="middle" font-size="12">Data Object</text>
+                          <text class="task-sub" x="146" y="2370" text-anchor="middle">临时单据 / 跨步骤传递</text>
+                          <!-- data store -->
+                          <ellipse cx="280" cy="2272" rx="32" ry="8" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <path d="M248,2272 L248,2330 Q248,2338 280,2338 Q312,2338 312,2330 L312,2272" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <ellipse cx="280" cy="2272" rx="32" ry="8" fill="none" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <text class="task-sub" x="280" y="2310" text-anchor="middle">orders</text>
+                          <text class="task-name" x="280" y="2358" text-anchor="middle" font-size="12">Data Store</text>
+                          <text class="task-sub" x="280" y="2370" text-anchor="middle">持久数据库 / 文件库</text>
+                          <!-- association line -->
+                          <text class="attr-name" x="370" y="2280" font-weight="600">关联线 (虚线)</text>
+                          <line x1="370" y1="2296" x2="490" y2="2296" stroke="#3D3D3A" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#slh-arrow)"/>
+                          <text class="task-sub" x="370" y="2316">数据流 → 不是 sequence flow</text>
+                          <text class="task-sub" x="370" y="2330">读: store → task</text>
+                          <text class="task-sub" x="370" y="2344">写: task → store</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-intermediate" tabindex="0">
+                          <rect class="gallery-card" x="560" y="2176" width="480" height="200"/>
+                          <text class="gallery-title" x="580" y="2204">Intermediate Event · 中间事件</text>
+                          <rect class="gallery-tag-uml-bg" x="956" y="2190" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="991" y="2201" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="956" y="2210" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="991" y="2220" text-anchor="middle">主图 ✓ timer</text>
+                          <text class="gallery-desc" x="580" y="2234">双细圆 + 内部图标 — 流程中途的暂停/触发点。最常用：timer · message · signal · error</text>
+                          <!-- timer intermediate -->
+                          <circle cx="620" cy="2278" r="16" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <circle cx="620" cy="2278" r="12" fill="none" stroke="#C4994E" stroke-width="1.4"/>
+                          <circle cx="620" cy="2278" r="6" fill="none" stroke="#3D3D3A"/>
+                          <line x1="620" y1="2272" x2="620" y2="2278" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <line x1="620" y1="2278" x2="624" y2="2280" stroke="#3D3D3A" stroke-width="1.2"/>
+                          <text class="task-sub" x="620" y="2304" text-anchor="middle" font-weight="600">timer</text>
+                          <text class="task-sub" x="620" y="2318" text-anchor="middle">定时 / 超时</text>
+                          <!-- message intermediate -->
+                          <circle cx="720" cy="2278" r="16" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <circle cx="720" cy="2278" r="12" fill="none" stroke="#C4994E" stroke-width="1.4"/>
+                          <rect x="713" y="2274" width="14" height="8" fill="none" stroke="#3D3D3A" stroke-width="1"/>
+                          <path d="M713,2274 L720,2279 L727,2274" fill="none" stroke="#3D3D3A"/>
+                          <text class="task-sub" x="720" y="2304" text-anchor="middle" font-weight="600">message</text>
+                          <text class="task-sub" x="720" y="2318" text-anchor="middle">等接消息</text>
+                          <!-- signal -->
+                          <circle cx="820" cy="2278" r="16" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <circle cx="820" cy="2278" r="12" fill="none" stroke="#C4994E" stroke-width="1.4"/>
+                          <path d="M820,2272 L827,2284 L813,2284 Z" fill="none" stroke="#3D3D3A"/>
+                          <text class="task-sub" x="820" y="2304" text-anchor="middle" font-weight="600">signal</text>
+                          <text class="task-sub" x="820" y="2318" text-anchor="middle">广播</text>
+                          <!-- error / boundary -->
+                          <circle cx="920" cy="2278" r="16" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
+                          <circle cx="920" cy="2278" r="12" fill="none" stroke="#C4994E" stroke-width="1.4"/>
+                          <path d="M912,2272 L920,2284 L915,2275 L924,2286" fill="none" stroke="#3D3D3A" stroke-width="1.4"/>
+                          <text class="task-sub" x="920" y="2304" text-anchor="middle" font-weight="600">error</text>
+                          <text class="task-sub" x="920" y="2318" text-anchor="middle">异常边界</text>
+                          <text class="attr-name" x="580" y="2358">边线<tspan text-decoration="underline">双圈细</tspan> = intermediate (与 start 的<tspan text-decoration="underline">单细</tspan>和 end 的<tspan text-decoration="underline">粗</tspan>区别)</text>
+                          <text class="attr-name" x="580" y="2372">主图: 10s timer 在支付分支后 — 等支付回调或超时</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-subprocess" tabindex="0">
+                          <rect class="gallery-card" x="40" y="2408" width="500" height="200"/>
+                          <text class="gallery-title" x="60" y="2436">Subprocess · 子流程 (折叠 vs 展开)</text>
+                          <rect class="gallery-tag-uml-bg" x="458" y="2422" width="70" height="16"/>
+                          <text class="gallery-tag-uml-text" x="493" y="2433" text-anchor="middle">BPMN 2.0</text>
+                          <rect class="ribbon-shown-bg" x="458" y="2442" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="493" y="2452" text-anchor="middle">主图 ✓ 发货配送</text>
+                          <text class="gallery-desc" x="60" y="2466">含子流程的 task 用<tspan font-weight="600">底部 [+] 标记</tspan>表示可折叠展开 — 大流程不必摊开所有细节</text>
+                          <!-- collapsed -->
+                          <text class="attr-name" x="60" y="2496" font-weight="600">折叠 (collapsed)</text>
+                          <rect x="60" y="2510" width="120" height="60" rx="8" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.6"/>
+                          <text class="task-name" x="120" y="2536" text-anchor="middle" font-size="13">发货配送</text>
+                          <text class="task-sub" x="120" y="2548" text-anchor="middle">Subprocess</text>
+                          <rect x="112" y="2556" width="16" height="10" fill="none" stroke="#3D3D3A" stroke-width="1"/>
+                          <line x1="120" y1="2558" x2="120" y2="2564" stroke="#3D3D3A" stroke-width="1"/>
+                          <line x1="115" y1="2561" x2="125" y2="2561" stroke="#3D3D3A" stroke-width="1"/>
+                          <!-- expanded -->
+                          <text class="attr-name" x="220" y="2496" font-weight="600">展开 (expanded)</text>
+                          <rect x="220" y="2510" width="300" height="60" rx="8" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.6"/>
+                          <text class="task-sub" x="232" y="2526">发货配送</text>
+                          <!-- inner mini flow -->
+                          <circle cx="252" cy="2548" r="7" fill="color-mix(in oklab, #788C5D, transparent 78%)" stroke="#788C5D" stroke-width="1.2"/>
+                          <line x1="259" y1="2548" x2="280" y2="2548" stroke="#3D3D3A" stroke-width="1.2" marker-end="url(#slh-arrow)"/>
+                          <rect x="280" y="2540" width="48" height="16" rx="4" fill="color-mix(in oklab, #4A8585, transparent 90%)" stroke="#4A8585"/>
+                          <text class="task-sub" x="304" y="2551" text-anchor="middle" font-size="9">分单</text>
+                          <line x1="328" y1="2548" x2="350" y2="2548" stroke="#3D3D3A" stroke-width="1.2" marker-end="url(#slh-arrow)"/>
+                          <rect x="350" y="2540" width="60" height="16" rx="4" fill="color-mix(in oklab, #4A8585, transparent 90%)" stroke="#4A8585"/>
+                          <text class="task-sub" x="380" y="2551" text-anchor="middle" font-size="9">派送</text>
+                          <line x1="410" y1="2548" x2="432" y2="2548" stroke="#3D3D3A" stroke-width="1.2" marker-end="url(#slh-arrow)"/>
+                          <circle cx="448" cy="2548" r="7" fill="color-mix(in oklab, #B04A3F, transparent 78%)" stroke="#B04A3F" stroke-width="2"/>
+                          <text class="attr-name" x="60" y="2600">主图: 发货配送 是 collapsed subprocess（底部 [+] 标）</text>
+                        </g>
+
+                        <g class="node gallery-card-node" data-id="g-annotation-ex" tabindex="0">
+                          <rect class="gallery-card" x="560" y="2408" width="480" height="200"/>
+                          <text class="gallery-title" x="580" y="2436">Annotation · Group · [ex] 业务扩展</text>
+                          <rect class="gallery-tag-uml-bg" x="916" y="2422" width="50" height="16"/>
+                          <text class="gallery-tag-uml-text" x="941" y="2433" text-anchor="middle">BPMN</text>
+                          <rect class="gallery-tag-ex-bg" x="972" y="2422" width="58" height="16"/>
+                          <text class="gallery-tag-ex-text" x="1001" y="2433" text-anchor="middle">+ EX</text>
+                          <rect class="ribbon-shown-bg" x="956" y="2442" width="70" height="14"/>
+                          <text class="ribbon-shown-text" x="991" y="2452" text-anchor="middle">主图 ✓ × 3</text>
+                          <text class="gallery-desc" x="580" y="2466">三个非流程元素：annotation 注释 · group 框选 · [ex] 自定义扩展角标</text>
+                          <!-- annotation -->
+                          <text class="attr-name" x="580" y="2492" font-weight="600">annotation · 折角矩形</text>
+                          <rect x="580" y="2500" width="160" height="34" fill="color-mix(in oklab, #C4994E, transparent 92%)" stroke="#C4994E" stroke-width="1.2"/>
+                          <path d="M736,2500 L740,2504 L736,2504 Z" fill="#C4994E" stroke="#C4994E"/>
+                          <text class="task-sub" x="588" y="2515">SLA &lt; 2h · 自动告警</text>
+                          <text class="task-sub" x="588" y="2528">用 association 虚线连</text>
+                          <!-- group -->
+                          <text class="attr-name" x="760" y="2492" font-weight="600">group · 圆角虚框</text>
+                          <rect x="760" y="2500" width="160" height="34" fill="none" stroke="#87867F" stroke-width="1.5" stroke-dasharray="8 4" rx="8"/>
+                          <text class="task-sub" x="770" y="2515">分类边界 · 不影响</text>
+                          <text class="task-sub" x="770" y="2528">流程，纯视觉</text>
+                          <!-- [ex] -->
+                          <text class="attr-name" x="580" y="2570" font-weight="600">[ex] 自定义扩展角标</text>
+                          <rect x="580" y="2578" width="180" height="20" fill="#FAF9F5" stroke="#D1CFC5"/>
+                          <text class="task-sub" x="588" y="2593" font-family="ui-monospace">10s timer</text>
+                          <rect class="ex-badge-bg" x="734" y="2580" width="22" height="14"/>
+                          <text class="ex-badge-text" x="745" y="2591" text-anchor="middle">ex</text>
+                          <text class="task-sub" x="580" y="2604">挂角标标注 SLA · 优先级 · 异步分支等业务字段</text>
+                        </g>
+
+              
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ─── How to draw ─── -->
+  <div class="howto-block">
+    <p class="block-label">怎么画 · How to draw</p>
+    <p class="block-sub">泳道图 · 水平的骨架</p>
+    <ol class="howto-steps">
+      <li><b>定义 Pool</b>：每个参与方（一个公司/系统）画一个 pool。同 pool 内的部门用 lane 细分；不同公司必须是不同 pool。</li>
+      <li><b>抽出 Lane</b>：每个职能/部门 = 一条 lane。常见错：把"用户"放在 pool 边缘（应为独立 pool 才对，但简化主图常合并）。</li>
+      <li><b>找 start / end</b>：每个 pool 至少一个 start（单细圆）+ 一个 end（粗双线圆）。多 end 表多种结果。</li>
+      <li><b>任务用 task 类型</b>：User · Service · Send · Manual · Script 各有图标 — 不要全画 Service 当万能盒子。</li>
+      <li><b>分支用 gateway</b>：XOR ×（if/else，只走一条）· AND +（同时全走）· OR ○+◇（满足条件的都走）。</li>
+      <li><b>连线选对</b>：同 pool 内 = sequence flow（实线）· 跨 pool = message flow（虚线 + 圆头）。<u>不要混用</u>。</li>
+      <li><b>数据用 data object / store</b>：临时单据 = document 形状 · 持久库 = cylinder。用<u>关联虚线</u>连，不是 sequence flow。</li>
+      <li><b>非标记 [ex]</b>：SLA / 超时阈值 / 异步并行标记是业务扩展，挂金色 [ex] 角标 — 与标准 BPMN 区分开。</li>
+    </ol>
+  </div>
+
+  <div class="section-footer">
+    <a class="template-link-large" href="../06-swimlane.html">
+      <span class="arrow">→</span>
+      <span>看完整范本</span>
+      <span class="meta">电商订单跨部门协作 · 4 lane(用户 / 客服 / 运营 / 财务)· 15 task · 3 gateway</span>
+    </a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span>Engineering Diagram Library · 06H · 泳道图 · 水平</span>
+  <span><a href="../index.html">← 返回总览</a> · <a href="../06-swimlane.html">→ 看完整范本</a></span>
+</footer>
+
+<script>
+// ── Theme toggle ─────────────────────────────────────────────
+const themeToggle = document.getElementById('themeToggle');
+const themeIconSun = document.getElementById('themeIconSun');
+const themeIconMoon = document.getElementById('themeIconMoon');
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeIconSun.style.display  = theme === 'dark' ? 'none' : '';
+  themeIconMoon.style.display = theme === 'dark' ? '' : 'none';
+  try { localStorage.setItem('edl-theme', theme); } catch(e) {}
+}
+applyTheme((function(){
+  try { return localStorage.getItem('edl-theme') || 'light'; } catch(e) { return 'light'; }
+})());
+themeToggle.addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+});
+
+// ── Copy HTML ────────────────────────────────────────────────
+const copyHtml = document.getElementById('copyHtml');
+copyHtml.addEventListener('click', async () => {
+  const original = copyHtml.innerHTML;
+  try {
+    await navigator.clipboard.writeText('<!doctype html>\n' + document.documentElement.outerHTML);
+    copyHtml.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg>已复制';
+    copyHtml.style.color = 'var(--olive)';
+    copyHtml.style.borderColor = 'var(--olive)';
+    setTimeout(() => {
+      copyHtml.innerHTML = original;
+      copyHtml.style.color = '';
+      copyHtml.style.borderColor = '';
+    }, 1800);
+  } catch (e) {
+    copyHtml.textContent = '复制失败';
+    setTimeout(() => { copyHtml.innerHTML = original; }, 1800);
+  }
+});
+</script>
+</body>
+</html>

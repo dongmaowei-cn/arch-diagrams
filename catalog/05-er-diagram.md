@@ -18,7 +18,7 @@
 
 ## 画法参考
 
-- **元素图鉴 + 怎么画**：[`templates/index.html#er`](../templates/index.html#er)
+- **元素图鉴 + 怎么画**：[`templates/gallery/05-er-diagram.html`](../templates/gallery/05-er-diagram.html)
 - 模板内保留 aside.legend-group 作快速查阅；完整教学在 index 对应 section。
 
 ## 实体表格结构

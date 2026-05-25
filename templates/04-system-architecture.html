@@ -1,0 +1,2286 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>系统架构图 · 电商交易中台 6 层分层 — Engineering Diagram Library</title>
+<style>
+/* ─── Shared design tokens + chrome for Engineering Diagram Library
+       v1 · paired with diagram-shared.js
+       Each diagram page only needs to layer its own SVG content. ─── */
+:root {
+  --ivory:   #FAF9F5;
+  --paper:   #FFFFFF;
+  --slate:   #141413;
+  --clay:    #D97757;
+  --oat:     #E3DACC;
+  --olive:   #788C5D;
+  --rust:    #B04A3F;
+  --plum:    #6B5B95;
+  --teal:    #4A8585;
+  --gold:    #C4994E;
+  --gray-150:#F0EEE6;
+  --gray-300:#D1CFC5;
+  --gray-500:#87867F;
+  --gray-700:#3D3D3A;
+  --shadow: 0 1px 2px rgba(20,20,19,0.04), 0 8px 24px rgba(20,20,19,0.06);
+
+  --serif: ui-serif, Georgia, "Times New Roman", serif;
+  --sans:  system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  --ivory:   #1A1917;
+  --paper:   #211F1C;
+  --slate:   #F5F3EC;
+  --clay:    #E08E6F;
+  --oat:     #3A342B;
+  --olive:   #93A872;
+  --rust:    #C46559;
+  --plum:    #8E81B5;
+  --teal:    #5DA0A0;
+  --gold:    #D4AB66;
+  --gray-150:#26241F;
+  --gray-300:#3D3A33;
+  --gray-500:#87867F;
+  --gray-700:#B8B6AA;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Dark-mode override: map inline SVG hex (fill/stroke presentation attrs)
+       to dark equivalents via attribute selectors. Lower specificity than
+       any class-based rule, higher than presentation attrs. ── */
+:root[data-theme="dark"] svg [fill="#FFFFFF"], :root[data-theme="dark"] svg [fill="#ffffff"], :root[data-theme="dark"] svg [fill="#fff"] { fill: #211F1C; }
+:root[data-theme="dark"] svg [stroke="#FFFFFF"], :root[data-theme="dark"] svg [stroke="#ffffff"], :root[data-theme="dark"] svg [stroke="#fff"] { stroke: #211F1C; }
+:root[data-theme="dark"] svg [fill="#FAF9F5"] { fill: #1A1917; }
+:root[data-theme="dark"] svg [stroke="#FAF9F5"] { stroke: #1A1917; }
+:root[data-theme="dark"] svg [fill="#141413"] { fill: #F5F3EC; }
+:root[data-theme="dark"] svg [stroke="#141413"] { stroke: #F5F3EC; }
+:root[data-theme="dark"] svg [fill="#D97757"] { fill: #E08E6F; }
+:root[data-theme="dark"] svg [stroke="#D97757"] { stroke: #E08E6F; }
+:root[data-theme="dark"] svg [fill="#788C5D"] { fill: #93A872; }
+:root[data-theme="dark"] svg [stroke="#788C5D"] { stroke: #93A872; }
+:root[data-theme="dark"] svg [fill="#B04A3F"] { fill: #C46559; }
+:root[data-theme="dark"] svg [stroke="#B04A3F"] { stroke: #C46559; }
+:root[data-theme="dark"] svg [fill="#6B5B95"] { fill: #8E81B5; }
+:root[data-theme="dark"] svg [stroke="#6B5B95"] { stroke: #8E81B5; }
+:root[data-theme="dark"] svg [fill="#4A8585"] { fill: #5DA0A0; }
+:root[data-theme="dark"] svg [stroke="#4A8585"] { stroke: #5DA0A0; }
+:root[data-theme="dark"] svg [fill="#C4994E"] { fill: #D4AB66; }
+:root[data-theme="dark"] svg [stroke="#C4994E"] { stroke: #D4AB66; }
+:root[data-theme="dark"] svg [fill="#F0EEE6"] { fill: #26241F; }
+:root[data-theme="dark"] svg [stroke="#F0EEE6"] { stroke: #26241F; }
+:root[data-theme="dark"] svg [fill="#D1CFC5"] { fill: #3D3A33; }
+:root[data-theme="dark"] svg [stroke="#D1CFC5"] { stroke: #3D3A33; }
+:root[data-theme="dark"] svg [fill="#3D3D3A"] { fill: #B8B6AA; }
+:root[data-theme="dark"] svg [stroke="#3D3D3A"] { stroke: #B8B6AA; }
+:root[data-theme="dark"] svg [fill="#E3DACC"] { fill: #3A342B; }
+:root[data-theme="dark"] svg [stroke="#E3DACC"] { stroke: #3A342B; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--ivory); color: var(--slate); font-family: var(--sans); -webkit-font-smoothing: antialiased; line-height: 1.55; transition: background 200ms ease, color 200ms ease; }
+
+/* ── Topbar ── */
+.topbar { position: sticky; top: 0; z-index: 50; background: color-mix(in oklab, var(--ivory), transparent 8%); backdrop-filter: blur(8px); border-bottom: 1px solid var(--gray-300); }
+.topbar-inner { max-width: 1480px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.crumb { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--gray-500); }
+.crumb a { color: var(--gray-500); text-decoration: none; }
+.crumb a:hover { color: var(--slate); }
+.crumb .sep { opacity: 0.5; }
+.crumb .here { color: var(--slate); }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 50%; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; }
+.icon-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 17px; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; }
+.pill-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn svg { width: 12px; height: 12px; }
+
+/* ── Header ── */
+.sheet { max-width: 1480px; margin: 0 auto; padding: 36px 28px 28px; }
+.title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+.title-block { max-width: 760px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); margin-bottom: 12px; }
+h1 { font-family: var(--serif); font-weight: 500; font-size: 40px; letter-spacing: -0.014em; line-height: 1.15; margin-bottom: 14px; }
+h1 em { font-style: italic; color: var(--gray-500); font-weight: 400; }
+.lead { font-size: 14.5px; line-height: 1.65; color: var(--gray-700); max-width: 660px; }
+.lead b { color: var(--slate); font-weight: 600; }
+.lead code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 6px; border-radius: 4px; }
+.stat-row { display: flex; gap: 28px; align-items: baseline; font-family: var(--mono); font-size: 11px; color: var(--gray-500); }
+.stat-row .v { color: var(--slate); font-size: 24px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.1; margin-bottom: 2px; }
+
+/* ── Layout ── */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-top: 28px; align-items: start; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── Canvas ── */
+.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; box-shadow: var(--shadow); }
+.canvas-stage { position: absolute; inset: 0; cursor: grab; user-select: none; touch-action: none; }
+.canvas-stage.dragging { cursor: grabbing; }
+.canvas-grid { position: absolute; inset: -2000px; background-image: radial-gradient(circle, var(--gray-300) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+.canvas-inner { position: absolute; left: 50%; top: 24px; transform-origin: center top; transition: transform 60ms ease; }
+svg.diagram { display: block; }
+.diagram text { font-family: var(--mono); font-size: 12px; fill: var(--slate); pointer-events: none; }
+.diagram text.t-title { font-family: var(--sans); font-weight: 500; font-size: 13px; }
+.diagram text.t-sub { font-size: 10px; fill: var(--gray-500); }
+.diagram text.t-lbl { font-size: 10px; fill: var(--gray-500); font-family: var(--mono); }
+.diagram text.t-lbl-no { fill: var(--rust); }
+.diagram text.t-lbl-yes { fill: var(--olive); }
+.diagram text.t-connector { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--clay); }
+.diagram text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.diagram text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+
+/* ── Generic node shapes (per-diagram pages add specifics) ── */
+.node { cursor: pointer; transition: opacity 150ms ease; }
+.node .shape { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
+.node .shape-inner { fill: none; stroke: var(--gray-500); stroke-width: 1.5; }
+.node.term .shape { fill: var(--gray-150); }
+.node.process .shape { fill: var(--paper); }
+.node.decision .shape { fill: var(--paper); }
+.node.io .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.io .shape-inner { stroke: var(--plum); }
+.node.io text { fill: var(--slate); }
+.node.db .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.db .shape-inner { stroke: var(--clay); }
+.node.subprocess .shape { fill: color-mix(in oklab, var(--olive), transparent 92%); stroke: var(--olive); }
+.node.subprocess .shape-inner { stroke: var(--olive); }
+.node.document .shape { fill: color-mix(in oklab, var(--rust), transparent 92%); stroke: var(--rust); }
+.node.document .shape-inner { stroke: var(--rust); }
+.node.connector .shape { fill: var(--paper); stroke: var(--clay); stroke-width: 1.5; }
+.node.success .shape { fill: color-mix(in oklab, var(--olive), transparent 85%); stroke: var(--olive); }
+.node.fail .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); }
+.node.actor .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.actor-system .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.actor-external .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.state .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.state-initial .shape { fill: var(--slate); stroke: var(--slate); }
+.node.state-final .shape { fill: var(--paper); stroke: var(--slate); }
+.node.state-final .shape-inner { fill: var(--slate); }
+.node.state-composite .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); }
+.node.entity .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.entity-weak .shape { fill: var(--paper); stroke: var(--gray-500); stroke-dasharray: none; }
+.node.attribute .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.attribute-key .shape { fill: var(--paper); stroke: var(--clay); }
+.node.relationship .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.gateway .shape { fill: var(--paper); stroke: var(--gold); }
+.node.event .shape { fill: var(--paper); stroke: var(--olive); }
+.node.event-end .shape { fill: var(--paper); stroke: var(--rust); stroke-width: 2.5; }
+.node.event-msg .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.tier .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 5 3; }
+.node.cache .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.queue .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.gateway-api .shape { fill: color-mix(in oklab, var(--clay), transparent 85%); stroke: var(--clay); stroke-width: 2; }
+.node.commit .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.commit-main .shape { fill: var(--paper); stroke: var(--clay); }
+.node.commit-develop .shape { fill: var(--paper); stroke: var(--plum); }
+.node.commit-feature .shape { fill: var(--paper); stroke: var(--olive); }
+.node.commit-release .shape { fill: var(--paper); stroke: var(--gold); }
+.node.commit-hotfix .shape { fill: var(--paper); stroke: var(--rust); }
+.node.tag .shape { fill: color-mix(in oklab, var(--gold), transparent 80%); stroke: var(--gold); }
+.node.zone .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 6 3; }
+.node.zone-dmz .shape { fill: color-mix(in oklab, var(--gold), transparent 95%); stroke: var(--gold); stroke-dasharray: 6 3; }
+.node.zone-internal .shape { fill: color-mix(in oklab, var(--plum), transparent 95%); stroke: var(--plum); stroke-dasharray: 6 3; }
+.node.firewall .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); stroke-width: 2; }
+.node.router .shape { fill: color-mix(in oklab, var(--teal), transparent 85%); stroke: var(--teal); }
+.node.switch-net .shape { fill: var(--paper); stroke: var(--gray-700); }
+.node.server .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node:hover .shape { stroke-width: 2; }
+.node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.node.active:not(.gallery-card-node) .shape { stroke: var(--clay); stroke-width: 2.6; }
+.node.active:not(.gallery-card-node) .shape-inner { stroke: var(--clay); }
+
+/* ── Edges ── */
+.edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#arrow); }
+.edge.yes { stroke: var(--olive); marker-end: url(#arrow-olive); }
+.edge.no { stroke: var(--rust); stroke-dasharray: 5 4; marker-end: url(#arrow-rust); }
+.edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#arrow-clay); }
+.edge.async { stroke-dasharray: 6 3; }
+.edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#arrow-open); }
+.edge.sync { stroke: var(--slate); marker-end: url(#arrow-slate); }
+.edge.msg { stroke: var(--plum); marker-end: url(#arrow-plum); }
+.edge.thick { stroke-width: 2.2; }
+.edge.bidir { marker-start: url(#arrow-rev); marker-end: url(#arrow); }
+.edge.no-arrow { marker-end: none; }
+.edge.relation { stroke: var(--clay); stroke-width: 1.5; }
+.edge.attr-link { stroke: var(--gray-500); stroke-width: 1.2; }
+.edge.lane { stroke: var(--gray-300); stroke-width: 1; }
+
+/* ── Annotation ── */
+.annotation .bracket { fill: none; stroke: var(--gray-500); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.annotation .leader { stroke: var(--gray-500); stroke-width: 1; stroke-dasharray: 2 3; }
+.annotation .note { fill: color-mix(in oklab, var(--gold), transparent 92%); stroke: var(--gold); stroke-width: 1.2; }
+.annotation .note-text { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+
+/* ── Floating canvas controls ── */
+.canvas-controls { position: absolute; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 4px; background: var(--paper); border: 1px solid var(--gray-300); border-radius: 20px; padding: 4px; box-shadow: var(--shadow); }
+.canvas-controls button { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--slate); border-radius: 50%; cursor: pointer; font-family: var(--mono); font-size: 14px; transition: background 150ms ease; }
+.canvas-controls button:hover { background: var(--gray-150); color: var(--clay); }
+.canvas-controls .zoom-readout { width: 46px; text-align: center; font-family: var(--mono); font-size: 10px; color: var(--gray-700); padding: 0 2px; letter-spacing: 0.02em; }
+.canvas-controls .sep { width: 1px; height: 18px; background: var(--gray-300); }
+.canvas-help { position: absolute; left: 16px; bottom: 16px; font-family: var(--mono); font-size: 10px; color: var(--gray-500); letter-spacing: 0.04em; background: color-mix(in oklab, var(--paper), transparent 20%); padding: 6px 10px; border-radius: 12px; border: 1px solid var(--gray-300); }
+
+/* ── Aside ── */
+aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 110px); }
+.panel { border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+.detail { padding: 22px 22px 22px; max-height: 50vh; overflow-y: auto; }
+.detail .hint { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.04em; }
+.detail .hint::before { content: "→"; color: var(--clay); font-size: 13px; }
+.detail h3 { font-family: var(--serif); font-weight: 500; font-size: 21px; margin-bottom: 4px; letter-spacing: -0.008em; line-height: 1.2; }
+.detail .meta { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 16px; letter-spacing: 0.03em; }
+.detail .meta .dot { color: var(--clay); margin: 0 7px; }
+.detail p { font-size: 13.5px; line-height: 1.6; color: var(--gray-700); margin-bottom: 12px; }
+.detail p code { font-family: var(--mono); font-size: 12px; background: var(--gray-150); padding: 1px 5px; border-radius: 3px; color: var(--slate); }
+.detail pre { font-family: var(--mono); font-size: 11.5px; line-height: 1.55; background: var(--gray-150); border: 1px solid var(--gray-300); border-radius: 8px; padding: 11px 13px; white-space: pre-wrap; color: var(--slate); overflow-x: auto; margin-bottom: 12px; }
+.detail .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.detail .tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border: 1px solid var(--gray-300); border-radius: 11px; color: var(--gray-700); letter-spacing: 0.04em; }
+.detail .tag.t-term { color: var(--gray-500); }
+.detail .tag.t-process { color: var(--slate); }
+.detail .tag.t-decision { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-io { color: var(--plum); border-color: var(--plum); }
+.detail .tag.t-db { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-subprocess { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-document { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-connector { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-success { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-fail { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-actor { color: var(--slate); }
+.detail .tag.t-state { color: var(--slate); }
+.detail .tag.t-entity { color: var(--slate); }
+.detail .tag.t-rel { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-gate { color: var(--gold); border-color: var(--gold); }
+.detail .tag.t-event { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-zone { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-firewall { color: var(--rust); border-color: var(--rust); }
+
+.howto { padding: 22px; max-height: 40vh; overflow-y: auto; }
+.howto .eyebrow { color: var(--clay); margin-bottom: 8px; }
+.howto h2 { font-family: var(--serif); font-weight: 500; font-size: 18px; margin-bottom: 14px; letter-spacing: -0.005em; }
+.howto ol { list-style: none; counter-reset: step; }
+.howto ol li { counter-increment: step; padding: 9px 0 9px 30px; position: relative; font-size: 12.5px; color: var(--gray-700); line-height: 1.55; border-top: 1px dashed var(--gray-300); }
+.howto ol li:first-child { border-top: none; }
+.howto ol li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 10px; font-family: var(--mono); font-size: 10px; color: var(--clay); letter-spacing: 0; }
+.howto ol li b { font-weight: 600; color: var(--slate); }
+
+/* ── Gallery card (B 区元素图鉴 · 与 03 范本对齐) ── */
+.diagram text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+.diagram text.section-sub   { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.diagram .section-divider   { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+.diagram .gallery-card      { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; transition: stroke 150ms ease, stroke-width 150ms ease; }
+.diagram .gallery-card-node { cursor: pointer; }
+.diagram .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.diagram .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.diagram .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.diagram text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.diagram text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.diagram .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .ribbon-shown-bg   { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.diagram .ribbon-ref-bg     { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+/* ── Legend ── */
+.legend-group { margin-top: 18px; }
+.legend-group + .legend-group { margin-top: 14px; }
+.legend-group-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; padding: 0 6px 8px; }
+.legend-group .legend { margin-top: 0; }
+.legend { margin-top: 18px; padding: 18px 22px; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 22px; }
+.legend-item { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--gray-700); }
+.legend-item .name { color: var(--slate); }
+.legend-item .sub { color: var(--gray-500); margin-left: 4px; }
+.chip { width: 26px; height: 16px; flex-shrink: 0; }
+.chip svg { width: 100%; height: 100%; overflow: visible; }
+
+/* ── Footer ── */
+.footer-note { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 11px; color: var(--gray-500); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.footer-note a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+
+</style>
+<style>
+  /* ── 04 System architecture — local visual rules ── */
+
+  /* tier bands (dashed olive containers, one per layer) */
+  .diagram .tier-band { fill: color-mix(in oklab, var(--olive), transparent 96%); stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 6 4; rx: 14; ry: 14; }
+  .diagram .tier-band.cross { fill: color-mix(in oklab, var(--teal), transparent 95%); stroke: var(--teal); stroke-dasharray: 6 4; }
+  .diagram .tier-band.spine { fill: color-mix(in oklab, var(--olive), transparent 92%); stroke: var(--olive); stroke-dasharray: 6 4; }
+  .diagram .row-divider { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 2 4; }
+
+  /* tier labels (left edge of each band) */
+  .diagram text.tier-num { font-family: var(--serif); font-weight: 500; font-size: 24px; fill: var(--slate); letter-spacing: -0.012em; }
+  .diagram text.tier-name { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; fill: var(--clay); text-transform: uppercase; }
+  .diagram text.tier-cn { font-family: var(--sans); font-weight: 500; font-size: 13px; fill: var(--slate); }
+  .diagram text.tier-sub { font-family: var(--mono); font-size: 10px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .diagram text.row-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; fill: var(--gray-500); }
+
+  /* node card colors per tier */
+  .diagram .node.client .shape { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.5; rx: 10; ry: 10; }
+  .diagram .node.edge-net .shape { fill: color-mix(in oklab, var(--gold), transparent 90%); stroke: var(--gold); stroke-width: 1.5; rx: 8; ry: 8; }
+  .diagram .node.bff .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); stroke-width: 1.5; rx: 8; ry: 8; }
+  .diagram .node.svc .shape { fill: var(--paper); stroke: var(--gray-700); stroke-width: 1.5; rx: 8; ry: 8; }
+  .diagram .node.svc.trade .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+  .diagram .node.svc.catalog .shape { fill: color-mix(in oklab, var(--plum), transparent 92%); stroke: var(--plum); }
+  .diagram .node.svc.edge-domain .shape { fill: color-mix(in oklab, var(--teal), transparent 92%); stroke: var(--teal); }
+  .diagram .node.svc.core .shape { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 2.4; }
+  .diagram .node.mw .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); stroke-width: 1.5; rx: 8; ry: 8; }
+  .diagram .node.mw.cache .shape { fill: color-mix(in oklab, var(--gold), transparent 86%); stroke: var(--gold); }
+  .diagram .node.mw.search .shape { fill: color-mix(in oklab, var(--teal), transparent 86%); stroke: var(--teal); }
+  .diagram .node.data-store .shape { fill: color-mix(in oklab, var(--clay), transparent 88%); stroke: var(--clay); stroke-width: 1.5; rx: 8; ry: 8; }
+  .diagram .node.infra .shape { fill: var(--paper); stroke: var(--teal); stroke-width: 1.5; rx: 6; ry: 6; }
+
+  /* card text */
+  .diagram text.t-cn { font-family: var(--sans); font-weight: 600; font-size: 13px; fill: var(--slate); }
+  .diagram text.t-en { font-family: var(--mono); font-size: 10px; fill: var(--gray-500); letter-spacing: 0.02em; }
+  .diagram text.t-stack { font-family: var(--mono); font-size: 9.5px; fill: var(--gray-700); }
+  .diagram text.t-metric { font-family: var(--mono); font-size: 9.5px; fill: var(--clay); font-weight: 600; }
+  .diagram text.t-metric.olive { fill: var(--olive); }
+  .diagram text.t-metric.plum { fill: var(--plum); }
+  .diagram text.t-metric.teal { fill: var(--teal); }
+  .diagram text.t-metric.gold { fill: var(--gold); }
+  .diagram text.t-metric.gray { fill: var(--gray-500); }
+
+  /* CORE badge on order-service */
+  .diagram .core-badge { fill: var(--olive); rx: 2.5; ry: 2.5; }
+  .diagram text.core-badge-text { font-family: var(--mono); font-size: 8.5px; fill: var(--paper); font-weight: 700; letter-spacing: 0.12em; }
+
+  /* small icon dot inside card */
+  .diagram .card-dot { fill: var(--clay); }
+  .diagram .card-dot.olive { fill: var(--olive); }
+  .diagram .card-dot.plum { fill: var(--plum); }
+  .diagram .card-dot.teal { fill: var(--teal); }
+  .diagram .card-dot.gold { fill: var(--gold); }
+  .diagram .card-dot.gray { fill: var(--gray-500); }
+
+  /* architecture edges */
+  .diagram .edge.sync-arch { stroke: var(--slate); stroke-width: 1.4; fill: none; marker-end: url(#arrow-slate); }
+  .diagram .edge.spine { stroke: var(--olive); stroke-width: 2.6; fill: none; marker-end: url(#arrow-olive-bold); }
+  .diagram .edge.rpc { stroke: var(--clay); stroke-width: 1.4; fill: none; marker-end: url(#arrow-clay); }
+  .diagram .edge.async-event { stroke: var(--plum); stroke-width: 1.4; stroke-dasharray: 6 4; fill: none; marker-end: url(#arrow-plum); }
+  .diagram .edge.cache-edge { stroke: var(--gold); stroke-width: 1.2; stroke-dasharray: 3 3; fill: none; marker-end: url(#arrow-gold); }
+  .diagram .edge.db-edge { stroke: var(--clay); stroke-width: 1.4; stroke-dasharray: 2 3; fill: none; marker-end: url(#arrow-clay); }
+  .diagram .edge.cdc { stroke: var(--teal); stroke-width: 1.3; stroke-dasharray: 5 3; fill: none; marker-end: url(#arrow-teal); }
+  .diagram .edge.scrape { stroke: var(--teal); stroke-width: 1; stroke-dasharray: 1 4; fill: none; opacity: 0.55; marker-end: none; }
+
+  /* edge label badges */
+  .diagram .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+  .diagram text.edge-label { font-family: var(--mono); font-size: 9.5px; fill: var(--gray-700); }
+  .diagram text.edge-label.olive { fill: var(--olive); font-weight: 600; }
+  .diagram text.edge-label.plum { fill: var(--plum); font-weight: 600; }
+  .diagram text.edge-label.clay { fill: var(--clay); font-weight: 600; }
+  .diagram text.edge-label.gold { fill: var(--gold); font-weight: 600; }
+  .diagram text.edge-label.teal { fill: var(--teal); font-weight: 600; }
+
+  /* spine highlight overlay (subtle olive wash showing the happy path) */
+  .diagram .spine-wash { fill: color-mix(in oklab, var(--olive), transparent 97%); rx: 8; ry: 8; }
+
+  /* section-title text */
+  .diagram text.diagram-title { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.012em; }
+  .diagram text.diagram-sub { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="crumb"><a href="index.html">Engineering Diagram Library</a><span class="sep">/</span><span class="here">04 · 系统架构图</span></div>
+    <div class="topbar-actions">
+      <button class="pill-btn" id="exportSvg"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>SVG</button>
+      <button class="pill-btn" id="exportPng"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>PNG</button>
+      <button class="pill-btn" id="copyHtml" title="复制 HTML 源码"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V3a1 1 0 011-1h7"/></svg>HTML</button>
+      <button class="icon-btn" id="themeToggle"><svg id="themeIconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg><svg id="themeIconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="display:none"><path d="M13 9.5A6 6 0 116.5 3a5 5 0 006.5 6.5z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet">
+  <header>
+    <div class="title-row">
+      <div class="title-block">
+        <div class="eyebrow">Diagram type 04 · 系统架构图 · Layered Architecture</div>
+        <h1>电商交易中台 · 6 层分层架构 <em>— e-commerce platform topology</em></h1>
+        <p class="lead">用<b>分层架构图</b>把"<u>从用户点击下单到资金入账</u>"背后真正跑的系统画出来：从<b>客户端</b>到<b>边缘接入</b>，经 <code>BFF</code> 进入 <b>9 个业务微服务</b>，再向下穿透到 <code>Kafka / Redis / ES</code> 中间件与 <code>MySQL / TiDB / ClickHouse</code> 数据层，最后把 <b>K8s / Istio / Prometheus</b> 等横切设施单独成层。每个节点都标了真实技术栈、实例数、QPS、SLA。<b>橄榄色加粗边</b>是下单主路径。</p>
+      </div>
+      <div class="stat-row">
+        <div><span class="v">7</span>层（含横切）</div>
+        <div><span class="v">35</span>节点</div>
+        <div><span class="v">12万</span>QPS · 大促峰值</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <div class="canvas-frame">
+        <div class="canvas-stage" id="stage">
+          <div class="canvas-grid"></div>
+          <div class="canvas-inner" id="canvasInner">
+            <svg class="diagram" id="diagram" width="1080" height="2680" viewBox="0 0 1080 2680" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
+                <marker id="arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+                <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="arrow-olive-bold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="arrow-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
+                <marker id="arrow-plum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
+                <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C4994E"/></marker>
+                <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A8585"/></marker>
+                <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+                <marker id="arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#87867F" stroke-width="1.4"/></marker>
+              </defs>
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- A · 电商交易中台 · 分层架构主图                            -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <text class="section-label" x="40" y="32">A · 电商交易中台 · 6 层分层架构 + 横切设施</text>
+              <text class="section-sub"   x="40" y="54">7 层 · 35 节点 · 12 万 QPS 大促峰值 · 橄榄粗边 = 下单主路径 spine</text>
+
+              <!-- ============================================================== -->
+              <!-- TIER 1 · 客户端层  y 70-200                                     -->
+              <!-- ============================================================== -->
+              <rect class="tier-band" x="30" y="70" width="1020" height="130"/>
+              <text class="tier-num"  x="50"  y="98">01</text>
+              <text class="tier-name" x="50"  y="114">Client</text>
+              <text class="tier-cn"   x="50"  y="134">客户端层</text>
+              <text class="tier-sub"  x="50"  y="150">5 种入口</text>
+              <text class="tier-sub"  x="50"  y="164">面向终端用户</text>
+              <g id="tier-1-nodes">
+                <g class="node client" data-id="client-web" tabindex="0">
+                  <rect class="shape" x="140" y="100" width="210" height="88"/>
+                  <text class="t-cn"     x="154" y="122">网页客户端</text>
+                  <text class="t-en"     x="154" y="138">web · responsive</text>
+                  <text class="t-stack"  x="154" y="158">React 18 · Next.js 14</text>
+                  <text class="t-metric gold" x="154" y="178">DAU · 8 万</text>
+                </g>
+                <g class="node client" data-id="client-ios" tabindex="0">
+                  <rect class="shape" x="370" y="100" width="210" height="88"/>
+                  <text class="t-cn"     x="384" y="122">iOS App</text>
+                  <text class="t-en"     x="384" y="138">native ios</text>
+                  <text class="t-stack"  x="384" y="158">Swift · SwiftUI · 5.0</text>
+                  <text class="t-metric gold" x="384" y="178">DAU · 28 万</text>
+                </g>
+                <g class="node client" data-id="client-android" tabindex="0">
+                  <rect class="shape" x="600" y="100" width="210" height="88"/>
+                  <text class="t-cn"     x="614" y="122">Android App</text>
+                  <text class="t-en"     x="614" y="138">native android</text>
+                  <text class="t-stack"  x="614" y="158">Kotlin · Compose · 1.6</text>
+                  <text class="t-metric gold" x="614" y="178">DAU · 42 万</text>
+                </g>
+                <g class="node client" data-id="client-mini" tabindex="0">
+                  <rect class="shape" x="830" y="100" width="210" height="88"/>
+                  <text class="t-cn"     x="844" y="122">小程序 / Open API</text>
+                  <text class="t-en"     x="844" y="138">mini-program · openapi</text>
+                  <text class="t-stack"  x="844" y="158">微信 / 支付宝 / 抖店</text>
+                  <text class="t-metric gold" x="844" y="178">DAU · 15 万 · API 调用 30 万</text>
+                </g>
+              </g>
+
+              <!-- ============================================================== -->
+              <!-- TIER 2 · 边缘接入层  y 220-360                                  -->
+              <!-- ============================================================== -->
+              <rect class="tier-band" x="30" y="220" width="1020" height="140"/>
+              <text class="tier-num"  x="50"  y="248">02</text>
+              <text class="tier-name" x="50"  y="264">Edge / Access</text>
+              <text class="tier-cn"   x="50"  y="284">边缘接入</text>
+              <text class="tier-sub"  x="50"  y="300">CDN · WAF</text>
+              <text class="tier-sub"  x="50"  y="314">网关 · 负载均衡</text>
+              <g id="tier-2-nodes">
+                <g class="node edge-net" data-id="edge-cdn" tabindex="0">
+                  <rect class="shape" x="140" y="250" width="210" height="96"/>
+                  <text class="t-cn"     x="154" y="272">CDN 内容分发</text>
+                  <text class="t-en"     x="154" y="288">edge cache · static</text>
+                  <text class="t-stack"  x="154" y="308">Cloudflare · 阿里云 CDN</text>
+                  <text class="t-stack"  x="154" y="324">200+ 节点 · 全球覆盖</text>
+                  <text class="t-metric" x="154" y="340">命中率 92% · 回源 8%</text>
+                </g>
+                <g class="node edge-net" data-id="edge-waf" tabindex="0">
+                  <rect class="shape" x="370" y="250" width="210" height="96"/>
+                  <text class="t-cn"     x="384" y="272">WAF 防护</text>
+                  <text class="t-en"     x="384" y="288">web app firewall</text>
+                  <text class="t-stack"  x="384" y="308">Cloudflare WAF</text>
+                  <text class="t-stack"  x="384" y="324">规则 + ML 异常检测</text>
+                  <text class="t-metric" x="384" y="340">日拦截 · 1.2 亿请求</text>
+                </g>
+                <g class="node edge-net" data-id="edge-gw" tabindex="0">
+                  <rect class="shape" x="600" y="250" width="210" height="96"/>
+                  <text class="t-cn"     x="614" y="272">API 网关</text>
+                  <text class="t-en"     x="614" y="288">api gateway · ingress</text>
+                  <text class="t-stack"  x="614" y="308">Kong · 自研鉴权插件</text>
+                  <text class="t-stack"  x="614" y="324">JWT · 限流 · 路由</text>
+                  <text class="t-metric" x="614" y="340">峰值 30 万 QPS · P99 8ms</text>
+                </g>
+                <g class="node edge-net" data-id="edge-lb" tabindex="0">
+                  <rect class="shape" x="830" y="250" width="210" height="96"/>
+                  <text class="t-cn"     x="844" y="272">负载均衡</text>
+                  <text class="t-en"     x="844" y="288">load balancer</text>
+                  <text class="t-stack"  x="844" y="308">Envoy (L7) · Nginx (L4)</text>
+                  <text class="t-stack"  x="844" y="324">3 机房 · 多 AZ</text>
+                  <text class="t-metric" x="844" y="340">健康检查 · 加权轮询</text>
+                </g>
+              </g>
+
+              <!-- ============================================================== -->
+              <!-- TIER 3 · BFF 聚合层  y 380-500                                  -->
+              <!-- ============================================================== -->
+              <rect class="tier-band" x="30" y="380" width="1020" height="120"/>
+              <text class="tier-num"  x="50"  y="406">03</text>
+              <text class="tier-name" x="50"  y="422">BFF</text>
+              <text class="tier-cn"   x="50"  y="442">聚合层</text>
+              <text class="tier-sub"  x="50"  y="458">Backend for Frontend</text>
+              <text class="tier-sub"  x="50"  y="472">协议转换 · 数据剪裁</text>
+              <g id="tier-3-nodes">
+                <g class="node bff" data-id="bff-web" tabindex="0">
+                  <rect class="shape" x="140" y="410" width="270" height="80"/>
+                  <text class="t-cn"     x="154" y="432">BFF-Web</text>
+                  <text class="t-en"     x="154" y="448">web aggregator · ssr-friendly</text>
+                  <text class="t-stack"  x="154" y="468">Go · Kratos · 16 实例</text>
+                  <text class="t-metric plum" x="154" y="484">5 万 QPS · 聚合 4 个服务 / req</text>
+                </g>
+                <g class="node bff" data-id="bff-mobile" tabindex="0">
+                  <rect class="shape" x="455" y="410" width="270" height="80"/>
+                  <text class="t-cn"     x="469" y="432">BFF-Mobile</text>
+                  <text class="t-en"     x="469" y="448">mobile aggregator · 端定制</text>
+                  <text class="t-stack"  x="469" y="468">Go · Kratos · 24 实例</text>
+                  <text class="t-metric plum" x="469" y="484">25 万 QPS · 协议:HTTP↔gRPC</text>
+                </g>
+                <g class="node bff" data-id="bff-openapi" tabindex="0">
+                  <rect class="shape" x="770" y="410" width="270" height="80"/>
+                  <text class="t-cn"     x="784" y="432">BFF-OpenAPI</text>
+                  <text class="t-en"     x="784" y="448">openapi · 三方接入</text>
+                  <text class="t-stack"  x="784" y="468">Go · 8 实例 · OAuth2</text>
+                  <text class="t-metric plum" x="784" y="484">配额 + 限流 · 商户 5000+</text>
+                </g>
+              </g>
+
+              <!-- ============================================================== -->
+              <!-- TIER 4 · 业务微服务层  y 520-890                                -->
+              <!-- ============================================================== -->
+              <rect class="tier-band spine" x="30" y="520" width="1020" height="370"/>
+              <text class="tier-num"  x="50"  y="548">04</text>
+              <text class="tier-name" x="50"  y="564">Services</text>
+              <text class="tier-cn"   x="50"  y="584">业务微服务</text>
+              <text class="tier-sub"  x="50"  y="600">9 服务 / 3 领域</text>
+              <text class="tier-sub"  x="50"  y="614">Go · Java · gRPC</text>
+
+              <!-- 行分割（订单/商品/边缘 3 行）-->
+              <line class="row-divider" x1="130" y1="660" x2="1040" y2="660"/>
+              <line class="row-divider" x1="130" y1="765" x2="1040" y2="765"/>
+              <!-- 行标签（左侧细微辅助） -->
+              <text class="row-label" x="135" y="558">Row · 交易域 · Trade</text>
+              <text class="row-label" x="135" y="666">Row · 商品域 · Catalog</text>
+              <text class="row-label" x="135" y="771">Row · 用户/通知/推荐 · Edge</text>
+              <g id="tier-4-nodes">
+                <!-- Row 1 · Trade (clay) — order(CORE olive) / payment / settlement -->
+                <g class="node svc core" data-id="svc-order" tabindex="0">
+                  <rect class="shape" x="140" y="566" width="270" height="84"/>
+                  <rect class="core-badge" x="368" y="572" width="34" height="13"/>
+                  <text class="core-badge-text" x="374" y="582">CORE</text>
+                  <text class="t-cn"     x="154" y="586">订单服务</text>
+                  <text class="t-en"     x="154" y="602">order-service</text>
+                  <text class="t-stack"  x="154" y="622">Go · gRPC · Kratos · 32 实例</text>
+                  <text class="t-metric olive" x="154" y="640">写 12 万 QPS · P99 45ms · 4 个 9</text>
+                </g>
+                <g class="node svc trade" data-id="svc-payment" tabindex="0">
+                  <rect class="shape" x="455" y="566" width="270" height="84"/>
+                  <text class="t-cn"     x="469" y="586">支付服务</text>
+                  <text class="t-en"     x="469" y="602">payment-service</text>
+                  <text class="t-stack"  x="469" y="622">Java · Spring Boot · 24 实例</text>
+                  <text class="t-metric" x="469" y="640">8 万 TPS · 渠道 12 个 · 对账 T+1</text>
+                </g>
+                <g class="node svc trade" data-id="svc-settlement" tabindex="0">
+                  <rect class="shape" x="770" y="566" width="270" height="84"/>
+                  <text class="t-cn"     x="784" y="586">结算分账</text>
+                  <text class="t-en"     x="784" y="602">settlement-service</text>
+                  <text class="t-stack"  x="784" y="622">Java · 16 实例 · Kafka 消费者</text>
+                  <text class="t-metric" x="784" y="640">日处理 5000 万单 · 异步</text>
+                </g>
+
+                <!-- Row 2 · Catalog (plum) — product / inventory / search -->
+                <g class="node svc catalog" data-id="svc-product" tabindex="0">
+                  <rect class="shape" x="140" y="672" width="270" height="84"/>
+                  <text class="t-cn"     x="154" y="692">商品服务</text>
+                  <text class="t-en"     x="154" y="708">product-service</text>
+                  <text class="t-stack"  x="154" y="728">Go · gRPC · 20 实例</text>
+                  <text class="t-metric plum" x="154" y="746">读 18 万 QPS · P99 12ms · 缓存优先</text>
+                </g>
+                <g class="node svc catalog" data-id="svc-inventory" tabindex="0">
+                  <rect class="shape" x="455" y="672" width="270" height="84"/>
+                  <text class="t-cn"     x="469" y="692">库存服务</text>
+                  <text class="t-en"     x="469" y="708">inventory-service</text>
+                  <text class="t-stack"  x="469" y="728">Go · 16 实例 · Redis Lua</text>
+                  <text class="t-metric plum" x="469" y="746">强一致扣减 · 防超卖 · 6 万 TPS</text>
+                </g>
+                <g class="node svc catalog" data-id="svc-search" tabindex="0">
+                  <rect class="shape" x="770" y="672" width="270" height="84"/>
+                  <text class="t-cn"     x="784" y="692">搜索服务</text>
+                  <text class="t-en"     x="784" y="708">search-service</text>
+                  <text class="t-stack"  x="784" y="728">Java · ES 客户端 · 12 实例</text>
+                  <text class="t-metric plum" x="784" y="746">6 万 QPS · P99 80ms · 多字段</text>
+                </g>
+
+                <!-- Row 3 · Edge (teal) — user / notify / recommend -->
+                <g class="node svc edge-domain" data-id="svc-user" tabindex="0">
+                  <rect class="shape" x="140" y="778" width="270" height="84"/>
+                  <text class="t-cn"     x="154" y="798">用户服务</text>
+                  <text class="t-en"     x="154" y="814">user-service</text>
+                  <text class="t-stack"  x="154" y="834">Go · 12 实例 · JWT</text>
+                  <text class="t-metric teal" x="154" y="852">4 万 QPS · 鉴权 + 画像 + 会员</text>
+                </g>
+                <g class="node svc edge-domain" data-id="svc-notify" tabindex="0">
+                  <rect class="shape" x="455" y="778" width="270" height="84"/>
+                  <text class="t-cn"     x="469" y="798">通知服务</text>
+                  <text class="t-en"     x="469" y="814">notification-service</text>
+                  <text class="t-stack"  x="469" y="834">Java · RocketMQ 消费者 · 16 实例</text>
+                  <text class="t-metric teal" x="469" y="852">日发 8000 万 · push · sms · email</text>
+                </g>
+                <g class="node svc edge-domain" data-id="svc-recommend" tabindex="0">
+                  <rect class="shape" x="770" y="778" width="270" height="84"/>
+                  <text class="t-cn"     x="784" y="798">推荐服务</text>
+                  <text class="t-en"     x="784" y="814">recommendation-service</text>
+                  <text class="t-stack"  x="784" y="834">Python · TF Serving · 20 实例</text>
+                  <text class="t-metric teal" x="784" y="852">召回+排序 · P99 60ms · CTR 6.8%</text>
+                </g>
+              </g>
+
+              <!-- ============================================================== -->
+              <!-- TIER 5 · 中间件层  y 910-1050                                   -->
+              <!-- ============================================================== -->
+              <rect class="tier-band" x="30" y="910" width="1020" height="140"/>
+              <text class="tier-num"  x="50"  y="938">05</text>
+              <text class="tier-name" x="50"  y="954">Middleware</text>
+              <text class="tier-cn"   x="50"  y="974">中间件</text>
+              <text class="tier-sub"  x="50"  y="990">MQ · 缓存 · 搜索</text>
+              <text class="tier-sub"  x="50"  y="1004">对象存储</text>
+              <g id="tier-5-nodes">
+                <g class="node mw" data-id="mw-kafka" tabindex="0">
+                  <rect class="shape" x="140" y="940" width="170" height="92"/>
+                  <text class="t-cn"     x="152" y="962">Kafka 消息队列</text>
+                  <text class="t-en"     x="152" y="978">kafka · event bus</text>
+                  <text class="t-stack"  x="152" y="998">12 broker · 3 副本</text>
+                  <text class="t-stack"  x="152" y="1012">保留 7 天</text>
+                  <text class="t-metric plum" x="152" y="1028">60 万 msg/s</text>
+                </g>
+                <g class="node mw cache" data-id="mw-redis" tabindex="0">
+                  <rect class="shape" x="322" y="940" width="170" height="92"/>
+                  <text class="t-cn"     x="334" y="962">Redis 集群</text>
+                  <text class="t-en"     x="334" y="978">redis · hot cache</text>
+                  <text class="t-stack"  x="334" y="998">16 分片 · 主从</text>
+                  <text class="t-stack"  x="334" y="1012">总容量 1 TB</text>
+                  <text class="t-metric gold" x="334" y="1028">命中 95% · P99 1ms</text>
+                </g>
+                <g class="node mw search" data-id="mw-es" tabindex="0">
+                  <rect class="shape" x="504" y="940" width="170" height="92"/>
+                  <text class="t-cn"     x="516" y="962">Elasticsearch</text>
+                  <text class="t-en"     x="516" y="978">es · 8.x</text>
+                  <text class="t-stack"  x="516" y="998">30 数据节点</text>
+                  <text class="t-stack"  x="516" y="1012">3 副本 · IK 分词</text>
+                  <text class="t-metric teal" x="516" y="1028">商品 4 亿 doc</text>
+                </g>
+                <g class="node mw" data-id="mw-rocketmq" tabindex="0">
+                  <rect class="shape" x="686" y="940" width="170" height="92"/>
+                  <text class="t-cn"     x="698" y="962">RocketMQ</text>
+                  <text class="t-en"     x="698" y="978">rocketmq · 事务消息</text>
+                  <text class="t-stack"  x="698" y="998">集群 6 节点</text>
+                  <text class="t-stack"  x="698" y="1012">通知 · 半消息</text>
+                  <text class="t-metric plum" x="698" y="1028">日发 8000 万</text>
+                </g>
+                <g class="node mw" data-id="mw-s3" tabindex="0">
+                  <rect class="shape" x="868" y="940" width="170" height="92"/>
+                  <text class="t-cn"     x="880" y="962">对象存储</text>
+                  <text class="t-en"     x="880" y="978">s3 · oss</text>
+                  <text class="t-stack"  x="880" y="998">阿里云 OSS</text>
+                  <text class="t-stack"  x="880" y="1012">商品图 · 视频</text>
+                  <text class="t-metric" x="880" y="1028">PB 级 · CDN 回源</text>
+                </g>
+              </g>
+
+              <!-- ============================================================== -->
+              <!-- TIER 6 · 数据层  y 1070-1210                                    -->
+              <!-- ============================================================== -->
+              <rect class="tier-band" x="30" y="1070" width="1020" height="140"/>
+              <text class="tier-num"  x="50"  y="1098">06</text>
+              <text class="tier-name" x="50"  y="1114">Data</text>
+              <text class="tier-cn"   x="50"  y="1134">数据层</text>
+              <text class="tier-sub"  x="50"  y="1150">OLTP · OLAP</text>
+              <text class="tier-sub"  x="50"  y="1164">分库分表 · 列存</text>
+              <g id="tier-6-nodes">
+                <g class="node data-store" data-id="db-mysql" tabindex="0">
+                  <rect class="shape" x="140" y="1095" width="210" height="96"/>
+                  <text class="t-cn"     x="154" y="1117">MySQL 主库</text>
+                  <text class="t-en"     x="154" y="1133">mysql · oltp · 8.0</text>
+                  <text class="t-stack"  x="154" y="1153">分库分表 16×256</text>
+                  <text class="t-stack"  x="154" y="1169">MHA · 多 AZ 主从</text>
+                  <text class="t-metric" x="154" y="1185">订单 / 商品 / 用户 主存储</text>
+                </g>
+                <g class="node data-store" data-id="db-tidb" tabindex="0">
+                  <rect class="shape" x="370" y="1095" width="210" height="96"/>
+                  <text class="t-cn"     x="384" y="1117">TiDB HTAP</text>
+                  <text class="t-en"     x="384" y="1133">tidb · 5.4</text>
+                  <text class="t-stack"  x="384" y="1153">PD + TiKV + TiFlash</text>
+                  <text class="t-stack"  x="384" y="1169">混合 OLTP+OLAP</text>
+                  <text class="t-metric" x="384" y="1185">结算 · 财务 · 实时报表</text>
+                </g>
+                <g class="node data-store" data-id="db-ch" tabindex="0">
+                  <rect class="shape" x="600" y="1095" width="210" height="96"/>
+                  <text class="t-cn"     x="614" y="1117">ClickHouse</text>
+                  <text class="t-en"     x="614" y="1133">clickhouse · column</text>
+                  <text class="t-stack"  x="614" y="1153">18 节点 · 列存 OLAP</text>
+                  <text class="t-stack"  x="614" y="1169">Kafka → ch (CDC)</text>
+                  <text class="t-metric" x="614" y="1185">行为 · BI · 日志分析</text>
+                </g>
+                <g class="node data-store" data-id="db-mongo" tabindex="0">
+                  <rect class="shape" x="830" y="1095" width="210" height="96"/>
+                  <text class="t-cn"     x="844" y="1117">MongoDB</text>
+                  <text class="t-en"     x="844" y="1133">mongo · document · 7.x</text>
+                  <text class="t-stack"  x="844" y="1153">副本集 3 主 9 从</text>
+                  <text class="t-stack"  x="844" y="1169">schemaless</text>
+                  <text class="t-metric" x="844" y="1185">评论 · 用户行为 · 日志</text>
+                </g>
+              </g>
+
+              <!-- ============================================================== -->
+              <!-- TIER X · 横切关注点  y 1230-1380                                -->
+              <!-- ============================================================== -->
+              <rect class="tier-band cross" x="30" y="1230" width="1020" height="150"/>
+              <text class="tier-num"  x="50"  y="1258">0X</text>
+              <text class="tier-name" x="50"  y="1274">Cross-cutting</text>
+              <text class="tier-cn"   x="50"  y="1294">横切设施</text>
+              <text class="tier-sub"  x="50"  y="1310">贯穿 1-6 层</text>
+              <text class="tier-sub"  x="50"  y="1324">编排 / 网格 / 可观测</text>
+              <g id="tier-x-nodes">
+                <g class="node infra" data-id="x-k8s" tabindex="0">
+                  <rect class="shape" x="140" y="1258" width="140" height="100"/>
+                  <text class="t-cn"     x="152" y="1280">K8s 编排</text>
+                  <text class="t-en"     x="152" y="1296">kubernetes · 1.29</text>
+                  <text class="t-stack"  x="152" y="1316">3 集群 · 1500 pod</text>
+                  <text class="t-stack"  x="152" y="1332">HPA · PDB</text>
+                  <text class="t-metric teal" x="152" y="1350">容器编排</text>
+                </g>
+                <g class="node infra" data-id="x-istio" tabindex="0">
+                  <rect class="shape" x="292" y="1258" width="140" height="100"/>
+                  <text class="t-cn"     x="304" y="1280">服务网格</text>
+                  <text class="t-en"     x="304" y="1296">istio · mesh</text>
+                  <text class="t-stack"  x="304" y="1316">Envoy sidecar</text>
+                  <text class="t-stack"  x="304" y="1332">mTLS · 路由</text>
+                  <text class="t-metric teal" x="304" y="1350">流量治理 · 灰度</text>
+                </g>
+                <g class="node infra" data-id="x-prom" tabindex="0">
+                  <rect class="shape" x="444" y="1258" width="140" height="100"/>
+                  <text class="t-cn"     x="456" y="1280">监控 + 告警</text>
+                  <text class="t-en"     x="456" y="1296">prometheus · grafana</text>
+                  <text class="t-stack"  x="456" y="1316">pull 抓取 · 15s</text>
+                  <text class="t-stack"  x="456" y="1332">Alertmanager · 飞书</text>
+                  <text class="t-metric teal" x="456" y="1350">12 万 metrics</text>
+                </g>
+                <g class="node infra" data-id="x-jaeger" tabindex="0">
+                  <rect class="shape" x="596" y="1258" width="140" height="100"/>
+                  <text class="t-cn"     x="608" y="1280">链路追踪</text>
+                  <text class="t-en"     x="608" y="1296">jaeger · otel</text>
+                  <text class="t-stack"  x="608" y="1316">全链路 traceId</text>
+                  <text class="t-stack"  x="608" y="1332">采样 1% (慢请求 100%)</text>
+                  <text class="t-metric teal" x="608" y="1350">日 5 亿 span</text>
+                </g>
+                <g class="node infra" data-id="x-elk" tabindex="0">
+                  <rect class="shape" x="748" y="1258" width="140" height="100"/>
+                  <text class="t-cn"     x="760" y="1280">日志中心</text>
+                  <text class="t-en"     x="760" y="1296">elk · loki</text>
+                  <text class="t-stack"  x="760" y="1316">fluent-bit 采集</text>
+                  <text class="t-stack"  x="760" y="1332">保留 30 天</text>
+                  <text class="t-metric teal" x="760" y="1350">日 TB+ 级</text>
+                </g>
+                <g class="node infra" data-id="x-nacos" tabindex="0">
+                  <rect class="shape" x="900" y="1258" width="140" height="100"/>
+                  <text class="t-cn"     x="912" y="1280">配置中心</text>
+                  <text class="t-en"     x="912" y="1296">nacos · config</text>
+                  <text class="t-stack"  x="912" y="1316">配置 + 服务发现</text>
+                  <text class="t-stack"  x="912" y="1332">动态推送 · 灰度</text>
+                  <text class="t-metric teal" x="912" y="1350">千节点接入</text>
+                </g>
+              </g>
+
+              <!-- ─── Edges (主路径 + 协作) ─── -->
+              <g id="edges">
+                <!-- ── A. Tier 1 → Tier 2 同步 stubs（Web / Android / Mini 客户端入口） ── -->
+                <path class="edge sync-arch" d="M 245,188 L 245,250"/>
+                <path class="edge sync-arch" d="M 705,188 L 705,250"/>
+                <path class="edge sync-arch" d="M 935,188 L 935,250"/>
+
+                <!-- ── B. 主路径 SPINE (olive bold) — iOS → Gateway → BFF-Mobile → order-service ── -->
+                <path class="edge spine" d="M 475,188 L 475,225 L 705,225 L 705,250"/>
+                <rect class="edge-label-bg" x="495" y="213" width="106" height="14"/>
+                <text class="edge-label olive" x="500" y="223">下单 happy path</text>
+
+                <path class="edge spine" d="M 705,346 L 705,378 L 590,378 L 590,410"/>
+                <rect class="edge-label-bg" x="612" y="368" width="92" height="14"/>
+                <text class="edge-label olive" x="617" y="378">JWT 鉴权 · 路由</text>
+
+                <path class="edge spine" d="M 590,490 L 590,530 L 275,530 L 275,566"/>
+                <rect class="edge-label-bg" x="298" y="520" width="120" height="14"/>
+                <text class="edge-label olive" x="303" y="530">gRPC · CreateOrder</text>
+
+                <!-- ── C. Tier 4 内部同步 RPC（clay）── -->
+                <!-- order → payment: 同行水平 RPC -->
+                <path class="edge rpc" d="M 410,608 L 455,608"/>
+                <rect class="edge-label-bg" x="412" y="596" width="38" height="12"/>
+                <text class="edge-label clay" x="416" y="605">扣款 RPC</text>
+
+                <!-- order → inventory: 跨行 RPC（扣减库存）-->
+                <path class="edge rpc" d="M 350,650 L 350,663 L 590,663 L 590,672"/>
+                <rect class="edge-label-bg" x="420" y="655" width="92" height="12"/>
+                <text class="edge-label clay" x="425" y="664">扣减库存 · Lua</text>
+
+                <!-- ── D. order → Redis（cache aside, gold，走 x=425 gap 绕开 row 2/3 cards）── -->
+                <path class="edge cache-edge" d="M 380,650 L 380,655 L 425,655 L 425,920 L 407,920 L 407,940"/>
+                <rect class="edge-label-bg" x="430" y="897" width="76" height="14"/>
+                <text class="edge-label gold" x="434" y="907">cache aside</text>
+
+                <!-- ── E. order → MySQL（同步落库，clay 点线，沿右边距 x=1045 完全绕开 svc-product / svc-user）── -->
+                <path class="edge db-edge" d="M 390,650 L 390,655 L 1045,655 L 1045,1080 L 245,1080 L 245,1095"/>
+                <rect class="edge-label-bg" x="620" y="1073" width="92" height="14"/>
+                <text class="edge-label clay" x="624" y="1083">JDBC · commit · 落库</text>
+
+                <!-- ── F. order → Kafka（async event, plum dashed, 沿左边距 x=125 绕开 row 2/3 cards）── -->
+                <path class="edge async-event" d="M 200,650 L 200,665 L 125,665 L 125,895 L 220,895 L 220,940"/>
+                <rect class="edge-label-bg" x="100" y="755" width="120" height="14" transform="rotate(-90, 100, 755)"/>
+                <text class="edge-label plum" x="105" y="765" transform="rotate(-90, 105, 765)">order.created event</text>
+
+                <!-- ── G. Kafka → settlement（consumer，沿底部 y=895 横线右行，再上行至 row 1）── -->
+                <path class="edge async-event" d="M 230,940 L 230,895 L 1045,895 L 1045,650 L 905,650"/>
+                <rect class="edge-label-bg" x="730" y="887" width="140" height="14"/>
+                <text class="edge-label plum" x="735" y="897">consume · order.paid</text>
+
+                <!-- ── H. Kafka → notify（consumer，分叉到 row 3）── -->
+                <path class="edge async-event" d="M 240,940 L 240,885 L 590,885 L 590,862"/>
+                <rect class="edge-label-bg" x="380" y="877" width="120" height="14"/>
+                <text class="edge-label plum" x="385" y="887">push · sms · email</text>
+
+                <!-- ── I. Kafka → ClickHouse（CDC sink, teal dashed，沿 y=1080）── -->
+                <path class="edge cdc" d="M 225,1032 L 225,1075 L 705,1075 L 705,1095"/>
+                <rect class="edge-label-bg" x="430" y="1067" width="110" height="14"/>
+                <text class="edge-label teal" x="435" y="1077">CDC · 实时入仓</text>
+
+                <!-- ── J. product → Elasticsearch（Canal CDC 同步，teal dashed，绕过 row 3 via x=440 gap）── -->
+                <path class="edge cdc" d="M 275,756 L 275,760 L 440,760 L 440,920 L 589,920 L 589,940"/>
+                <rect class="edge-label-bg" x="442" y="868" width="116" height="14"/>
+                <text class="edge-label teal" x="446" y="878">Canal · binlog → ES</text>
+
+                <!-- ── K. user → MySQL（同步落库，绕过右侧 gap x≈865，y=1083 避开 CDC y=1075）── -->
+                <path class="edge db-edge" d="M 380,862 L 380,925 L 865,925 L 865,1083 L 280,1083 L 280,1095"/>
+                <rect class="edge-label-bg" x="500" y="918" width="74" height="14"/>
+                <text class="edge-label clay" x="504" y="928">user · 写 MySQL</text>
+
+                <!-- ── L. recommend → ClickHouse（读 OLAP，teal dashed，走 x=857 gap 绕开 mw-s3）── -->
+                <path class="edge cdc" d="M 905,862 L 905,910 L 857,910 L 857,1085 L 750,1085 L 750,1095"/>
+                <rect class="edge-label-bg" x="862" y="970" width="74" height="14"/>
+                <text class="edge-label teal" x="866" y="980">行为特征查询</text>
+
+                <!-- ── M. 横切：Prometheus → 服务（监控采集，indicative，teal 点线） ── -->
+                <path class="edge scrape" d="M 514,1258 L 514,1218 L 275,1218 L 275,650"/>
+                <rect class="edge-label-bg" x="370" y="1210" width="86" height="14"/>
+                <text class="edge-label teal" x="375" y="1220">scrape · 15s</text>
+
+                <!-- ── N. 横切：Nacos → 服务（配置下发） ── -->
+                <path class="edge scrape" d="M 970,1258 L 970,1218 L 905,1218 L 905,650"/>
+                <rect class="edge-label-bg" x="828" y="1210" width="74" height="14"/>
+                <text class="edge-label teal" x="832" y="1220">config 推送</text>
+              </g>
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- B · 分层架构元素图鉴 · 10 张卡 (5×2)                       -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <line class="section-divider" x1="40" y1="1450" x2="1040" y2="1450"/>
+              <text class="section-label" x="40" y="1488">B · 分层架构元素图鉴 · 复制粘贴元素库</text>
+              <text class="section-sub"   x="40" y="1510">10 张卡 · 节点 4 件套 + 边类型集 + tier band · 主图实际使用的元素挂 olive ✓</text>
+
+              <!-- ─── Row 1 · Card 1 · Client node + Card 2 · Edge node ─── -->
+              <g class="node gallery-card-node" data-id="g-client-node" tabindex="0">
+                <rect class="gallery-card" x="40" y="1540" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="1568">Client node · 客户端节点 (paper · gray 边)</text>
+                <rect class="gallery-tag-uml-bg" x="438" y="1554" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="483" y="1565" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="458" y="1574" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="1584" text-anchor="middle">主图 ✓ × 4</text>
+                <text class="gallery-desc" x="60" y="1598">paper 底 + gray-700 实边 + 10px 圆角 — 4 件套文本: 中文名 / 英文 mono / 技术栈 / 关键指标</text>
+                <!-- Demo: one example client node card -->
+                <g transform="translate(0,0)">
+                  <rect x="80" y="1622" width="220" height="92" rx="10" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.5"/>
+                  <text class="t-cn"     x="92" y="1644">iOS App</text>
+                  <text class="t-en"     x="92" y="1660">native ios</text>
+                  <text class="t-stack"  x="92" y="1682">Swift · SwiftUI · 5.0</text>
+                  <text class="t-metric gold" x="92" y="1702">DAU · 28 万</text>
+                </g>
+                <!-- Annotations -->
+                <text class="state-body" x="330" y="1644" fill="#3D3D3A">① cn 中文名 · sans 13px 600</text>
+                <text class="state-body" x="330" y="1664" fill="#87867F">② en mono · gray-500 10px</text>
+                <text class="state-body" x="330" y="1684" fill="#3D3D3A">③ stack 技术栈 · mono 9.5px</text>
+                <text class="state-body" x="330" y="1704" fill="#C4994E">④ metric 关键指标 · 高亮色</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-edge-node" tabindex="0">
+                <rect class="gallery-card" x="560" y="1540" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="1568">Edge / Access · 边缘接入节点 (gold)</text>
+                <rect class="gallery-tag-uml-bg" x="936" y="1554" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="981" y="1565" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="956" y="1574" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="993" y="1584" text-anchor="middle">主图 ✓ × 4</text>
+                <text class="gallery-desc" x="580" y="1598">gold 90% 透明底 + gold 实边 + 8px 圆角 — CDN · WAF · API Gateway · 负载均衡 共用</text>
+                <!-- Demo -->
+                <g transform="translate(0,0)">
+                  <rect x="600" y="1622" width="220" height="92" rx="8" fill="color-mix(in oklab, #C4994E, transparent 90%)" stroke="#C4994E" stroke-width="1.5"/>
+                  <text class="t-cn"     x="612" y="1644">API 网关</text>
+                  <text class="t-en"     x="612" y="1660">api gateway · ingress</text>
+                  <text class="t-stack"  x="612" y="1682">Kong · 自研鉴权插件</text>
+                  <text class="t-metric" x="612" y="1702">峰值 30 万 QPS · P99 8ms</text>
+                </g>
+                <text class="state-body" x="850" y="1644" fill="#C4994E" font-weight="600">gold 90% 底</text>
+                <text class="state-body" x="850" y="1664" fill="#C4994E">gold 实边 1.5px</text>
+                <text class="state-body" x="850" y="1684" fill="#87867F">rx 8 (略小于 client)</text>
+                <text class="state-body" x="850" y="1704" fill="#87867F">边缘四件 (CDN · WAF · GW · LB)</text>
+              </g>
+
+              <!-- ─── Row 2 · Card 3 · BFF + Card 4 · CORE ─── -->
+              <g class="node gallery-card-node" data-id="g-bff-node" tabindex="0">
+                <rect class="gallery-card" x="40" y="1772" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="1800">BFF Aggregator · 聚合层节点 (plum)</text>
+                <rect class="gallery-tag-uml-bg" x="438" y="1786" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="483" y="1797" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="458" y="1806" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="1816" text-anchor="middle">主图 ✓ × 3</text>
+                <text class="gallery-desc" x="60" y="1830">plum 90% 透明底 + plum 实边 — Backend for Frontend · 协议转换 · 数据聚合 / 剪裁</text>
+                <!-- Demo -->
+                <g transform="translate(0,0)">
+                  <rect x="80" y="1854" width="220" height="92" rx="8" fill="color-mix(in oklab, #6B5B95, transparent 90%)" stroke="#6B5B95" stroke-width="1.5"/>
+                  <text class="t-cn"     x="92" y="1876">BFF-Mobile</text>
+                  <text class="t-en"     x="92" y="1892">mobile aggregator · 端定制</text>
+                  <text class="t-stack"  x="92" y="1914">Go · Kratos · 24 实例</text>
+                  <text class="t-metric plum" x="92" y="1934">25 万 QPS · 协议 HTTP↔gRPC</text>
+                </g>
+                <text class="state-body" x="330" y="1876" fill="#6B5B95" font-weight="600">plum 90% 底</text>
+                <text class="state-body" x="330" y="1896" fill="#6B5B95">plum 实边 1.5px</text>
+                <text class="state-body" x="330" y="1916" fill="#87867F">面向端的聚合层</text>
+                <text class="state-body" x="330" y="1936" fill="#87867F">BFF-Web · -Mobile · -OpenAPI</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-core-node" tabindex="0">
+                <rect class="gallery-card" x="560" y="1772" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="1800">CORE service · 主路径核心服务 + 徽章</text>
+                <rect class="gallery-tag-uml-bg" x="936" y="1786" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="981" y="1797" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="956" y="1806" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="993" y="1816" text-anchor="middle">主图 ✓ × 1</text>
+                <text class="gallery-desc" x="580" y="1830">olive 80% 透明底 + olive <tspan font-weight="600">2.4px</tspan> 加粗边 + 右上 <tspan fill="#788C5D" font-weight="600">CORE</tspan> 徽章 — 主路径脊柱节点</text>
+                <!-- Demo -->
+                <g transform="translate(0,0)">
+                  <rect x="600" y="1854" width="220" height="92" rx="8" fill="color-mix(in oklab, #788C5D, transparent 80%)" stroke="#788C5D" stroke-width="2.4"/>
+                  <rect x="778" y="1860" width="34" height="13" rx="2.5" fill="#788C5D"/>
+                  <text class="core-badge-text" x="784" y="1870">CORE</text>
+                  <text class="t-cn"     x="612" y="1876">订单服务</text>
+                  <text class="t-en"     x="612" y="1892">order-service</text>
+                  <text class="t-stack"  x="612" y="1914">Go · gRPC · Kratos · 32 实例</text>
+                  <text class="t-metric olive" x="612" y="1934">写 12 万 QPS · P99 45ms · 4 个 9</text>
+                </g>
+                <text class="state-body" x="850" y="1876" fill="#788C5D" font-weight="600">olive 2.4 加粗</text>
+                <text class="state-body" x="850" y="1896" fill="#788C5D">CORE 徽章</text>
+                <text class="state-body" x="850" y="1916" fill="#87867F">主路径脊柱</text>
+                <text class="state-body" x="850" y="1936" fill="#87867F">通常仅 1 个 / 服务图</text>
+              </g>
+
+              <!-- ─── Row 3 · Card 5 · Domain services + Card 6 · Middleware ─── -->
+              <g class="node gallery-card-node" data-id="g-domain-services" tabindex="0">
+                <rect class="gallery-card" x="40" y="2004" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2032">Domain services · 域服务 3 色编码</text>
+                <rect class="gallery-tag-uml-bg" x="438" y="2018" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="483" y="2029" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="458" y="2038" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="2048" text-anchor="middle">主图 ✓ × 8</text>
+                <text class="gallery-desc" x="60" y="2062">clay = 交易域 trade · plum = 商品域 catalog · teal = 用户/通知/推荐 edge — 按业务领域分色</text>
+                <!-- Demo: 3 small cards in 3 colors -->
+                <rect x="60" y="2084" width="150" height="60" rx="8" fill="color-mix(in oklab, #D97757, transparent 92%)" stroke="#D97757" stroke-width="1.5"/>
+                <text class="t-cn" x="70" y="2104" font-size="12">支付服务</text>
+                <text class="t-en" x="70" y="2118" font-size="9">payment-service</text>
+                <text class="t-metric" x="70" y="2136" font-size="9">trade · 8 万 TPS</text>
+                <rect x="220" y="2084" width="150" height="60" rx="8" fill="color-mix(in oklab, #6B5B95, transparent 92%)" stroke="#6B5B95" stroke-width="1.5"/>
+                <text class="t-cn" x="230" y="2104" font-size="12">商品服务</text>
+                <text class="t-en" x="230" y="2118" font-size="9">product-service</text>
+                <text class="t-metric plum" x="230" y="2136" font-size="9">catalog · 读 18 万</text>
+                <rect x="380" y="2084" width="150" height="60" rx="8" fill="color-mix(in oklab, #4A8585, transparent 92%)" stroke="#4A8585" stroke-width="1.5"/>
+                <text class="t-cn" x="390" y="2104" font-size="12">用户服务</text>
+                <text class="t-en" x="390" y="2118" font-size="9">user-service</text>
+                <text class="t-metric teal" x="390" y="2136" font-size="9">edge · 4 万 QPS</text>
+                <text class="state-body" x="290" y="2168" text-anchor="middle">同 tier 内按域分色 · 一眼可读边界</text>
+                <text class="state-body" x="290" y="2188" text-anchor="middle">主图 9 服务 / 3 行: Trade · Catalog · Edge</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-middleware-node" tabindex="0">
+                <rect class="gallery-card" x="560" y="2004" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2032">Middleware · 中间件 (Cache · MQ · ES)</text>
+                <rect class="gallery-tag-uml-bg" x="936" y="2018" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="981" y="2029" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="956" y="2038" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="993" y="2048" text-anchor="middle">主图 ✓ × 5</text>
+                <text class="gallery-desc" x="580" y="2062">按职能着色 — gold = 缓存 · plum = 消息队列 · teal = 搜索 — 让中间件类型一眼可辨</text>
+                <!-- Demo: 3 small MW cards -->
+                <rect x="580" y="2084" width="140" height="64" rx="8" fill="color-mix(in oklab, #C4994E, transparent 86%)" stroke="#C4994E" stroke-width="1.5"/>
+                <text class="t-cn" x="590" y="2104" font-size="12">Redis 集群</text>
+                <text class="t-en" x="590" y="2118" font-size="9">redis · hot cache</text>
+                <text class="t-stack" x="590" y="2132" font-size="9">16 分片 · 主从</text>
+                <text class="t-metric gold" x="590" y="2144" font-size="9">命中 95%</text>
+                <rect x="730" y="2084" width="140" height="64" rx="8" fill="color-mix(in oklab, #6B5B95, transparent 88%)" stroke="#6B5B95" stroke-width="1.5"/>
+                <text class="t-cn" x="740" y="2104" font-size="12">Kafka</text>
+                <text class="t-en" x="740" y="2118" font-size="9">event bus</text>
+                <text class="t-stack" x="740" y="2132" font-size="9">12 broker · RF 3</text>
+                <text class="t-metric plum" x="740" y="2144" font-size="9">60 万 msg/s</text>
+                <rect x="880" y="2084" width="140" height="64" rx="8" fill="color-mix(in oklab, #4A8585, transparent 86%)" stroke="#4A8585" stroke-width="1.5"/>
+                <text class="t-cn" x="890" y="2104" font-size="12">Elasticsearch</text>
+                <text class="t-en" x="890" y="2118" font-size="9">es · 8.x</text>
+                <text class="t-stack" x="890" y="2132" font-size="9">30 数据节点</text>
+                <text class="t-metric teal" x="890" y="2144" font-size="9">4 亿 doc</text>
+                <text class="state-body" x="800" y="2168" text-anchor="middle">gold = 缓存 · plum = MQ · teal = 搜索</text>
+                <text class="state-body" x="800" y="2188" text-anchor="middle">同 tier 5 节点 / 按职能着色</text>
+              </g>
+
+              <!-- ─── Row 4 · Card 7 · Data store + Card 8 · Cross-cutting infra ─── -->
+              <g class="node gallery-card-node" data-id="g-data-store" tabindex="0">
+                <rect class="gallery-card" x="40" y="2236" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2264">Data store · 数据存储节点 (clay)</text>
+                <rect class="gallery-tag-uml-bg" x="438" y="2250" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="483" y="2261" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="458" y="2270" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="2280" text-anchor="middle">主图 ✓ × 4</text>
+                <text class="gallery-desc" x="60" y="2294">clay 88% 透明 + clay 实边 — MySQL / TiDB / ClickHouse / MongoDB 共用 · OLTP + OLAP 同框</text>
+                <!-- Demo -->
+                <rect x="80" y="2318" width="220" height="92" rx="8" fill="color-mix(in oklab, #D97757, transparent 88%)" stroke="#D97757" stroke-width="1.5"/>
+                <text class="t-cn"     x="92" y="2340">MySQL 主库</text>
+                <text class="t-en"     x="92" y="2356">mysql · oltp · 8.0</text>
+                <text class="t-stack"  x="92" y="2378">分库分表 16×256</text>
+                <text class="t-stack"  x="92" y="2394">MHA · 多 AZ 主从</text>
+                <text class="t-metric" x="92" y="2410">订单 / 商品 / 用户 主存储</text>
+                <text class="state-body" x="330" y="2340" fill="#D97757" font-weight="600">clay 88% 底</text>
+                <text class="state-body" x="330" y="2360" fill="#D97757">clay 实边 1.5px</text>
+                <text class="state-body" x="330" y="2380" fill="#87867F">数据层共用样式</text>
+                <text class="state-body" x="330" y="2400" fill="#87867F">OLTP+OLAP 都用此色</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-cross-cutting" tabindex="0">
+                <rect class="gallery-card" x="560" y="2236" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2264">Cross-cutting infra · 横切设施节点</text>
+                <rect class="gallery-tag-uml-bg" x="936" y="2250" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="981" y="2261" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="956" y="2270" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="993" y="2280" text-anchor="middle">主图 ✓ × 6</text>
+                <text class="gallery-desc" x="580" y="2294">paper 底 + teal 边 + rx <tspan font-weight="600">6</tspan>(略小圆角) — K8s · Istio · Prom · Jaeger · ELK · Nacos 共用</text>
+                <!-- Demo -->
+                <rect x="600" y="2318" width="180" height="92" rx="6" fill="#FFFFFF" stroke="#4A8585" stroke-width="1.5"/>
+                <text class="t-cn"     x="612" y="2340">监控 + 告警</text>
+                <text class="t-en"     x="612" y="2356">prometheus · grafana</text>
+                <text class="t-stack"  x="612" y="2378">pull 抓取 · 15s</text>
+                <text class="t-stack"  x="612" y="2394">Alertmanager · 飞书</text>
+                <text class="t-metric teal" x="612" y="2410">12 万 metrics</text>
+                <text class="state-body" x="810" y="2340" fill="#4A8585" font-weight="600">paper + teal 边</text>
+                <text class="state-body" x="810" y="2360" fill="#4A8585">rx 6 (小于业务)</text>
+                <text class="state-body" x="810" y="2380" fill="#87867F">不属任何业务层</text>
+                <text class="state-body" x="810" y="2400" fill="#87867F">贯穿 1-6 层</text>
+              </g>
+
+              <!-- ─── Row 5 · Card 9 · Edge type set + Card 10 · Tier band ─── -->
+              <g class="node gallery-card-node" data-id="g-edge-types" tabindex="0">
+                <rect class="gallery-card" x="40" y="2468" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2496">Edge type set · 边类型集 (7 种)</text>
+                <rect class="gallery-tag-uml-bg" x="438" y="2482" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="483" y="2493" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="458" y="2502" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="2512" text-anchor="middle">主图 ✓ 全用</text>
+                <text class="gallery-desc" x="60" y="2526">7 种边类型支撑全部架构语义 — 颜色 + 虚实组合 · 与底部 legend 完全对齐</text>
+                <!-- Demo: 7 edges stacked vertically -->
+                <path class="edge spine" d="M80,2550 L260,2550"/>
+                <text class="state-body" x="270" y="2554" fill="#788C5D" font-weight="600">spine 主路径</text>
+                <text class="state-body" x="380" y="2554" fill="#87867F">olive 2.6 + bold ▶</text>
+                <path class="edge sync-arch" d="M80,2570 L260,2570"/>
+                <text class="state-body" x="270" y="2574" fill="#141413" font-weight="600">sync-arch 骨架</text>
+                <text class="state-body" x="380" y="2574" fill="#87867F">slate 1.4 实线</text>
+                <path class="edge rpc" d="M80,2590 L260,2590"/>
+                <text class="state-body" x="270" y="2594" fill="#D97757" font-weight="600">同步 RPC</text>
+                <text class="state-body" x="380" y="2594" fill="#87867F">clay 1.4 实线</text>
+                <path class="edge async-event" d="M80,2610 L260,2610"/>
+                <text class="state-body" x="270" y="2614" fill="#6B5B95" font-weight="600">异步事件</text>
+                <text class="state-body" x="380" y="2614" fill="#87867F">plum 1.4 dashed 6/4</text>
+                <path class="edge cache-edge" d="M80,2630 L260,2630"/>
+                <text class="state-body" x="270" y="2634" fill="#C4994E" font-weight="600">cache aside</text>
+                <text class="state-body" x="380" y="2634" fill="#87867F">gold 1.2 dotted 3/3</text>
+                <path class="edge db-edge" d="M80,2650 L260,2650"/>
+                <text class="state-body" x="270" y="2654" fill="#D97757" font-weight="600">DB 读写</text>
+                <text class="state-body" x="380" y="2654" fill="#87867F">clay 1.4 dotted 2/3</text>
+                <path class="edge cdc" d="M80,2660 L260,2660"/>
+                <text class="state-body" x="270" y="2664" fill="#4A8585" font-weight="600">CDC / 同步</text>
+                <text class="state-body" x="380" y="2664" fill="#87867F">teal 1.3 dashed 5/3</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-tier-bands" tabindex="0">
+                <rect class="gallery-card" x="560" y="2468" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2496">Tier band · 分层背板 3 变体</text>
+                <rect class="gallery-tag-uml-bg" x="936" y="2482" width="90" height="16"/>
+                <text class="gallery-tag-uml-text" x="981" y="2493" text-anchor="middle">ARC PATTERN</text>
+                <rect class="ribbon-shown-bg" x="956" y="2502" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="993" y="2512" text-anchor="middle">主图 ✓ × 7</text>
+                <text class="gallery-desc" x="580" y="2526">默认 olive 4% · spine olive 8%（主路径加重）· cross teal 5%（横切层）· 全部虚边</text>
+                <!-- Demo: 3 small tier bands -->
+                <rect class="tier-band" x="580" y="2548" width="440" height="32"/>
+                <text class="tier-num" x="592" y="2566" font-size="14">01</text>
+                <text class="tier-name" x="616" y="2566">DEFAULT</text>
+                <text class="tier-cn" x="708" y="2566" font-size="11">默认 tier band</text>
+                <text class="state-body" x="920" y="2566" text-anchor="end" fill="#87867F">olive 96%</text>
+                <rect class="tier-band spine" x="580" y="2590" width="440" height="32"/>
+                <text class="tier-num" x="592" y="2608" font-size="14">04</text>
+                <text class="tier-name" x="616" y="2608">SPINE</text>
+                <text class="tier-cn" x="688" y="2608" font-size="11">主路径加重</text>
+                <text class="state-body" x="920" y="2608" text-anchor="end" fill="#788C5D" font-weight="600">olive 92%</text>
+                <rect class="tier-band cross" x="580" y="2632" width="440" height="32"/>
+                <text class="tier-num" x="592" y="2650" font-size="14">0X</text>
+                <text class="tier-name" x="616" y="2650" fill="#4A8585">CROSS</text>
+                <text class="tier-cn" x="688" y="2650" font-size="11">横切层 / infra</text>
+                <text class="state-body" x="920" y="2650" text-anchor="end" fill="#4A8585" font-weight="600">teal 95%</text>
+              </g>
+
+            </svg>
+          </div>
+          <div class="canvas-controls">
+            <button id="zoomOut" title="zoom out">−</button>
+            <span class="zoom-readout" id="zoomReadout">50%</span>
+            <button id="zoomIn" title="zoom in">+</button>
+            <span class="sep"></span>
+            <button id="zoomFit" title="fit">⛶</button>
+            <button id="zoomReset" title="reset">↺</button>
+          </div>
+          <div class="canvas-help">滚轮缩放 · 拖拽平移 · 双击节点居中 · 点击节点 →</div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <!-- 上：当前节点详情 -->
+      <div class="panel detail">
+        <div class="hint">点击图中任意节点查看详情</div>
+        <h3 id="d-title">订单服务 — order-service</h3>
+        <div class="meta" id="d-meta"><span>core microservice</span><span class="dot">·</span><span>12万 QPS</span><span class="dot">·</span><span>P99 45ms</span></div>
+        <div id="d-body">
+          <p>电商交易中台的<b>主路径核心节点</b> — 承载下单、改单、查单、退款等订单生命周期所有写流量。本架构图把"用户点击购买"这条主路径用<b>橄榄色加粗箭头</b>串起来，从客户端一路打到 MySQL 落库 + Kafka 发事件。</p>
+          <pre>tech stack:
+· Go 1.22 / gRPC / Kratos
+· 32 实例 (8c16g · k8s)
+· MySQL 分库分表 (16 库 256 表)
+· Redis 集群 (热缓存)
+· Kafka (order.created / order.paid 事件)
+
+SLA:
+· 写 QPS  · 12 万 (大促峰值)
+· P99    · 45ms
+· 可用性 · 99.99%</pre>
+        </div>
+        <div class="tags" id="d-tags"><span class="tag t-success">core</span><span class="tag t-success">main path</span></div>
+      </div>
+
+      <!-- 下：怎么画分层架构图 -->
+      <div class="panel howto">
+        <div class="eyebrow" style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">How-to · 分层架构图</div>
+        <h2>怎么画一张系统架构图</h2>
+        <ol>
+          <li><b>定层数</b>：典型 5-7 层。前端 / 接入 / BFF / 业务 / 中间件 / 数据，必要时把<b>横切层</b>（K8s/监控/网格）单独成层。</li>
+          <li><b>定方向</b>：用户请求自顶向下，<b>顶 = 用户最近、底 = 数据最近</b>。横向才是同层服务之间的协作。</li>
+          <li><b>每层一个 dashed 容器框</b>，左侧统一标层号 + 中英文名 + 一句描述，让读者一眼分得清"我在第几层"。</li>
+          <li><b>节点信息四件套</b>：中文名 / 英文技术名 / 技术栈 / SLA 指标。<u>没有数字的节点不算合格</u>。</li>
+          <li><b>主路径高亮</b>：选一条<u>最典型的请求</u>（如下单），用<b>加粗 + 区别色</b>把它从顶串到底，让读者知道"系统的脊柱"在哪。</li>
+          <li><b>区分边类型</b>：同步 RPC、异步事件、缓存读、DB 写、CDC、监控采集 — <b>5-6 种边类型</b>足够，用颜色 + 虚实区分，并写在图例里。</li>
+          <li><b>把横切点单独画</b>：K8s / Istio / Prometheus / Jaeger 不属于任何业务层，单独一层贯穿是最干净的画法，别在每个节点里画"还有监控"。</li>
+          <li><b>避免画成"框堆"</b>：节点过多时<u>同领域分组 + 行标签</u>（本图 4 层用"交易/商品/边缘" 3 行），比扁平堆叠更易读。</li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 底部 legend -->
+  <div class="legend-group" aria-label="legend - 节点与区域">
+    <div class="legend-group-label">节点与区域 · NODES &amp; TIER BANDS</div>
+    <div class="legend">
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="3" fill="#ffffff" stroke="#3D3D3A" stroke-width="1.5"/></svg></span><span class="name">客户端</span><span class="sub">/ web · app</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#C4994E22" stroke="#C4994E" stroke-width="1.5"/></svg></span><span class="name">边缘接入</span><span class="sub">/ CDN · GW</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#6B5B9522" stroke="#6B5B95" stroke-width="1.5"/></svg></span><span class="name">BFF 层</span><span class="sub">/ aggregator</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#788C5D33" stroke="#788C5D" stroke-width="2.4"/></svg></span><span class="name">CORE 服务</span><span class="sub">/ 主路径 + badge</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#D9775722" stroke="#D97757" stroke-width="1.5"/></svg></span><span class="name">交易域服务</span><span class="sub">/ trade</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#6B5B9522" stroke="#6B5B95" stroke-width="1.5"/></svg></span><span class="name">商品域服务</span><span class="sub">/ catalog</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#4A858522" stroke="#4A8585" stroke-width="1.5"/></svg></span><span class="name">边缘域服务</span><span class="sub">/ edge</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#6B5B9533" stroke="#6B5B95" stroke-width="1.5"/></svg></span><span class="name">消息 MQ</span><span class="sub">/ Kafka · RocketMQ</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#4A858533" stroke="#4A8585" stroke-width="1.5"/></svg></span><span class="name">搜索 ES</span><span class="sub">/ ElasticSearch</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#C4994E33" stroke="#C4994E" stroke-width="1.5"/></svg></span><span class="name">缓存</span><span class="sub">/ Redis</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#D9775733" stroke="#D97757" stroke-width="1.5"/></svg></span><span class="name">数据存储</span><span class="sub">/ MySQL · OLAP</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="2" fill="#ffffff" stroke="#4A8585" stroke-width="1.5"/></svg></span><span class="name">横切设施</span><span class="sub">/ infra</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="3" fill="#788C5D0A" stroke="#D1CFC5" stroke-width="1" stroke-dasharray="3 2"/></svg></span><span class="name">tier band</span><span class="sub">分层背板</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="3" fill="#788C5D14" stroke="#788C5D" stroke-width="1" stroke-dasharray="3 2"/></svg></span><span class="name">spine band</span><span class="sub">主路径加重</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="1" y="1" width="24" height="14" rx="3" fill="#4A85850D" stroke="#4A8585" stroke-width="1" stroke-dasharray="3 2"/></svg></span><span class="name">cross band</span><span class="sub">横切层 / infra</span></div>
+    </div>
+  </div>
+
+  <div class="legend-group" aria-label="legend - 线条与标记">
+    <div class="legend-group-label">线条与标记 · EDGES &amp; MARKERS</div>
+    <div class="legend">
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.6"/><path d="M22,8 L18,5 L18,11 z" fill="#788C5D"/></svg></span><span class="name">主路径 spine</span><span class="sub">happy path 加粗</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#141413" stroke-width="1.4"/><path d="M22,8 L18,5 L18,11 z" fill="#141413"/></svg></span><span class="name">sync-arch</span><span class="sub">分层骨架 slate</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#D97757" stroke-width="1.4"/><path d="M22,8 L18,5 L18,11 z" fill="#D97757"/></svg></span><span class="name">同步 RPC</span><span class="sub">gRPC · sync</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.4" stroke-dasharray="6 4"/><path d="M22,8 L18,5 L18,11 z" fill="#6B5B95"/></svg></span><span class="name">异步事件</span><span class="sub">Kafka · MQ</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#C4994E" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M22,8 L18,5 L18,11 z" fill="#C4994E"/></svg></span><span class="name">缓存</span><span class="sub">cache-aside</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#D97757" stroke-width="1.4" stroke-dasharray="2 3"/><path d="M22,8 L18,5 L18,11 z" fill="#D97757"/></svg></span><span class="name">DB 读写</span><span class="sub">JDBC · ORM 点线</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#4A8585" stroke-width="1.3" stroke-dasharray="5 3"/><path d="M22,8 L18,5 L18,11 z" fill="#4A8585"/></svg></span><span class="name">CDC / 同步</span><span class="sub">Canal · Debezium</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#4A8585" stroke-width="1" stroke-dasharray="1 4" opacity="0.55"/></svg></span><span class="name">监控采集</span><span class="sub">Prometheus pull · 无箭头</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="4" fill="#788C5D" stroke="#788C5D"/><text x="13" y="10.5" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#FFFFFF" font-weight="700">CORE</text></svg></span><span class="name">CORE 徽章</span><span class="sub">主路径胶囊</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="2" fill="#FFFFFF" stroke="#D1CFC5"/><text x="13" y="10.5" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#3D3D3A">edge-label</text></svg></span><span class="name">边标签</span><span class="sub">白底 + 灰发线</span></div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span>Engineering Diagram Library · 04 / 07 · 系统架构图 · 6 层分层 + 横切</span>
+    <span><a href="index.html">← 返回图谱总览</a></span>
+  </div>
+</div>
+
+<script>
+window.DIAGRAM_CONFIG = {
+  viewBox: { w: 1080, h: 2680 },
+  exportName: '04-system-architecture-ecommerce',
+  nodeData: {
+    /* ─────────────  Tier 1 · 客户端层  ───────────── */
+    'client-web': {
+      type: 'client', tagClass: 't-actor',
+      title: '网页客户端 — Web Client',
+      meta: ['tier 01 · client', 'React 18 · Next.js 14', 'DAU 8 万'],
+      body: `<p>面向 PC 用户的 <b>响应式网页端</b>，覆盖商品浏览、详情、下单、订单跟踪等全场景。</p><pre>tech:
+· React 18 + Next.js 14 (App Router)
+· SSR + ISR (商品详情走 ISR · 60s 增量)
+· TanStack Query (服务端状态)
+· Tailwind + shadcn/ui (设计系统)
+
+CDN 静态:
+· _next/static/*  · 命中率 98%
+· /api/*         · 走 BFF-Web</pre>`,
+      tags: ['web', 'ssr', 'pc-first']
+    },
+    'client-ios': {
+      type: 'client', tagClass: 't-actor',
+      title: 'iOS App',
+      meta: ['tier 01 · client', 'Swift / SwiftUI 5.0', 'DAU 28 万'],
+      body: `<p>苹果原生客户端 — iOS 14+ 支持，承载电商主路径 <b>40% 的 GMV</b>。本架构图 <b>主路径示例</b>从这里开始（橄榄粗箭头）。</p><pre>tech:
+· Swift 5.0 + SwiftUI / UIKit 混合
+· The Composable Architecture (TCA)
+· Combine (响应式)
+· Charles 抓包 + Quic + HTTP/3
+· APNs · Live Activity · Widget</pre>`,
+      tags: ['mobile', 'ios', 'main-path']
+    },
+    'client-android': {
+      type: 'client', tagClass: 't-actor',
+      title: 'Android App',
+      meta: ['tier 01 · client', 'Kotlin · Compose 1.6', 'DAU 42 万'],
+      body: `<p>安卓原生客户端 — Android 8+ 支持，覆盖国内主流厂商（小米/华为/OPPO/vivo），DAU 是 iOS 的 1.5 倍。</p><pre>tech:
+· Kotlin · Jetpack Compose 1.6
+· Hilt (DI) · Coroutines · Flow
+· Retrofit + OkHttp (HTTP/2)
+· FCM + 厂商推送通道</pre>`,
+      tags: ['mobile', 'android']
+    },
+    'client-mini': {
+      type: 'client', tagClass: 't-actor',
+      title: '小程序 / Open API',
+      meta: ['tier 01 · client', 'mini + 三方接入', 'API 调用 30 万'],
+      body: `<p>两类合并：<b>小程序矩阵</b>（微信/支付宝/抖店）+ <b>Open API</b>（5000+ ERP/选品/导购服务商接入）。</p><pre>mini-program:
+· 微信小程序 (Taro 跨端)
+· 支付宝小程序 · 抖店
+
+open-api:
+· OAuth 2.0 三方授权
+· 配额限流 (商户级)
+· 接入网关 BFF-OpenAPI</pre>`,
+      tags: ['mini-program', 'third-party']
+    },
+
+    /* ─────────────  Tier 2 · 边缘接入层  ───────────── */
+    'edge-cdn': {
+      type: 'edge', tagClass: 't-gate',
+      title: 'CDN — 内容分发',
+      meta: ['tier 02 · edge', 'Cloudflare + 阿里云', '命中率 92%'],
+      body: `<p>静态资源加速：JS/CSS/图片/视频缓存到全球 200+ PoP 节点，<b>92% 请求直接由边缘节点响应</b>，仅 8% 回源到对象存储。</p><pre>cache rules:
+· _next/static/*    · max-age 1y (hashed)
+· /images/*         · max-age 30d
+· /api/v1/cdn-*     · max-age 5min (TTL)
+· dynamic /api/*    · bypass</pre>`,
+      tags: ['cdn', 'static']
+    },
+    'edge-waf': {
+      type: 'edge', tagClass: 't-gate',
+      title: 'WAF — Web 应用防火墙',
+      meta: ['tier 02 · edge', 'Cloudflare WAF', '日拦截 1.2 亿'],
+      body: `<p>OWASP Top10 防护 + 自研 ML 异常识别。<b>日均拦截 1.2 亿次恶意请求</b>（爬虫、SQL 注入、CC 攻击）。</p><pre>protections:
+· SQL injection · XSS · CSRF
+· bot management (challenge / block)
+· CC / rate-limit (10k req / IP / min)
+· geo-fence (sanction list)
+· custom rules (业务自定义)</pre>`,
+      tags: ['security', 'waf']
+    },
+    'edge-gw': {
+      type: 'edge', tagClass: 't-gate',
+      title: 'API 网关 — Kong',
+      meta: ['tier 02 · edge', 'Kong + 自研插件', '峰值 30 万 QPS'],
+      body: `<p>整个平台的<b>统一入口</b>：所有 BFF/Service 流量必须经此。本架构图 <b>主路径橄榄箭头第二段</b> 经此到达 BFF-Mobile。</p><pre>plugins:
+· JWT 鉴权 (自研，对接 Nacos)
+· 限流 (令牌桶 · 服务级 + 用户级)
+· 路由 (按 path · header · 灰度)
+· request-transformer (协议转换)
+· prometheus exporter (监控)</pre>`,
+      tags: ['gateway', 'main-path']
+    },
+    'edge-lb': {
+      type: 'edge', tagClass: 't-gate',
+      title: '负载均衡 — Envoy + Nginx',
+      meta: ['tier 02 · edge', 'L4 + L7', '3 机房'],
+      body: `<p>双层负载均衡：Nginx 做 L4 TCP 分发，Envoy 做 L7 HTTP 智能路由 + mTLS 终止。</p><pre>policies:
+· L4 · 4-tuple hash (TCP)
+· L7 · 加权轮询 + 健康检查
+· 主备机房自动切换 (DNS 切流)
+· 多 AZ 流量调度 (跨机房灾备)</pre>`,
+      tags: ['lb', 'multi-az']
+    },
+
+    /* ─────────────  Tier 3 · BFF 聚合层  ───────────── */
+    'bff-web': {
+      type: 'bff', tagClass: 't-rel',
+      title: 'BFF-Web — 网页聚合层',
+      meta: ['tier 03 · bff', 'Go · Kratos', '5 万 QPS'],
+      body: `<p>面向 PC Web 的聚合层。SSR 友好（一次请求拿到首屏全部数据）：</p><pre>responsibilities:
+· 协议转换 HTTP/JSON ↔ gRPC/protobuf
+· 数据聚合 (一次请求 → 4-6 个服务并发)
+· 数据剪裁 (按 Web 端 schema 收敛字段)
+· 缓存 (Redis · 热点商品 1-5 min)
+
+scale:
+· Go 1.22 + Kratos
+· 16 实例 · 8c8g
+· P99 25ms (含下游)</pre>`,
+      tags: ['bff', 'ssr', 'aggregator']
+    },
+    'bff-mobile': {
+      type: 'bff', tagClass: 't-rel',
+      title: 'BFF-Mobile — 移动端聚合层',
+      meta: ['tier 03 · bff', 'Go · Kratos', '25 万 QPS'],
+      body: `<p>移动端流量大户（iOS+Android），<b>主路径橄榄箭头第三段</b> 经此调用 order-service。</p><pre>features:
+· 协议: HTTPS/JSON ↔ gRPC
+· 流量大头 (25 万 QPS)
+· 端定制 (iOS / Android schema 不同)
+· 弱网优化 (Brotli 压缩 + 增量同步)
+
+scale:
+· Go 1.22 · 24 实例 · 8c16g
+· P99 30ms · 4 个 9 可用性</pre>`,
+      tags: ['bff', 'mobile', 'main-path']
+    },
+    'bff-openapi': {
+      type: 'bff', tagClass: 't-rel',
+      title: 'BFF-OpenAPI — 三方接入网关',
+      meta: ['tier 03 · bff', 'Go · OAuth2', '商户 5000+'],
+      body: `<p>面向 ERP/选品/导购等三方系统的接入层，配额 + 限流是核心能力。</p><pre>capabilities:
+· OAuth 2.0 三方授权
+· 商户级 QPS 配额 (套餐定义)
+· 接口白名单 + 字段脱敏
+· 调用账单 (T+1 出账)
+· SDK 多语言生成 (OpenAPI 3.0)</pre>`,
+      tags: ['bff', 'openapi', 'merchant']
+    },
+
+    /* ─────────────  Tier 4 · 业务微服务（9 个）───────────── */
+    'svc-order': {
+      type: 'svc', tagClass: 't-success',
+      title: '订单服务 — order-service ★ CORE',
+      meta: ['tier 04 · core service', 'Go · gRPC · 32 实例', '写 12 万 QPS'],
+      body: `<p>本架构图的<b>主路径终点</b>。承载下单、改单、查单、退款发起 — 是整个交易中台的<b>脊柱节点</b>。</p><pre>responsibilities:
+· 订单全生命周期管理 (CREATED → COMPLETED)
+· 并发扣减库存 (调 svc-inventory)
+· 并发发起支付 (调 svc-payment)
+· 异步发事件 → Kafka (order.created / paid / shipped)
+· MySQL 落库 (分库分表 16×256 by user_id)
+
+tech:
+· Go 1.22 · gRPC · Kratos · DDD
+· 32 实例 · 8c16g · k8s
+· MySQL 分库 + Redis 缓存
+· Saga 事务 (跨服务一致性)
+
+SLA:
+· 写 QPS · 12 万 (大促峰值)
+· P99    · 45ms
+· 可用性 · 99.99% (4 个 9)</pre>`,
+      tags: ['core', 'main-path', 'trade']
+    },
+    'svc-payment': {
+      type: 'svc', tagClass: 't-decision',
+      title: '支付服务 — payment-service',
+      meta: ['tier 04 · trade', 'Java · Spring Boot · 24 实例', '8 万 TPS'],
+      body: `<p>对接 12 个支付渠道（微信/支付宝/银联/Apple Pay/...），统一抽象成<b>渠道适配器</b>模式。</p><pre>channels:
+· 微信 / 支付宝 / 银联 / 余额 / 信用卡
+· Apple Pay / Google Pay / 数字人民币
+
+key flows:
+· 同步收单 (统一下单 API)
+· 异步通知 (各渠道回调 → 自有 callback 网关)
+· 对账 (T+1 拉账单 比对)
+· 退款 (异步 · 状态机驱动)
+
+SLA: 8 万 TPS · P99 200ms (含渠道)</pre>`,
+      tags: ['payment', 'trade']
+    },
+    'svc-settlement': {
+      type: 'svc', tagClass: 't-decision',
+      title: '结算分账 — settlement-service',
+      meta: ['tier 04 · trade', 'Java · Kafka 消费者', '日 5000 万单'],
+      body: `<p><b>纯异步消费者</b> — 订阅 <code>order.paid</code> 事件后做商家分账、佣金计算、税务记账。</p><pre>responsibilities:
+· 消费 order.paid Kafka topic
+· 按商家配置规则分账 (T+0 / T+1 / T+7)
+· 平台扣点 + 服务费 + 税
+· 落 TiDB (HTAP 库) 供财务实时查询
+· 失败重试 (最多 5 次 · 死信告警)
+
+scale:
+· Java 17 · 16 实例 · 8c8g
+· 单实例消费 3万 msg/s</pre>`,
+      tags: ['settlement', 'async-consumer']
+    },
+    'svc-product': {
+      type: 'svc', tagClass: 't-io',
+      title: '商品服务 — product-service',
+      meta: ['tier 04 · catalog', 'Go · gRPC · 20 实例', '读 18 万 QPS'],
+      body: `<p>商品 SPU/SKU 主存储。<b>读多写少</b>（读:写 = 50:1），缓存命中率是关键。</p><pre>data model:
+· SPU (商品主体 · 标题/类目/品牌)
+· SKU (规格组合 · 价格/库存/图片)
+· 类目树 (5 级 · 自维护)
+
+caching strategy:
+· 商品详情 → Redis · 5 min
+· 类目树   → 本地缓存 + Redis · 1h
+· 库存数量 → 不缓存 (强一致由 inventory 管)
+
+写 → MySQL → Canal binlog → ES (供搜索)</pre>`,
+      tags: ['catalog', 'high-read']
+    },
+    'svc-inventory': {
+      type: 'svc', tagClass: 't-io',
+      title: '库存服务 — inventory-service',
+      meta: ['tier 04 · catalog', 'Go · Redis Lua', '强一致 · 6 万 TPS'],
+      body: `<p>电商最难做的服务之一 — <b>强一致库存扣减 + 防超卖</b>。订单主路径同步依赖。</p><pre>核心算法:
+· 库存数据 Redis Hash + MySQL 主存储
+· 扣减用 Redis Lua 脚本 (原子)
+· MySQL 异步对账 (兜底)
+· 预占 → 实扣 (Saga 两阶段)
+
+防超卖:
+· 行锁 + 乐观锁 (version)
+· 流量削峰 (Sentinel)
+· 不可超卖的兜底回退 (订单冲正)</pre>`,
+      tags: ['inventory', 'strong-consistency']
+    },
+    'svc-search': {
+      type: 'svc', tagClass: 't-io',
+      title: '搜索服务 — search-service',
+      meta: ['tier 04 · catalog', 'Java · ES 客户端', '6 万 QPS'],
+      body: `<p>商品搜索 + 类目筛选 + 排序。底层是 Elasticsearch，本服务做查询 DSL 拼装 + 业务排序。</p><pre>features:
+· 多字段检索 (标题/品牌/属性/价格区间)
+· IK 中文分词 + 同义词
+· 业务排序 (CTR + 销量 + 库存权重)
+· 千人千面 (融合 svc-recommend 召回)
+
+P99 80ms · QPS 6万 · 索引 4亿 doc</pre>`,
+      tags: ['search', 'catalog']
+    },
+    'svc-user': {
+      type: 'svc', tagClass: 't-event',
+      title: '用户服务 — user-service',
+      meta: ['tier 04 · edge', 'Go · JWT', '4 万 QPS'],
+      body: `<p>用户域核心：注册/登录/鉴权/会员/画像。<b>鉴权 RPS 高</b>（每次请求都验 JWT）。</p><pre>modules:
+· 账号 (手机/邮箱/三方登录)
+· 鉴权 (JWT 签发 + 校验)
+· 会员等级 (V1-V8 · 权益)
+· 用户画像 (年龄/性别/地域/偏好)
+· 风控关联 (设备指纹)
+
+存储 → MySQL (主) + Redis (token 缓存)</pre>`,
+      tags: ['user', 'auth']
+    },
+    'svc-notify': {
+      type: 'svc', tagClass: 't-event',
+      title: '通知服务 — notification-service',
+      meta: ['tier 04 · edge', 'Java · RocketMQ 消费者', '日 8000 万'],
+      body: `<p>消费 Kafka 订单事件 → 分发到 push / sms / email 三个渠道。日均推送 8000 万次。</p><pre>channels:
+· push  · 自研 + 厂商 (apns/fcm/小米/华为)
+· sms   · 阿里云 + 容灾备份 (腾讯/电信)
+· email · SendGrid
+
+flow control:
+· 模板化消息 (运营平台维护)
+· 用户分级 (V1-V4 静默时段不打扰)
+· 失败重试 + 兜底降级 (push → sms)
+· 触达率监控 (Prometheus)</pre>`,
+      tags: ['notification', 'async']
+    },
+    'svc-recommend': {
+      type: 'svc', tagClass: 't-event',
+      title: '推荐服务 — recommendation-service',
+      meta: ['tier 04 · edge', 'Python · TF Serving', 'CTR 6.8%'],
+      body: `<p>千人千面首页推荐。<b>召回 + 粗排 + 精排</b> 三段式架构。</p><pre>pipeline:
+· 召回 (5 路 · i2i / u2i / 热门 / 新品 / 多兴趣)
+· 粗排 (LR · 千级候选)
+· 精排 (DeepFM · 百级候选)
+· 重排 (业务规则 · 多样性 · 去重)
+
+tech:
+· Python 3.10 + TensorFlow Serving
+· 特征来源 → ClickHouse + Redis
+· 20 实例 GPU · P99 60ms · CTR 6.8%</pre>`,
+      tags: ['recommendation', 'ml']
+    },
+
+    /* ─────────────  Tier 5 · 中间件  ───────────── */
+    'mw-kafka': {
+      type: 'mw', tagClass: 't-event',
+      title: 'Kafka — 事件总线',
+      meta: ['tier 05 · mq', '12 broker · 3 副本', '60 万 msg/s'],
+      body: `<p>整个中台的<b>事件总线</b>。订单生命周期事件（created/paid/shipped/...）经此<b>异步通知</b>所有下游消费者。</p><pre>topics:
+· order.created   (订单创建)
+· order.paid      (支付成功 → 触发结算/通知)
+· order.shipped   (发货 → 触发通知)
+· order.refunded  (退款 → 触发结算/通知)
+· user.signup     (新用户 → 推荐冷启动)
+
+config:
+· 12 broker · 3 副本 (RF=3)
+· min.insync.replicas=2
+· 保留 7 天 (磁盘) + 30 天 (S3 备份)</pre>`,
+      tags: ['mq', 'event-bus']
+    },
+    'mw-redis': {
+      type: 'mw', tagClass: 't-state',
+      title: 'Redis — 热点缓存集群',
+      meta: ['tier 05 · cache', '16 分片 · 主从', '命中率 95%'],
+      body: `<p><b>缓存优先</b>架构的基石 — 商品详情/类目树/用户 token/购物车都在这里。</p><pre>分片策略:
+· 16 个分片 · 每个分片 1 主 1 从
+· 客户端分片 (一致性哈希)
+· 总容量 1 TB · 内存型实例
+
+cache patterns:
+· Cache-Aside (商品/订单读)
+· Write-Through (购物车)
+· TTL · 不超过 1h (避免穿透)
+· 防穿透/雪崩/击穿三件套
+  ↓ 布隆过滤器 / 互斥锁 / 多级 TTL</pre>`,
+      tags: ['cache', 'redis']
+    },
+    'mw-es': {
+      type: 'mw', tagClass: 't-state',
+      title: 'Elasticsearch — 搜索引擎',
+      meta: ['tier 05 · search', '8.x · 30 数据节点', '4 亿 doc'],
+      body: `<p>商品搜索的底层引擎。<b>通过 Canal 订阅 MySQL binlog 异步同步</b>（CDC），保证写后秒级可搜。</p><pre>indices:
+· product_v3      · 4 亿 doc · 主索引
+· product_recall  · 召回专用
+· order_es        · 订单冷数据归档
+
+配置:
+· 8.x 版本 · 30 数据节点
+· 3 副本 · IK 中文分词器
+· 索引大小 · 2 TB
+
+写入路径:
+MySQL → Canal → Kafka → ES Sink Connector</pre>`,
+      tags: ['search', 'es']
+    },
+    'mw-rocketmq': {
+      type: 'mw', tagClass: 't-event',
+      title: 'RocketMQ — 事务消息',
+      meta: ['tier 05 · mq', '6 节点', '通知专用'],
+      body: `<p>专门用于<b>事务消息</b>（half-message 半消息模式）— 解决"DB 落库成功但 MQ 发送失败"的双写问题。</p><pre>use cases:
+· 通知服务的下发消息 (失败重试 16 次)
+· 跨服务事务 (订单 + 库存 final 一致性)
+· 定时延迟消息 (订单 30min 未支付自动取消)
+
+vs Kafka:
+· Kafka  → 吞吐量优先 (事件流)
+· RocketMQ → 一致性 + 事务优先</pre>`,
+      tags: ['mq', 'transaction']
+    },
+    'mw-s3': {
+      type: 'mw', tagClass: 't-state',
+      title: '对象存储 — 阿里云 OSS',
+      meta: ['tier 05 · storage', 'PB 级', 'CDN 回源'],
+      body: `<p>所有非结构化数据的归宿：商品图、商品视频、聊天图片、订单导出、日志归档。</p><pre>buckets:
+· product-image-v3     · 商品图 (CDN 回源)
+· product-video        · 商品视频 (HLS 切片)
+· chat-attachment      · 即时通讯附件
+· logs-archive         · 日志归档 (60 天后转冷存储)
+· report-export        · 订单/财务报表
+
+总容量 · PB 级</pre>`,
+      tags: ['storage', 'oss']
+    },
+
+    /* ─────────────  Tier 6 · 数据层  ───────────── */
+    'db-mysql': {
+      type: 'data-store', tagClass: 't-db',
+      title: 'MySQL — OLTP 主库',
+      meta: ['tier 06 · oltp', '8.0 · 分库分表 16×256', 'MHA 高可用'],
+      body: `<p>电商最重要的数据 — 订单、用户、商品、库存 — 全在这里。<b>分库分表是必修课</b>。</p><pre>sharding:
+· 订单库: shard by user_id (16 库 256 表)
+· 用户库: shard by user_id (8 库 64 表)
+· 商品库: 单库分表 (256 表)
+· 库存库: shard by sku_id
+
+高可用:
+· MHA (Master High Availability)
+· 半同步复制 (semi-sync)
+· 跨 AZ 主从 · 自动 failover < 30s
+· 备份 · 全量每日 + binlog 增量</pre>`,
+      tags: ['mysql', 'oltp', 'sharding']
+    },
+    'db-tidb': {
+      type: 'data-store', tagClass: 't-db',
+      title: 'TiDB — HTAP 数据库',
+      meta: ['tier 06 · htap', '5.4 · PD + TiKV + TiFlash', '结算专用'],
+      body: `<p>结算和财务报表的库 — 既要 OLTP（实时写）又要 OLAP（聚合查询），用 HTAP 一站式解决。</p><pre>架构:
+· PD     · 调度组件 (3 节点)
+· TiKV   · 行存 OLTP (15 节点)
+· TiFlash · 列存 OLAP (6 节点)
+
+为什么用 TiDB：
+· 结算后跑日报/月报 → TiFlash 走列存
+· 实时账单写入     → TiKV 走行存
+· 一份数据两种使用 (HTAP 真正落地)
+· 兼容 MySQL 协议 (迁移成本低)</pre>`,
+      tags: ['tidb', 'htap']
+    },
+    'db-ch': {
+      type: 'data-store', tagClass: 't-db',
+      title: 'ClickHouse — 列存 OLAP',
+      meta: ['tier 06 · olap', '18 节点 · 列存', '行为分析'],
+      body: `<p>用户行为分析 + BI + 实时报表。<b>Kafka → ClickHouse CDC 入仓</b>，10秒内可查。</p><pre>数据源:
+· Kafka 订单事件 (CDC 实时入仓)
+· MySQL binlog (T+0 同步)
+· 客户端埋点 (浏览/点击/停留)
+· 日志聚合
+
+典型查询:
+· 实时大盘 (1s 内 GMV/订单数)
+· 漏斗分析 (10亿数据 · 5s 内)
+· 用户行为路径 (DAU 留存)
+
+为什么用 ClickHouse: 1000x faster than MySQL on group-by</pre>`,
+      tags: ['olap', 'ch']
+    },
+    'db-mongo': {
+      type: 'data-store', tagClass: 't-db',
+      title: 'MongoDB — 文档存储',
+      meta: ['tier 06 · document', '7.x 副本集', '评论 · 日志'],
+      body: `<p>用于 schemaless 数据：用户评论、商品评价、用户行为日志、系统操作日志。</p><pre>collections:
+· product_review   · 商品评价 (含图/视频)
+· user_behavior   · 用户行为流
+· operation_log   · 后台操作日志
+· feedback        · 用户反馈
+
+架构:
+· 副本集 (1 主 + 2 从 + 2 仲裁) × 3 套
+· 分片 by user_id / product_id
+· 读写分离</pre>`,
+      tags: ['mongo', 'document']
+    },
+
+    /* ─────────────  Tier X · 横切关注点  ───────────── */
+    'x-k8s': {
+      type: 'infra', tagClass: 't-zone',
+      title: 'K8s — 容器编排',
+      meta: ['cross-cutting', 'kubernetes 1.29', '3 集群 · 1500 pod'],
+      body: `<p>所有微服务的运行时。<b>3 套集群</b>（线上/灰度/预发）+ <b>多 AZ</b>（跨机房调度）。</p><pre>capabilities:
+· Deployment / StatefulSet / DaemonSet
+· HPA (基于 QPS / CPU / Memory 自动扩容)
+· PDB (Pod Disruption Budget · 滚动安全)
+· NetworkPolicy (服务级 ACL)
+· 跨 AZ 反亲和 (高可用)
+
+GitOps · ArgoCD 同步</pre>`,
+      tags: ['k8s', 'orchestration']
+    },
+    'x-istio': {
+      type: 'infra', tagClass: 't-zone',
+      title: 'Istio — 服务网格',
+      meta: ['cross-cutting', 'sidecar · mTLS', '灰度发布'],
+      body: `<p>把"流量治理"从业务代码里抽出来，放到 sidecar 里统一管。</p><pre>capabilities:
+· mTLS (服务间双向加密)
+· 流量切分 (按 header / weight · 灰度)
+· 故障注入 (混沌工程)
+· 熔断 + 重试 + 超时 (统一治理)
+· 可观测 (生成 trace + metric)
+
+部署模式:
+· Envoy sidecar (每个 pod 一个)
+· istiod (控制面 · 配置下发)</pre>`,
+      tags: ['mesh', 'istio']
+    },
+    'x-prom': {
+      type: 'infra', tagClass: 't-zone',
+      title: 'Prometheus + Grafana — 监控告警',
+      meta: ['cross-cutting', 'pull · 15s', '12 万 metrics'],
+      body: `<p><b>每 15 秒</b>从每个服务的 <code>/metrics</code> 接口拉取数据，存入 Prometheus，Grafana 出图。</p><pre>关键指标:
+· QPS / latency / error_rate (RED 法则)
+· P50 / P95 / P99 (分位线)
+· 业务指标 (订单数/GMV/支付成功率)
+· 基础设施 (CPU/内存/磁盘/网络)
+
+告警:
+· Alertmanager → 飞书 + 短信 + 电话
+· 分级 (P0/P1/P2)
+· 静默规则 (避免告警风暴)</pre>`,
+      tags: ['monitoring', 'metrics']
+    },
+    'x-jaeger': {
+      type: 'infra', tagClass: 't-zone',
+      title: 'Jaeger — 分布式链路追踪',
+      meta: ['cross-cutting', 'opentelemetry', '日 5 亿 span'],
+      body: `<p>把一次请求经过的所有服务 + 中间件串成一条 trace，<b>定位慢请求/失败请求的神器</b>。</p><pre>features:
+· traceId 全链路透传 (HTTP header / gRPC metadata)
+· 采样策略:
+  · 默认 1% (节省存储)
+  · 慢请求 (>1s) 100% 强制采样
+  · 错误请求 100% 强制采样
+· OpenTelemetry 自动埋点
+· 关联 Prometheus exemplar (从图表点入 trace)</pre>`,
+      tags: ['tracing', 'otel']
+    },
+    'x-elk': {
+      type: 'infra', tagClass: 't-zone',
+      title: '日志中心 — ELK / Loki',
+      meta: ['cross-cutting', 'fluent-bit', '日 TB+'],
+      body: `<p>fluent-bit 采集 → Kafka 缓冲 → Logstash 解析 → ES 存储。<b>保留 30 天</b>，超过转 OSS 冷存储。</p><pre>pipeline:
+· fluent-bit (sidecar · 采集容器 stdout)
+· Kafka (削峰缓冲)
+· Logstash (grok 解析 + 富化)
+· Elasticsearch (近 30 天热数据)
+· S3 (30 天后冷归档)
+
+日均量:
+· 业务日志 · 800 GB
+· 接入日志 · 300 GB
+· 系统日志 · 100 GB</pre>`,
+      tags: ['log', 'elk']
+    },
+    'x-nacos': {
+      type: 'infra', tagClass: 't-zone',
+      title: 'Nacos — 配置中心 + 服务发现',
+      meta: ['cross-cutting', '动态配置', '千节点'],
+      body: `<p>配置中心 + 服务发现一体化。<b>不重启服务热更配置</b>是关键能力。</p><pre>features:
+· 配置中心:
+  · 多环境隔离 (dev/staging/prod)
+  · 灰度发布 (按 ip / label 推送)
+  · 版本回滚 (历史 30 版)
+· 服务发现:
+  · 实例上下线毫秒级通知
+  · 健康检查 (TCP / HTTP)
+· 命名空间隔离 (项目维度)</pre>`,
+      tags: ['config', 'service-discovery']
+    },
+
+    /* ─────────────  B · 分层架构元素图鉴  ───────────── */
+    'g-client-node': {
+      type: 'client', tagClass: 't-actor',
+      title: 'B-01 · Client node — 客户端节点',
+      meta: ['element', 'arc pattern · paper card', '主图 ✓ × 4'],
+      body: `<p>paper 底 + gray-700 实边 + 10px 圆角 — 客户端层的统一视觉。</p><pre>4 件套文本:
+① cn 中文名 (var(--sans) weight 600 · 13px · slate)
+② en 英文 mono (var(--mono) · 10px · gray-500)
+③ stack 技术栈 (var(--mono) · 9.5px · gray-700)
+④ metric 关键指标 (var(--mono) · 9.5px · 高亮色)
+   - gold = DAU/PV · plum = QPS · olive = SLA · teal = 命中率</pre><p><b>主图 4 实例</b>: 网页客户端 (React 18) · iOS App (Swift) · Android App (Kotlin) · 小程序/Open API。</p><p>原则: <b>没有数字的节点不算合格</b> — 每个节点必有 metric 一行；没有可填的就标 "—" 而不是省略。</p>`,
+      tags: ['element', 'client']
+    },
+    'g-edge-node': {
+      type: 'edge', tagClass: 't-gate',
+      title: 'B-02 · Edge / Access — 边缘接入节点 (gold)',
+      meta: ['element', 'arc pattern · gold tint', '主图 ✓ × 4'],
+      body: `<p>gold 90% 透明底 + gold 实边 + 8px 圆角 — 边缘接入层统一视觉。</p><pre>语义:
+gold 色编码 "用户最近、最先看到的网络层" — CDN/WAF/Gateway/LB
+rx 8 (略小于 client rx 10) 区分层级
+stroke-width 1.5 与 client 一致
+
+主图 4 实例:
+· CDN 内容分发 (Cloudflare + 阿里云)
+· WAF Web 防火墙 (Cloudflare WAF)
+· API 网关 Kong
+· 负载均衡 Envoy (L7) + Nginx (L4)</pre><p>边缘四件套是<b>电商交易中台的固定标配</b> — 缺一会显得架构图缺一层防护。</p>`,
+      tags: ['element', 'edge']
+    },
+    'g-bff-node': {
+      type: 'bff', tagClass: 't-rel',
+      title: 'B-03 · BFF Aggregator — 聚合层节点 (plum)',
+      meta: ['element', 'arc pattern · plum tint', '主图 ✓ × 3'],
+      body: `<p>plum 90% 透明底 + plum 实边 — Backend for Frontend 层。</p><pre>职责:
+· 协议转换 HTTP/JSON ↔ gRPC/protobuf
+· 数据聚合 (一次请求 → 4-6 个微服务并发)
+· 数据剪裁 (按端 schema 收敛字段)
+· 缓存热点结果 (Redis · 1-5 min)
+· 弱网优化 (Brotli 压缩 · 增量同步)
+
+主图 3 实例:
+· BFF-Web    (PC 网页聚合 · SSR 友好)
+· BFF-Mobile (移动端聚合 · 流量大头 25 万 QPS)
+· BFF-OpenAPI (三方接入 · 配额限流)</pre><p>plum 色与 system 服务的 plum 区分: BFF 用 90% 透明（最浅）· system 用 88%。</p>`,
+      tags: ['element', 'bff']
+    },
+    'g-core-node': {
+      type: 'svc', tagClass: 't-success',
+      title: 'B-04 · CORE service — 主路径核心服务 + 徽章',
+      meta: ['element', 'arc pattern · olive 2.4 + badge', '主图 ✓ × 1'],
+      body: `<p>olive 80% 透明 + olive <b>2.4px 加粗</b>边 + 右上 <b>CORE</b> 实色徽章 — 主路径脊柱节点。</p><pre>visual 配方:
+· fill: color-mix(in oklab, olive, transparent 80%)
+· stroke: olive
+· stroke-width: 2.4 (其他服务 1.5 · 突出主路径)
+· 右上方 34×13 实色 olive 矩形 + 白字 "CORE" 7px
+
+主图实例: order-service (订单服务)
+· 32 实例 · 写 12 万 QPS · P99 45ms · 4 个 9
+· spine 主路径终点
+· 同步调 svc-payment + svc-inventory
+· 异步发 Kafka order.created/paid 事件</pre><p>每张分层架构图<b>通常仅 1 个 CORE</b> — 是主路径上的关键节点；过多 CORE 等于没有 CORE。</p>`,
+      tags: ['element', 'core']
+    },
+    'g-domain-services': {
+      type: 'svc', tagClass: 't-success',
+      title: 'B-05 · Domain services — 域服务 3 色编码',
+      meta: ['element', 'arc pattern · domain coloring', '主图 ✓ × 8'],
+      body: `<p>同 tier 内按业务领域分色 — 让"哪些服务属一组"一眼可读。</p><pre>3 色编码:
+· clay 92% (交易域 trade)
+   - payment-service (支付)
+   - settlement-service (结算分账)
+· plum 92% (商品域 catalog)
+   - product-service (商品)
+   - inventory-service (库存)
+   - search-service (搜索)
+· teal 92% (用户/通知/推荐 edge)
+   - user-service (用户)
+   - notification-service (通知)
+   - recommendation-service (推荐)
+
+主图 9 服务 / 3 行</pre><p>同 tier 内<b>用色彩分组</b>比纯横向布局更易读 — 服务多到 6+ 时这种 3 行分组几乎必选。</p>`,
+      tags: ['element', 'domain']
+    },
+    'g-middleware-node': {
+      type: 'mw', tagClass: 't-event',
+      title: 'B-06 · Middleware — 中间件 (Cache · MQ · ES)',
+      meta: ['element', 'arc pattern · function coloring', '主图 ✓ × 5'],
+      body: `<p>按职能着色 — 让中间件类型一眼可辨。</p><pre>3 色编码:
+· gold 86%  缓存 cache
+   - Redis (热点缓存 · 命中 95%)
+· plum 88%  消息队列 mq
+   - Kafka (事件总线 · 60 万 msg/s)
+   - RocketMQ (事务消息 · 半消息模式)
+· teal 86%  搜索 / 索引
+   - Elasticsearch (商品索引 · 4 亿 doc)
+
+中性:
+· paper + gray edge  对象存储 OSS</pre><p>不要用"middleware"统一色 — 缓存和 MQ 的访问模式完全不同 (高频读 vs 异步推)，颜色区分让架构语义直接呈现。</p>`,
+      tags: ['element', 'middleware']
+    },
+    'g-data-store': {
+      type: 'data-store', tagClass: 't-db',
+      title: 'B-07 · Data store — 数据存储节点 (clay)',
+      meta: ['element', 'arc pattern · clay tint', '主图 ✓ × 4'],
+      body: `<p>clay 88% 透明 + clay 实边 — 数据层统一视觉。</p><pre>主图 4 实例:
+· MySQL 主库   OLTP · 8.0 · 分库分表 16×256
+· TiDB HTAP    OLTP+OLAP · 5.4 · PD+TiKV+TiFlash
+· ClickHouse   OLAP 列存 · 18 节点
+· MongoDB      Document 7.x · 副本集
+
+OLTP 和 OLAP 用同色 — clay 表示"权威数据"，区分 OLTP/OLAP 通过 cn/en/stack 文本即可。</pre><p>不要给数据库画 cylinder 图标 — 在分层架构图里 cylinder 是 ER 图的形状语言；这里用<b>统一色调矩形</b>表示"持久化层"更克制。</p>`,
+      tags: ['element', 'database']
+    },
+    'g-cross-cutting': {
+      type: 'infra', tagClass: 't-zone',
+      title: 'B-08 · Cross-cutting infra — 横切设施节点',
+      meta: ['element', 'arc pattern · teal border', '主图 ✓ × 6'],
+      body: `<p>paper 底 + teal 边 + rx <b>6</b>(略小圆角) — 横切层统一视觉。</p><pre>视觉区分:
+· 业务节点 rx 8 / 10 · 实色填充
+· 横切节点 rx 6 · 仅边框 (paper 内部)
+  → 表达"不属于任何业务层" 的视觉语义
+
+主图 6 实例:
+· K8s 容器编排 (1.29 · 1500 pod)
+· Istio 服务网格 (mTLS · 灰度)
+· Prometheus + Grafana (12 万 metrics)
+· Jaeger 链路追踪 (日 5 亿 span)
+· ELK 日志中心 (TB+ 级)
+· Nacos 配置中心 + 服务发现</pre><p>横切层不要插进任何业务 tier — <b>单独成层（0X）</b>是分层架构图的<u>最重要的一条美学规则</u>。</p>`,
+      tags: ['element', 'cross-cutting']
+    },
+    'g-edge-types': {
+      type: 'event', tagClass: 't-event',
+      title: 'B-09 · Edge type set — 边类型集 (7 种)',
+      meta: ['element', 'arc pattern · 颜色 + 虚实组合', '主图 ✓ 全用'],
+      body: `<p>7 种边类型支撑全部架构语义 — 与主图边集 + 底部 legend 完全对齐。</p><pre>类型 / 视觉 / 用途:
+· spine        olive 2.6px + bold ▶
+                 主路径 spine · 下单 happy path
+· sync-arch    slate 1.4px 实线
+                 层间骨架 · 用户请求方向
+· sync RPC     clay 1.4px 实线 + ▶clay
+                 服务间同步调用 · gRPC unary
+· async event  plum 1.4px dashed 6/4 + ▶plum
+                 Kafka 异步事件推送
+· cache aside  gold 1.2px dotted 3/3 + ▶gold
+                 Redis 缓存读写
+· DB read/write  clay 1.4px dotted 2/3 + ▶clay
+                 JDBC · ORM · 落库
+· CDC / sync   teal 1.3px dashed 5/3 + ▶teal
+                 Canal · Debezium binlog 同步
+· scrape       teal 1px dotted 1/4 opacity 0.55
+                 Prometheus pull 抓取 (无箭头)</pre><p><b>原则</b>: 5-6 种边类型足够，再多读者就分不清；这里是 7 种但 scrape 视觉极轻 (透明度 0.55 + 无箭头)，实际"重边"只有 6 种。</p>`,
+      tags: ['element', 'edges']
+    },
+    'g-tier-bands': {
+      type: 'tier', tagClass: 't-zone',
+      title: 'B-10 · Tier band — 分层背板 3 变体',
+      meta: ['element', 'arc pattern · band coloring', '主图 ✓ × 7'],
+      body: `<p>tier band 是分层架构图的<b>每一层的背板容器</b> — 框出"这一层"的范围。</p><pre>3 变体:
+· DEFAULT  olive 96% 透明 + gray-300 虚边
+            普通 tier · Client / Edge / BFF / Middleware / Data
+· SPINE    olive 92% 透明 + olive 虚边
+            主路径 tier · Services (内含 CORE)
+· CROSS    teal 95% 透明 + teal 虚边
+            横切层 0X · K8s / Istio / 监控 / ...
+
+共用规则:
+· stroke-dasharray: "6 4"
+· rx: 14 ry: 14
+· height 按内容自适应 (120-370px)
+· width 统一 1020 (canvas 内 30 → 1050)</pre><p><b>主图 7 tier</b>: 01 Client / 02 Edge / 03 BFF / 04 Services(spine) / 05 Middleware / 06 Data / 0X Cross。每层左侧统一 24px serif 编号 + mono 英文名 + 中文名 + 副标题。</p>`,
+      tags: ['element', 'tier-band']
+    }
+  }
+};
+</script>
+<script>
+/* ─── Shared interactivity for Engineering Diagram Library
+       Expects window.DIAGRAM_CONFIG = {
+         nodeData: { [id]: { type, tagClass, title, meta, body, tags } },
+         viewBox: { w, h },         // SVG natural size
+         exportName: 'NN-slug',     // file basename (no extension)
+         svgStyle: '...'            // (optional) inline CSS string injected into export svg
+       } ─── */
+(function(){
+  const cfg = window.DIAGRAM_CONFIG || {};
+  const NODE_DATA = cfg.nodeData || {};
+  const VBW = (cfg.viewBox && cfg.viewBox.w) || 1080;
+  const VBH = (cfg.viewBox && cfg.viewBox.h) || 1500;
+  const EXPORT_NAME = cfg.exportName || 'diagram';
+  const SVG_EXPORT_STYLE = cfg.svgStyle || '';
+
+  /* ── Detail panel ── */
+  const detailEl = {
+    title: document.getElementById('d-title'),
+    meta:  document.getElementById('d-meta'),
+    body:  document.getElementById('d-body'),
+    tags:  document.getElementById('d-tags'),
+  };
+  function showDetail(id) {
+    const data = NODE_DATA[id];
+    if (!data || !detailEl.title) return;
+    detailEl.title.textContent = data.title;
+    detailEl.meta.innerHTML = (data.meta || []).map((m, i, arr) =>
+      `<span>${m}</span>${i < arr.length - 1 ? '<span class="dot">·</span>' : ''}`
+    ).join('');
+    detailEl.body.innerHTML = data.body || '';
+    detailEl.tags.innerHTML = (data.tags || []).map(t =>
+      `<span class="tag ${data.tagClass || ''}">${t}</span>`
+    ).join('');
+    document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+    const node = document.querySelector(`.node[data-id="${id}"]`);
+    if (node) node.classList.add('active');
+  }
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('click', () => showDetail(node.dataset.id));
+    node.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDetail(node.dataset.id); }
+    });
+  });
+
+  /* ── Pan & Zoom ── */
+  const stage = document.getElementById('stage');
+  const inner = document.getElementById('canvasInner');
+  const zoomReadout = document.getElementById('zoomReadout');
+  if (!stage || !inner) return;
+
+  let scale = 0.5, tx = 0, ty = 0;
+  const MIN_SCALE = 0.2, MAX_SCALE = 4;
+
+  function applyTransform() {
+    inner.style.transform = `translate(calc(-50% + ${tx}px), ${ty}px) scale(${scale})`;
+    if (zoomReadout) zoomReadout.textContent = Math.round(scale * 100) + '%';
+  }
+  function fitToFrame() {
+    const rect = stage.getBoundingClientRect();
+    const padX = 40, padY = 60;
+    const sX = (rect.width - padX * 2) / VBW;
+    const sY = (rect.height - padY * 2) / VBH;
+    scale = Math.min(sX, sY, 1);
+    tx = 0; ty = 0;
+    applyTransform();
+  }
+  function resetView() { scale = 0.5; tx = 0; ty = 0; applyTransform(); }
+
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    const delta = -e.deltaY * 0.0015;
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * (1 + delta)));
+    const k = newScale / scale;
+    const stageCx = rect.width / 2;
+    const dx = cx - stageCx - tx;
+    const dy = cy - 24 - ty;
+    tx -= dx * (k - 1);
+    ty -= dy * (k - 1);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  let dragging = false, dragStart = { x: 0, y: 0, tx: 0, ty: 0 };
+  stage.addEventListener('mousedown', e => {
+    if (e.target.closest('.node')) return;
+    dragging = true;
+    stage.classList.add('dragging');
+    dragStart = { x: e.clientX, y: e.clientY, tx, ty };
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx = dragStart.tx + (e.clientX - dragStart.x);
+    ty = dragStart.ty + (e.clientY - dragStart.y);
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    dragging = false;
+    stage.classList.remove('dragging');
+  });
+
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      try {
+        const bbox = node.getBBox();
+        const cx = bbox.x + bbox.width / 2;
+        const cy = bbox.y + bbox.height / 2;
+        const rect = stage.getBoundingClientRect();
+        scale = 1.4;
+        tx = -(cx - VBW / 2) * scale;
+        ty = -cy * scale + (rect.height / 2 - 24);
+        applyTransform();
+      } catch (err) {}
+    });
+  });
+
+  const elIn  = document.getElementById('zoomIn');
+  const elOut = document.getElementById('zoomOut');
+  const elFit = document.getElementById('zoomFit');
+  const elRes = document.getElementById('zoomReset');
+  if (elIn)  elIn.addEventListener('click', () => { scale = Math.min(MAX_SCALE, scale * 1.2); applyTransform(); });
+  if (elOut) elOut.addEventListener('click', () => { scale = Math.max(MIN_SCALE, scale / 1.2); applyTransform(); });
+  if (elFit) elFit.addEventListener('click', fitToFrame);
+  if (elRes) elRes.addEventListener('click', resetView);
+
+  window.addEventListener('load', fitToFrame);
+  window.addEventListener('resize', fitToFrame);
+
+  /* ── Theme ── */
+  const sunIcon  = document.getElementById('themeIconSun');
+  const moonIcon = document.getElementById('themeIconMoon');
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    if (sunIcon)  sunIcon.style.display  = t === 'dark' ? 'none' : '';
+    if (moonIcon) moonIcon.style.display = t === 'dark' ? '' : 'none';
+  }
+  const savedTheme = localStorage.getItem('diagram-theme') || 'light';
+  applyTheme(savedTheme);
+  const tt = document.getElementById('themeToggle');
+  if (tt) tt.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('diagram-theme', next);
+  });
+
+  /* ── Export ── */
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function paletteFor(theme) {
+    return theme === 'dark' ? {
+      paper: '#211F1C', slate: '#F5F3EC', clay: '#E08E6F', olive: '#93A872',
+      rust: '#C46559', plum: '#8E81B5', teal: '#5DA0A0', gold: '#D4AB66',
+      gray150: '#26241F', gray300: '#3D3A33', gray500: '#87867F', gray700: '#B8B6AA', bg: '#1A1917'
+    } : {
+      paper: '#FFFFFF', slate: '#141413', clay: '#D97757', olive: '#788C5D',
+      rust: '#B04A3F', plum: '#6B5B95', teal: '#4A8585', gold: '#C4994E',
+      gray150: '#F0EEE6', gray300: '#D1CFC5', gray500: '#87867F', gray700: '#3D3D3A', bg: '#FAF9F5'
+    };
+  }
+  function inlineStyleBlock(p) {
+    return `
+      text { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: ${p.slate}; }
+      text.t-title { font-family: system-ui, sans-serif; font-weight: 500; font-size: 13px; fill: ${p.slate}; }
+      text.t-sub { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl-yes { fill: ${p.olive}; }
+      text.t-lbl-no { fill: ${p.rust}; }
+      text.t-connector { font-family: Georgia, serif; font-weight: 500; font-size: 14px; fill: ${p.clay}; }
+      text.t-ann { font-size: 10.5px; fill: ${p.gray700}; }
+      text.t-lane { font-family: Georgia, serif; font-size: 16px; fill: ${p.slate}; font-weight: 500; }
+      text.t-big  { font-family: Georgia, serif; font-size: 18px; fill: ${p.slate}; font-weight: 500; }
+      text.t-stage { font-size: 10px; letter-spacing: 0.1em; fill: ${p.gray500}; text-transform: uppercase; }
+      .node .shape { fill: ${p.paper}; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node .shape-inner { fill: none; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node.term .shape { fill: ${p.gray150}; }
+      .node.io .shape, .node.io .shape-inner { stroke: ${p.plum}; }
+      .node.io .shape { fill: ${p.plum}22; }
+      .node.db .shape, .node.db .shape-inner { stroke: ${p.clay}; }
+      .node.db .shape { fill: ${p.clay}22; }
+      .node.subprocess .shape, .node.subprocess .shape-inner { stroke: ${p.olive}; }
+      .node.subprocess .shape { fill: ${p.olive}22; }
+      .node.document .shape { fill: ${p.rust}22; stroke: ${p.rust}; }
+      .node.connector .shape { stroke: ${p.clay}; }
+      .node.success .shape { fill: ${p.olive}33; stroke: ${p.olive}; }
+      .node.fail .shape { fill: ${p.rust}33; stroke: ${p.rust}; }
+      .node.actor .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.actor-system .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.actor-external .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.state .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.state-initial .shape { fill: ${p.slate}; stroke: ${p.slate}; }
+      .node.state-final .shape { fill: ${p.paper}; stroke: ${p.slate}; }
+      .node.state-final .shape-inner { fill: ${p.slate}; }
+      .node.state-composite .shape { fill: ${p.olive}11; stroke: ${p.olive}; }
+      .node.entity .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute-key .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.relationship .shape { fill: ${p.clay}22; stroke: ${p.clay}; }
+      .node.gateway .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.event .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.event-end .shape { fill: ${p.paper}; stroke: ${p.rust}; stroke-width: 2.5; }
+      .node.event-msg .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.tier .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 5 3; }
+      .node.cache .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.queue .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.gateway-api .shape { fill: ${p.clay}33; stroke: ${p.clay}; stroke-width: 2; }
+      .node.commit .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.commit-main .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.commit-develop .shape { fill: ${p.paper}; stroke: ${p.plum}; }
+      .node.commit-feature .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.commit-release .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.commit-hotfix .shape { fill: ${p.paper}; stroke: ${p.rust}; }
+      .node.tag .shape { fill: ${p.gold}33; stroke: ${p.gold}; }
+      .node.zone .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 6 3; }
+      .node.zone-dmz .shape { fill: ${p.gold}11; stroke: ${p.gold}; stroke-dasharray: 6 3; }
+      .node.zone-internal .shape { fill: ${p.plum}11; stroke: ${p.plum}; stroke-dasharray: 6 3; }
+      .node.firewall .shape { fill: ${p.rust}22; stroke: ${p.rust}; stroke-width: 2; }
+      .node.router .shape { fill: ${p.teal}22; stroke: ${p.teal}; }
+      .node.switch-net .shape { fill: ${p.paper}; stroke: ${p.gray700}; }
+      .node.server .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .edge { stroke: ${p.gray500}; stroke-width: 1.5; fill: none; }
+      .edge.yes { stroke: ${p.olive}; }
+      .edge.no { stroke: ${p.rust}; stroke-dasharray: 5 4; }
+      .edge.db { stroke: ${p.clay}; stroke-dasharray: 3 3; }
+      .edge.async { stroke-dasharray: 6 3; }
+      .edge.return { stroke: ${p.gray500}; stroke-dasharray: 4 3; }
+      .edge.sync { stroke: ${p.slate}; }
+      .edge.msg { stroke: ${p.plum}; }
+      .edge.relation { stroke: ${p.clay}; }
+      .edge.lane { stroke: ${p.gray300}; stroke-width: 1; }
+      .annotation .bracket { fill: none; stroke: ${p.gray500}; stroke-width: 1.2; stroke-dasharray: 3 3; }
+      .annotation .leader { stroke: ${p.gray500}; stroke-width: 1; stroke-dasharray: 2 3; }
+      .annotation .note { fill: ${p.gold}22; stroke: ${p.gold}; stroke-width: 1.2; }
+      .annotation .note-text { font-size: 10.5px; fill: ${p.gray700}; }
+      ${SVG_EXPORT_STYLE}
+    `;
+  }
+  function buildExportableSvg() {
+    const svg = document.getElementById('diagram').cloneNode(true);
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const p = paletteFor(theme);
+    svg.setAttribute('data-theme', theme);
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    const allDocStyles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    style.textContent = allDocStyles + '\n' + inlineStyleBlock(p);
+    svg.insertBefore(style, svg.firstChild);
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('x', '0'); bg.setAttribute('y', '0');
+    bg.setAttribute('width', VBW); bg.setAttribute('height', VBH);
+    bg.setAttribute('fill', p.bg);
+    svg.insertBefore(bg, svg.firstChild.nextSibling);
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    return new XMLSerializer().serializeToString(svg);
+  }
+  function exportSvg() {
+    const blob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    downloadBlob(blob, `${EXPORT_NAME}-${theme}.svg`);
+  }
+  function exportPng() {
+    const svgBlob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const dpr = 3;
+      const canvas = document.createElement('canvas');
+      canvas.width = VBW * dpr; canvas.height = VBH * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(img, 0, 0, VBW, VBH);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+        downloadBlob(blob, `${EXPORT_NAME}-${theme}.png`);
+      }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); alert('PNG 导出失败 — 请改用 SVG。'); };
+    img.src = url;
+  }
+  const sv = document.getElementById('exportSvg');
+  const pn = document.getElementById('exportPng');
+  if (sv) sv.addEventListener('click', exportSvg);
+  if (pn) pn.addEventListener('click', exportPng);
+
+  /* ── Copy HTML source ── */
+  const ch = document.getElementById('copyHtml');
+  if (ch) ch.addEventListener('click', async () => {
+    const src = '<!doctype html>\n' + document.documentElement.outerHTML;
+    const orig = ch.innerHTML;
+    try {
+      await navigator.clipboard.writeText(src);
+      ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制';
+    } catch (err) {
+      const ta = document.createElement('textarea');
+      ta.value = src; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制'; }
+      catch (e) { ch.innerHTML = '复制失败'; }
+      ta.remove();
+    }
+    setTimeout(() => { ch.innerHTML = orig; }, 1800);
+  });
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1492 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ER 图 · 订单业务数据模型 — Engineering Diagram Library</title>
+<style>
+/* ─── Shared design tokens + chrome for Engineering Diagram Library
+       v1 · paired with diagram-shared.js
+       Each diagram page only needs to layer its own SVG content. ─── */
+:root {
+  --ivory:   #FAF9F5;
+  --paper:   #FFFFFF;
+  --slate:   #141413;
+  --clay:    #D97757;
+  --oat:     #E3DACC;
+  --olive:   #788C5D;
+  --rust:    #B04A3F;
+  --plum:    #6B5B95;
+  --teal:    #4A8585;
+  --gold:    #C4994E;
+  --gray-150:#F0EEE6;
+  --gray-300:#D1CFC5;
+  --gray-500:#87867F;
+  --gray-700:#3D3D3A;
+  --shadow: 0 1px 2px rgba(20,20,19,0.04), 0 8px 24px rgba(20,20,19,0.06);
+
+  --serif: ui-serif, Georgia, "Times New Roman", serif;
+  --sans:  system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  --ivory:   #1A1917;
+  --paper:   #211F1C;
+  --slate:   #F5F3EC;
+  --clay:    #E08E6F;
+  --oat:     #3A342B;
+  --olive:   #93A872;
+  --rust:    #C46559;
+  --plum:    #8E81B5;
+  --teal:    #5DA0A0;
+  --gold:    #D4AB66;
+  --gray-150:#26241F;
+  --gray-300:#3D3A33;
+  --gray-500:#87867F;
+  --gray-700:#B8B6AA;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Dark-mode override: map inline SVG hex (fill/stroke presentation attrs)
+       to dark equivalents via attribute selectors. Lower specificity than
+       any class-based rule, higher than presentation attrs. ── */
+:root[data-theme="dark"] svg [fill="#FFFFFF"], :root[data-theme="dark"] svg [fill="#ffffff"], :root[data-theme="dark"] svg [fill="#fff"] { fill: #211F1C; }
+:root[data-theme="dark"] svg [stroke="#FFFFFF"], :root[data-theme="dark"] svg [stroke="#ffffff"], :root[data-theme="dark"] svg [stroke="#fff"] { stroke: #211F1C; }
+:root[data-theme="dark"] svg [fill="#FAF9F5"] { fill: #1A1917; }
+:root[data-theme="dark"] svg [stroke="#FAF9F5"] { stroke: #1A1917; }
+:root[data-theme="dark"] svg [fill="#141413"] { fill: #F5F3EC; }
+:root[data-theme="dark"] svg [stroke="#141413"] { stroke: #F5F3EC; }
+:root[data-theme="dark"] svg [fill="#D97757"] { fill: #E08E6F; }
+:root[data-theme="dark"] svg [stroke="#D97757"] { stroke: #E08E6F; }
+:root[data-theme="dark"] svg [fill="#788C5D"] { fill: #93A872; }
+:root[data-theme="dark"] svg [stroke="#788C5D"] { stroke: #93A872; }
+:root[data-theme="dark"] svg [fill="#B04A3F"] { fill: #C46559; }
+:root[data-theme="dark"] svg [stroke="#B04A3F"] { stroke: #C46559; }
+:root[data-theme="dark"] svg [fill="#6B5B95"] { fill: #8E81B5; }
+:root[data-theme="dark"] svg [stroke="#6B5B95"] { stroke: #8E81B5; }
+:root[data-theme="dark"] svg [fill="#4A8585"] { fill: #5DA0A0; }
+:root[data-theme="dark"] svg [stroke="#4A8585"] { stroke: #5DA0A0; }
+:root[data-theme="dark"] svg [fill="#C4994E"] { fill: #D4AB66; }
+:root[data-theme="dark"] svg [stroke="#C4994E"] { stroke: #D4AB66; }
+:root[data-theme="dark"] svg [fill="#F0EEE6"] { fill: #26241F; }
+:root[data-theme="dark"] svg [stroke="#F0EEE6"] { stroke: #26241F; }
+:root[data-theme="dark"] svg [fill="#D1CFC5"] { fill: #3D3A33; }
+:root[data-theme="dark"] svg [stroke="#D1CFC5"] { stroke: #3D3A33; }
+:root[data-theme="dark"] svg [fill="#3D3D3A"] { fill: #B8B6AA; }
+:root[data-theme="dark"] svg [stroke="#3D3D3A"] { stroke: #B8B6AA; }
+:root[data-theme="dark"] svg [fill="#E3DACC"] { fill: #3A342B; }
+:root[data-theme="dark"] svg [stroke="#E3DACC"] { stroke: #3A342B; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--ivory); color: var(--slate); font-family: var(--sans); -webkit-font-smoothing: antialiased; line-height: 1.55; transition: background 200ms ease, color 200ms ease; }
+
+/* ── Topbar ── */
+.topbar { position: sticky; top: 0; z-index: 50; background: color-mix(in oklab, var(--ivory), transparent 8%); backdrop-filter: blur(8px); border-bottom: 1px solid var(--gray-300); }
+.topbar-inner { max-width: 1480px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.crumb { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--gray-500); }
+.crumb a { color: var(--gray-500); text-decoration: none; }
+.crumb a:hover { color: var(--slate); }
+.crumb .sep { opacity: 0.5; }
+.crumb .here { color: var(--slate); }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 50%; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; }
+.icon-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 17px; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; }
+.pill-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn svg { width: 12px; height: 12px; }
+
+/* ── Header ── */
+.sheet { max-width: 1480px; margin: 0 auto; padding: 36px 28px 28px; }
+.title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+.title-block { max-width: 760px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); margin-bottom: 12px; }
+h1 { font-family: var(--serif); font-weight: 500; font-size: 40px; letter-spacing: -0.014em; line-height: 1.15; margin-bottom: 14px; }
+h1 em { font-style: italic; color: var(--gray-500); font-weight: 400; }
+.lead { font-size: 14.5px; line-height: 1.65; color: var(--gray-700); max-width: 660px; }
+.lead b { color: var(--slate); font-weight: 600; }
+.lead code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 6px; border-radius: 4px; }
+.stat-row { display: flex; gap: 28px; align-items: baseline; font-family: var(--mono); font-size: 11px; color: var(--gray-500); }
+.stat-row .v { color: var(--slate); font-size: 24px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.1; margin-bottom: 2px; }
+
+/* ── Layout ── */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-top: 28px; align-items: start; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── Canvas ── */
+.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; box-shadow: var(--shadow); }
+.canvas-stage { position: absolute; inset: 0; cursor: grab; user-select: none; touch-action: none; }
+.canvas-stage.dragging { cursor: grabbing; }
+.canvas-grid { position: absolute; inset: -2000px; background-image: radial-gradient(circle, var(--gray-300) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+.canvas-inner { position: absolute; left: 50%; top: 24px; transform-origin: center top; transition: transform 60ms ease; }
+svg.diagram { display: block; }
+.diagram text { font-family: var(--mono); font-size: 12px; fill: var(--slate); pointer-events: none; }
+.diagram text.t-title { font-family: var(--sans); font-weight: 500; font-size: 13px; }
+.diagram text.t-sub { font-size: 10px; fill: var(--gray-500); }
+.diagram text.t-lbl { font-size: 10px; fill: var(--gray-500); font-family: var(--mono); }
+.diagram text.t-lbl-no { fill: var(--rust); }
+.diagram text.t-lbl-yes { fill: var(--olive); }
+.diagram text.t-connector { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--clay); }
+.diagram text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.diagram text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+
+/* ── Generic node shapes (per-diagram pages add specifics) ── */
+.node { cursor: pointer; transition: opacity 150ms ease; }
+.node .shape { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
+.node .shape-inner { fill: none; stroke: var(--gray-500); stroke-width: 1.5; }
+.node.term .shape { fill: var(--gray-150); }
+.node.process .shape { fill: var(--paper); }
+.node.decision .shape { fill: var(--paper); }
+.node.io .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.io .shape-inner { stroke: var(--plum); }
+.node.io text { fill: var(--slate); }
+.node.db .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.db .shape-inner { stroke: var(--clay); }
+.node.subprocess .shape { fill: color-mix(in oklab, var(--olive), transparent 92%); stroke: var(--olive); }
+.node.subprocess .shape-inner { stroke: var(--olive); }
+.node.document .shape { fill: color-mix(in oklab, var(--rust), transparent 92%); stroke: var(--rust); }
+.node.document .shape-inner { stroke: var(--rust); }
+.node.connector .shape { fill: var(--paper); stroke: var(--clay); stroke-width: 1.5; }
+.node.success .shape { fill: color-mix(in oklab, var(--olive), transparent 85%); stroke: var(--olive); }
+.node.fail .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); }
+.node.actor .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.actor-system .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.actor-external .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.state .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.state-initial .shape { fill: var(--slate); stroke: var(--slate); }
+.node.state-final .shape { fill: var(--paper); stroke: var(--slate); }
+.node.state-final .shape-inner { fill: var(--slate); }
+.node.state-composite .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); }
+.node.entity .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.entity-weak .shape { fill: var(--paper); stroke: var(--gray-500); stroke-dasharray: none; }
+.node.attribute .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.attribute-key .shape { fill: var(--paper); stroke: var(--clay); }
+.node.relationship .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.gateway .shape { fill: var(--paper); stroke: var(--gold); }
+.node.event .shape { fill: var(--paper); stroke: var(--olive); }
+.node.event-end .shape { fill: var(--paper); stroke: var(--rust); stroke-width: 2.5; }
+.node.event-msg .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.tier .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 5 3; }
+.node.cache .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.queue .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.gateway-api .shape { fill: color-mix(in oklab, var(--clay), transparent 85%); stroke: var(--clay); stroke-width: 2; }
+.node.commit .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.commit-main .shape { fill: var(--paper); stroke: var(--clay); }
+.node.commit-develop .shape { fill: var(--paper); stroke: var(--plum); }
+.node.commit-feature .shape { fill: var(--paper); stroke: var(--olive); }
+.node.commit-release .shape { fill: var(--paper); stroke: var(--gold); }
+.node.commit-hotfix .shape { fill: var(--paper); stroke: var(--rust); }
+.node.tag .shape { fill: color-mix(in oklab, var(--gold), transparent 80%); stroke: var(--gold); }
+.node.zone .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 6 3; }
+.node.zone-dmz .shape { fill: color-mix(in oklab, var(--gold), transparent 95%); stroke: var(--gold); stroke-dasharray: 6 3; }
+.node.zone-internal .shape { fill: color-mix(in oklab, var(--plum), transparent 95%); stroke: var(--plum); stroke-dasharray: 6 3; }
+.node.firewall .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); stroke-width: 2; }
+.node.router .shape { fill: color-mix(in oklab, var(--teal), transparent 85%); stroke: var(--teal); }
+.node.switch-net .shape { fill: var(--paper); stroke: var(--gray-700); }
+.node.server .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node:hover .shape { stroke-width: 2; }
+.node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.node.active:not(.gallery-card-node) .shape { stroke: var(--clay); stroke-width: 2.6; }
+.node.active:not(.gallery-card-node) .shape-inner { stroke: var(--clay); }
+
+/* ── Edges ── */
+.edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#arrow); }
+.edge.yes { stroke: var(--olive); marker-end: url(#arrow-olive); }
+.edge.no { stroke: var(--rust); stroke-dasharray: 5 4; marker-end: url(#arrow-rust); }
+.edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#arrow-clay); }
+.edge.async { stroke-dasharray: 6 3; }
+.edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#arrow-open); }
+.edge.sync { stroke: var(--slate); marker-end: url(#arrow-slate); }
+.edge.msg { stroke: var(--plum); marker-end: url(#arrow-plum); }
+.edge.thick { stroke-width: 2.2; }
+.edge.bidir { marker-start: url(#arrow-rev); marker-end: url(#arrow); }
+.edge.no-arrow { marker-end: none; }
+.edge.relation { stroke: var(--clay); stroke-width: 1.5; }
+.edge.attr-link { stroke: var(--gray-500); stroke-width: 1.2; }
+.edge.lane { stroke: var(--gray-300); stroke-width: 1; }
+
+/* ── Annotation ── */
+.annotation .bracket { fill: none; stroke: var(--gray-500); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.annotation .leader { stroke: var(--gray-500); stroke-width: 1; stroke-dasharray: 2 3; }
+.annotation .note { fill: color-mix(in oklab, var(--gold), transparent 92%); stroke: var(--gold); stroke-width: 1.2; }
+.annotation .note-text { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+
+/* ── Floating canvas controls ── */
+.canvas-controls { position: absolute; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 4px; background: var(--paper); border: 1px solid var(--gray-300); border-radius: 20px; padding: 4px; box-shadow: var(--shadow); }
+.canvas-controls button { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--slate); border-radius: 50%; cursor: pointer; font-family: var(--mono); font-size: 14px; transition: background 150ms ease; }
+.canvas-controls button:hover { background: var(--gray-150); color: var(--clay); }
+.canvas-controls .zoom-readout { width: 46px; text-align: center; font-family: var(--mono); font-size: 10px; color: var(--gray-700); padding: 0 2px; letter-spacing: 0.02em; }
+.canvas-controls .sep { width: 1px; height: 18px; background: var(--gray-300); }
+.canvas-help { position: absolute; left: 16px; bottom: 16px; font-family: var(--mono); font-size: 10px; color: var(--gray-500); letter-spacing: 0.04em; background: color-mix(in oklab, var(--paper), transparent 20%); padding: 6px 10px; border-radius: 12px; border: 1px solid var(--gray-300); }
+
+/* ── Aside ── */
+aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 110px); }
+.panel { border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+.detail { padding: 22px 22px 22px; max-height: 50vh; overflow-y: auto; }
+.detail .hint { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.04em; }
+.detail .hint::before { content: "→"; color: var(--clay); font-size: 13px; }
+.detail h3 { font-family: var(--serif); font-weight: 500; font-size: 21px; margin-bottom: 4px; letter-spacing: -0.008em; line-height: 1.2; }
+.detail .meta { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 16px; letter-spacing: 0.03em; }
+.detail .meta .dot { color: var(--clay); margin: 0 7px; }
+.detail p { font-size: 13.5px; line-height: 1.6; color: var(--gray-700); margin-bottom: 12px; }
+.detail p code { font-family: var(--mono); font-size: 12px; background: var(--gray-150); padding: 1px 5px; border-radius: 3px; color: var(--slate); }
+.detail pre { font-family: var(--mono); font-size: 11.5px; line-height: 1.55; background: var(--gray-150); border: 1px solid var(--gray-300); border-radius: 8px; padding: 11px 13px; white-space: pre-wrap; color: var(--slate); overflow-x: auto; margin-bottom: 12px; }
+.detail .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.detail .tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border: 1px solid var(--gray-300); border-radius: 11px; color: var(--gray-700); letter-spacing: 0.04em; }
+.detail .tag.t-term { color: var(--gray-500); }
+.detail .tag.t-process { color: var(--slate); }
+.detail .tag.t-decision { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-io { color: var(--plum); border-color: var(--plum); }
+.detail .tag.t-db { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-subprocess { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-document { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-connector { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-success { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-fail { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-actor { color: var(--slate); }
+.detail .tag.t-state { color: var(--slate); }
+.detail .tag.t-entity { color: var(--slate); }
+.detail .tag.t-rel { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-gate { color: var(--gold); border-color: var(--gold); }
+.detail .tag.t-event { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-zone { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-firewall { color: var(--rust); border-color: var(--rust); }
+
+.howto { padding: 22px; max-height: 40vh; overflow-y: auto; }
+.howto .eyebrow { color: var(--clay); margin-bottom: 8px; }
+.howto h2 { font-family: var(--serif); font-weight: 500; font-size: 18px; margin-bottom: 14px; letter-spacing: -0.005em; }
+.howto ol { list-style: none; counter-reset: step; }
+.howto ol li { counter-increment: step; padding: 9px 0 9px 30px; position: relative; font-size: 12.5px; color: var(--gray-700); line-height: 1.55; border-top: 1px dashed var(--gray-300); }
+.howto ol li:first-child { border-top: none; }
+.howto ol li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 10px; font-family: var(--mono); font-size: 10px; color: var(--clay); letter-spacing: 0; }
+.howto ol li b { font-weight: 600; color: var(--slate); }
+
+/* ── Gallery card (B 区元素图鉴 · 与 03 范本对齐) ── */
+.diagram text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+.diagram text.section-sub   { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.diagram .section-divider   { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+.diagram .gallery-card      { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; transition: stroke 150ms ease, stroke-width 150ms ease; }
+.diagram .gallery-card-node { cursor: pointer; }
+.diagram .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.diagram .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.diagram .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.diagram text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.diagram text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.diagram .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .ribbon-shown-bg   { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.diagram .ribbon-ref-bg     { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+/* ── Legend ── */
+.legend-group { margin-top: 18px; }
+.legend-group + .legend-group { margin-top: 14px; }
+.legend-group-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; padding: 0 6px 8px; }
+.legend-group .legend { margin-top: 0; }
+.legend { margin-top: 18px; padding: 18px 22px; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 22px; }
+.legend-item { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--gray-700); }
+.legend-item .name { color: var(--slate); }
+.legend-item .sub { color: var(--gray-500); margin-left: 4px; }
+.chip { width: 26px; height: 16px; flex-shrink: 0; }
+.chip svg { width: 100%; height: 100%; overflow: visible; }
+
+/* ── Footer ── */
+.footer-note { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 11px; color: var(--gray-500); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.footer-note a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+
+</style>
+<style>
+  /* ── ER · IE notation table styles (local) ── */
+  :root { --row-zebra:#F7F5EE; }
+  [data-theme="dark"] { --row-zebra:#1E1D1B; }
+
+  .diagram .table-frame  { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.5; rx: 10; ry: 10; transition: stroke 150ms ease, stroke-width 150ms ease; }
+  .diagram .table-header { fill: var(--slate); transition: fill 150ms ease; }
+  .diagram .table-header.weak { fill: var(--paper); stroke: var(--slate); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .diagram .row-zebra    { fill: var(--row-zebra); }
+  .diagram .row-divider  { stroke: var(--gray-300); }
+
+  .diagram text.table-title { font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--paper); }
+  .diagram text.table-title.weak { fill: var(--slate); }
+  .diagram text.cell        { font-family: var(--mono); font-size: 11.5px; fill: var(--slate); }
+  .diagram text.cell.pk     { font-weight: 700; }
+  .diagram text.cell.fk     { font-style: italic; fill: var(--plum); }
+  .diagram text.typ         { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); }
+  .diagram text.tag-pk      { font-family: var(--mono); font-size: 9px; fill: var(--gold); font-weight: 700; }
+  .diagram text.tag-fk      { font-family: var(--mono); font-size: 9px; fill: var(--plum); font-weight: 700; }
+  .diagram text.tag-uq      { font-family: var(--mono); font-size: 9px; fill: var(--olive); font-weight: 700; }
+  .diagram text.tag-idx     { font-family: var(--mono); font-size: 9px; fill: var(--teal); font-weight: 700; }
+  .diagram text.tag-nn      { font-family: var(--mono); font-size: 9px; fill: var(--clay); font-weight: 700; }
+
+  /* relationship lines + crow's foot endpoints (use stroke="currentColor"-friendly inline) */
+  .diagram .er-edge    { stroke: var(--gray-500); stroke-width: 1.3; fill: none; }
+  .diagram .er-edge.dashed { stroke-dasharray: 4 3; }
+  .diagram .crowfoot   { stroke: var(--gray-500); stroke-width: 1.3; fill: none; }
+  .diagram .endpoint-circle { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.3; }
+
+  /* selected entity */
+  .diagram .node.active:not(.gallery-card-node) .table-frame  { stroke: var(--clay); stroke-width: 2; }
+  .diagram .node.active:not(.gallery-card-node) .table-header { fill: var(--clay); }
+
+  /* edge label badges (04-style) */
+  .diagram .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+  .diagram text.edge-label { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+
+  /* diagram title row (centered, 04-style) */
+  .diagram text.diagram-title { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.012em; }
+  .diagram text.diagram-sub   { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+  /* section labels (A· / B·) */
+  .diagram text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+  .diagram text.section-sub   { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .diagram .section-divider   { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+
+  /* gallery cards */
+  .diagram text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+  .diagram text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+
+  /* IE notation tag (replaces UML 2.5 tag for ER) */
+  .diagram .gallery-tag-ie-bg   { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+  .diagram text.gallery-tag-ie-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+
+  /* bottom legend (split by group) */
+  .legend-group { margin-top: 18px; }
+  .legend-group + .legend-group { margin-top: 14px; }
+  .legend-group-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; padding: 0 6px 8px; }
+  .legend-group .legend { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="crumb"><a href="index.html">Engineering Diagram Library</a><span class="sep">/</span><span class="here">05 · ER 图</span></div>
+    <div class="topbar-actions">
+      <button class="pill-btn" id="exportSvg"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>SVG</button>
+      <button class="pill-btn" id="exportPng"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>PNG</button>
+      <button class="pill-btn" id="copyHtml" title="复制 HTML 源码"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V3a1 1 0 011-1h7"/></svg>HTML</button>
+      <button class="icon-btn" id="themeToggle"><svg id="themeIconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg><svg id="themeIconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="display:none"><path d="M13 9.5A6 6 0 116.5 3a5 5 0 006.5 6.5z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet">
+  <header>
+    <div class="title-row">
+      <div class="title-block">
+        <div class="eyebrow">Diagram type 05 · ER 图 · IE Notation</div>
+        <h1>订单业务数据模型 <em>— storefront ER diagram</em></h1>
+        <p class="lead">电商核心域 7 张表 · 8 条关系 · 用 IE notation（crow's foot）表达基数。上半区是订单业务 ER 主图（强实体 / 弱实体 / 关联表 / 自引用），下半区是 ER 元素图鉴（10 张卡：实体三类 + 主外键 / 索引标记 + 4 种 crow's foot 端点 + 三种关系基数）。所有表均可点击查看 columns / indexes / SQL。</p>
+      </div>
+      <div class="stat-row">
+        <div><span class="v">7</span>实体</div>
+        <div><span class="v">8</span>关系</div>
+        <div><span class="v">10</span>元素图鉴</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <div class="canvas-frame">
+        <div class="canvas-stage" id="stage">
+          <div class="canvas-grid"></div>
+          <div class="canvas-inner" id="canvasInner">
+            <svg class="diagram" id="diagram" width="1080" height="2680" viewBox="0 0 1080 2680" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrow"            viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
+                <marker id="arrow-clay"       viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+                <marker id="arrow-olive"      viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="arrow-olive-bold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="arrow-rust"       viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
+                <marker id="arrow-plum"       viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
+                <marker id="arrow-gold"       viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C4994E"/></marker>
+                <marker id="arrow-teal"       viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A8585"/></marker>
+                <marker id="arrow-slate"      viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+              </defs>
+
+              <!-- ── Diagram title row (centered, 04-style) ── -->
+              <text class="diagram-title" x="540" y="32" text-anchor="middle">订单业务数据模型 · ER 图 (Storefront ER Diagram)</text>
+              <text class="diagram-sub"   x="540" y="52" text-anchor="middle">IE Notation · 7 实体 · 8 关系 · crow's foot · 含强 / 弱实体 / 关联表 / 自引用</text>
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- 区 A · 订单业务 ER 主图谱                                -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <text class="section-label" x="40" y="92">A · 订单业务 ER 主图谱</text>
+              <text class="section-sub"   x="40" y="114">7 表 · 8 关系 · users → orders → order_items ↔ products → categories(self) · payments / reviews 桥接</text>
+
+              <!-- ── A 区主图：实体 + 关系（内部坐标取自打磨好的 960×700 版本，平移到 60,140） ── -->
+              <g transform="translate(60 140)">
+
+                <!-- ── RELATIONSHIP LINES (drawn first) ── -->
+                <g>
+                  <!-- 1. users(1) — orders(*): vertical, col 1 -->
+                  <path class="er-edge" d="M 120 190 V 270"/>
+                  <line class="crowfoot" x1="110" y1="194" x2="130" y2="194"/>
+                  <line class="crowfoot" x1="110" y1="198" x2="130" y2="198"/>
+                  <line class="crowfoot" x1="112" y1="262" x2="120" y2="270"/>
+                  <line class="crowfoot" x1="120" y1="262" x2="120" y2="270"/>
+                  <line class="crowfoot" x1="128" y1="262" x2="120" y2="270"/>
+
+                  <!-- 2. orders(1) — order_items(*): horizontal, row 2 -->
+                  <path class="er-edge" d="M 220 345 H 370"/>
+                  <line class="crowfoot" x1="224" y1="335" x2="224" y2="355"/>
+                  <line class="crowfoot" x1="228" y1="335" x2="228" y2="355"/>
+                  <line class="crowfoot" x1="362" y1="337" x2="370" y2="345"/>
+                  <line class="crowfoot" x1="362" y1="345" x2="370" y2="345"/>
+                  <line class="crowfoot" x1="362" y1="353" x2="370" y2="345"/>
+
+                  <!-- 3. products(1) — order_items(*): vertical, col 2 -->
+                  <path class="er-edge" d="M 470 190 V 270"/>
+                  <line class="crowfoot" x1="460" y1="194" x2="480" y2="194"/>
+                  <line class="crowfoot" x1="460" y1="198" x2="480" y2="198"/>
+                  <line class="crowfoot" x1="462" y1="262" x2="470" y2="270"/>
+                  <line class="crowfoot" x1="470" y1="262" x2="470" y2="270"/>
+                  <line class="crowfoot" x1="478" y1="262" x2="470" y2="270"/>
+
+                  <!-- 4. categories(1) — products(*): horizontal, row 1 -->
+                  <path class="er-edge" d="M 720 120 H 570"/>
+                  <line class="crowfoot" x1="716" y1="110" x2="716" y2="130"/>
+                  <line class="crowfoot" x1="712" y1="110" x2="712" y2="130"/>
+                  <line class="crowfoot" x1="578" y1="112" x2="570" y2="120"/>
+                  <line class="crowfoot" x1="578" y1="120" x2="570" y2="120"/>
+                  <line class="crowfoot" x1="578" y1="128" x2="570" y2="120"/>
+
+                  <!-- 5. categories self-reference (parent · 0..1 — *) -->
+                  <path class="er-edge dashed" d="M 940 90 H 956 V 150 H 940"/>
+                  <circle class="endpoint-circle" cx="944" cy="90" r="4"/>
+                  <line class="crowfoot" x1="948" y1="142" x2="940" y2="150"/>
+                  <line class="crowfoot" x1="948" y1="150" x2="940" y2="150"/>
+                  <line class="crowfoot" x1="948" y1="158" x2="940" y2="150"/>
+
+                  <!-- 6. orders(1) — payments(1) -->
+                  <path class="er-edge" d="M 220 410 V 460 H 720 V 360"/>
+                  <line class="crowfoot" x1="224" y1="400" x2="224" y2="420"/>
+                  <line class="crowfoot" x1="228" y1="400" x2="228" y2="420"/>
+                  <line class="crowfoot" x1="716" y1="350" x2="716" y2="370"/>
+                  <line class="crowfoot" x1="712" y1="350" x2="712" y2="370"/>
+
+                  <!-- 7. reviews(*) — users(1) -->
+                  <path class="er-edge" d="M 270 570 H 240 V 130 H 220"/>
+                  <line class="crowfoot" x1="278" y1="562" x2="270" y2="570"/>
+                  <line class="crowfoot" x1="278" y1="570" x2="270" y2="570"/>
+                  <line class="crowfoot" x1="278" y1="578" x2="270" y2="570"/>
+                  <line class="crowfoot" x1="216" y1="120" x2="216" y2="140"/>
+                  <line class="crowfoot" x1="212" y1="120" x2="212" y2="140"/>
+
+                  <!-- 8. reviews(*) — products(1) -->
+                  <path class="er-edge" d="M 460 510 V 460 H 320 V 130 H 370"/>
+                  <line class="crowfoot" x1="452" y1="518" x2="460" y2="510"/>
+                  <line class="crowfoot" x1="460" y1="518" x2="460" y2="510"/>
+                  <line class="crowfoot" x1="468" y1="518" x2="460" y2="510"/>
+                  <line class="crowfoot" x1="366" y1="120" x2="366" y2="140"/>
+                  <line class="crowfoot" x1="362" y1="120" x2="362" y2="140"/>
+                </g>
+
+                <!-- ── RELATIONSHIP LABELS ── -->
+                <g text-anchor="middle">
+                  <g><rect class="edge-label-bg" x="84" y="221" width="72" height="16"/><text class="edge-label" x="120" y="233">places · 1—*</text></g>
+                  <g><rect class="edge-label-bg" x="252" y="336" width="86" height="16"/><text class="edge-label" x="295" y="348">contains · 1—*</text></g>
+                  <g><rect class="edge-label-bg" x="434" y="221" width="76" height="16"/><text class="edge-label" x="472" y="233">sold as · 1—*</text></g>
+                  <g><rect class="edge-label-bg" x="612" y="111" width="68" height="16"/><text class="edge-label" x="646" y="123">groups · 1—*</text></g>
+                  <g><rect class="edge-label-bg" x="846" y="44" width="78" height="16"/><text class="edge-label" x="885" y="56">parent · 0..1</text></g>
+                  <g><rect class="edge-label-bg" x="426" y="451" width="88" height="16"/><text class="edge-label" x="470" y="463">settled · 1—1</text></g>
+                  <g><rect class="edge-label-bg" x="208" y="461" width="64" height="16"/><text class="edge-label" x="240" y="473">writes · *</text></g>
+                  <g><rect class="edge-label-bg" x="284" y="351" width="72" height="16"/><text class="edge-label" x="320" y="363">reviewed</text></g>
+                </g>
+
+                <!-- ── ENTITY TABLES ── -->
+
+                <!-- users -->
+                <g class="node" data-id="users" tabindex="0">
+                  <rect class="table-frame" x="20" y="70" width="200" height="120"/>
+                  <path class="table-header" d="M 20 80 a10 10 0 0 1 10 -10 H 210 a10 10 0 0 1 10 10 V 98 H 20 Z"/>
+                  <text class="table-title" x="120" y="89" text-anchor="middle">users</text>
+                  <line class="row-divider" x1="20" y1="98" x2="220" y2="98"/>
+                  <rect class="row-zebra" x="20" y="98" width="200" height="22"/>
+                  <text class="cell pk" x="32" y="113">id</text><text class="tag-pk" x="52" y="113">PK</text><text class="typ" x="208" y="113" text-anchor="end">bigint</text>
+                  <text class="cell" x="32" y="135">email</text><text class="tag-uq" x="62" y="135">UQ</text><text class="typ" x="208" y="135" text-anchor="end">citext</text>
+                  <rect class="row-zebra" x="20" y="142" width="200" height="22"/>
+                  <text class="cell" x="32" y="157">name</text><text class="typ" x="208" y="157" text-anchor="end">text</text>
+                  <text class="cell" x="32" y="179">created_at</text><text class="typ" x="208" y="179" text-anchor="end">timestamptz</text>
+                </g>
+
+                <!-- products -->
+                <g class="node" data-id="products" tabindex="0">
+                  <rect class="table-frame" x="370" y="70" width="200" height="120"/>
+                  <path class="table-header" d="M 370 80 a10 10 0 0 1 10 -10 H 560 a10 10 0 0 1 10 10 V 98 H 370 Z"/>
+                  <text class="table-title" x="470" y="89" text-anchor="middle">products</text>
+                  <line class="row-divider" x1="370" y1="98" x2="570" y2="98"/>
+                  <rect class="row-zebra" x="370" y="98" width="200" height="22"/>
+                  <text class="cell pk" x="382" y="113">id</text><text class="tag-pk" x="402" y="113">PK</text><text class="typ" x="558" y="113" text-anchor="end">bigint</text>
+                  <text class="cell" x="382" y="135">name</text><text class="typ" x="558" y="135" text-anchor="end">text</text>
+                  <rect class="row-zebra" x="370" y="142" width="200" height="22"/>
+                  <text class="cell" x="382" y="157">price</text><text class="typ" x="558" y="157" text-anchor="end">numeric(10,2)</text>
+                  <text class="cell fk" x="382" y="179">category_id</text><text class="tag-fk" x="458" y="179">FK</text><text class="typ" x="558" y="179" text-anchor="end">bigint</text>
+                </g>
+
+                <!-- categories -->
+                <g class="node" data-id="categories" tabindex="0">
+                  <rect class="table-frame" x="720" y="70" width="220" height="100"/>
+                  <path class="table-header" d="M 720 80 a10 10 0 0 1 10 -10 H 930 a10 10 0 0 1 10 10 V 98 H 720 Z"/>
+                  <text class="table-title" x="830" y="89" text-anchor="middle">categories</text>
+                  <line class="row-divider" x1="720" y1="98" x2="940" y2="98"/>
+                  <rect class="row-zebra" x="720" y="98" width="220" height="22"/>
+                  <text class="cell pk" x="732" y="113">id</text><text class="tag-pk" x="752" y="113">PK</text><text class="typ" x="928" y="113" text-anchor="end">bigint</text>
+                  <text class="cell" x="732" y="135">name</text><text class="typ" x="928" y="135" text-anchor="end">text</text>
+                  <rect class="row-zebra" x="720" y="142" width="220" height="22"/>
+                  <text class="cell fk" x="732" y="157">parent_id</text><text class="tag-fk" x="800" y="157">FK</text><text class="typ" x="928" y="157" text-anchor="end">bigint?</text>
+                </g>
+
+                <!-- orders -->
+                <g class="node" data-id="orders" tabindex="0">
+                  <rect class="table-frame" x="20" y="270" width="200" height="150"/>
+                  <path class="table-header" d="M 20 280 a10 10 0 0 1 10 -10 H 210 a10 10 0 0 1 10 10 V 298 H 20 Z"/>
+                  <text class="table-title" x="120" y="289" text-anchor="middle">orders</text>
+                  <line class="row-divider" x1="20" y1="298" x2="220" y2="298"/>
+                  <rect class="row-zebra" x="20" y="298" width="200" height="22"/>
+                  <text class="cell pk" x="32" y="313">id</text><text class="tag-pk" x="52" y="313">PK</text><text class="typ" x="208" y="313" text-anchor="end">bigint</text>
+                  <text class="cell fk" x="32" y="335">user_id</text><text class="tag-fk" x="80" y="335">FK</text><text class="typ" x="208" y="335" text-anchor="end">bigint</text>
+                  <rect class="row-zebra" x="20" y="342" width="200" height="22"/>
+                  <text class="cell" x="32" y="357">total</text><text class="typ" x="208" y="357" text-anchor="end">numeric(10,2)</text>
+                  <text class="cell" x="32" y="379">status</text><text class="typ" x="208" y="379" text-anchor="end">order_status</text>
+                  <rect class="row-zebra" x="20" y="386" width="200" height="22"/>
+                  <text class="cell" x="32" y="401">created_at</text><text class="typ" x="208" y="401" text-anchor="end">timestamptz</text>
+                </g>
+
+                <!-- order_items (junction · weak entity) -->
+                <g class="node" data-id="order_items" tabindex="0">
+                  <rect class="table-frame" x="370" y="270" width="220" height="150"/>
+                  <path class="table-header" d="M 370 280 a10 10 0 0 1 10 -10 H 580 a10 10 0 0 1 10 10 V 298 H 370 Z"/>
+                  <text class="table-title" x="480" y="289" text-anchor="middle">order_items</text>
+                  <line class="row-divider" x1="370" y1="298" x2="590" y2="298"/>
+                  <rect class="row-zebra" x="370" y="298" width="220" height="22"/>
+                  <text class="cell pk" x="382" y="313">id</text><text class="tag-pk" x="402" y="313">PK</text><text class="typ" x="578" y="313" text-anchor="end">bigint</text>
+                  <text class="cell fk" x="382" y="335">order_id</text><text class="tag-fk" x="438" y="335">FK</text><text class="typ" x="578" y="335" text-anchor="end">bigint</text>
+                  <rect class="row-zebra" x="370" y="342" width="220" height="22"/>
+                  <text class="cell fk" x="382" y="357">product_id</text><text class="tag-fk" x="452" y="357">FK</text><text class="typ" x="578" y="357" text-anchor="end">bigint</text>
+                  <text class="cell" x="382" y="379">quantity</text><text class="typ" x="578" y="379" text-anchor="end">int</text>
+                  <rect class="row-zebra" x="370" y="386" width="220" height="22"/>
+                  <text class="cell" x="382" y="401">price</text><text class="typ" x="578" y="401" text-anchor="end">numeric(10,2)</text>
+                </g>
+
+                <!-- payments -->
+                <g class="node" data-id="payments" tabindex="0">
+                  <rect class="table-frame" x="720" y="290" width="220" height="140"/>
+                  <path class="table-header" d="M 720 300 a10 10 0 0 1 10 -10 H 930 a10 10 0 0 1 10 10 V 318 H 720 Z"/>
+                  <text class="table-title" x="830" y="309" text-anchor="middle">payments</text>
+                  <line class="row-divider" x1="720" y1="318" x2="940" y2="318"/>
+                  <rect class="row-zebra" x="720" y="318" width="220" height="22"/>
+                  <text class="cell pk" x="732" y="333">id</text><text class="tag-pk" x="752" y="333">PK</text><text class="typ" x="928" y="333" text-anchor="end">bigint</text>
+                  <text class="cell fk" x="732" y="355">order_id</text><text class="tag-fk" x="788" y="355">FK</text><text class="tag-uq" x="810" y="355">UQ</text><text class="typ" x="928" y="355" text-anchor="end">bigint</text>
+                  <rect class="row-zebra" x="720" y="362" width="220" height="22"/>
+                  <text class="cell" x="732" y="377">amount</text><text class="typ" x="928" y="377" text-anchor="end">numeric(10,2)</text>
+                  <text class="cell" x="732" y="399">status</text><text class="typ" x="928" y="399" text-anchor="end">payment_status</text>
+                  <rect class="row-zebra" x="720" y="406" width="220" height="22"/>
+                  <text class="cell" x="732" y="421">stripe_id</text><text class="tag-uq" x="788" y="421">UQ</text><text class="typ" x="928" y="421" text-anchor="end">text</text>
+                </g>
+
+                <!-- reviews -->
+                <g class="node" data-id="reviews" tabindex="0">
+                  <rect class="table-frame" x="270" y="510" width="240" height="120"/>
+                  <path class="table-header" d="M 270 520 a10 10 0 0 1 10 -10 H 500 a10 10 0 0 1 10 10 V 538 H 270 Z"/>
+                  <text class="table-title" x="390" y="529" text-anchor="middle">reviews</text>
+                  <line class="row-divider" x1="270" y1="538" x2="510" y2="538"/>
+                  <rect class="row-zebra" x="270" y="538" width="240" height="22"/>
+                  <text class="cell pk" x="282" y="553">id</text><text class="tag-pk" x="302" y="553">PK</text><text class="typ" x="498" y="553" text-anchor="end">bigint</text>
+                  <text class="cell fk" x="282" y="575">user_id</text><text class="tag-fk" x="330" y="575">FK</text><text class="typ" x="498" y="575" text-anchor="end">bigint</text>
+                  <rect class="row-zebra" x="270" y="582" width="240" height="22"/>
+                  <text class="cell fk" x="282" y="597">product_id</text><text class="tag-fk" x="352" y="597">FK</text><text class="typ" x="498" y="597" text-anchor="end">bigint</text>
+                  <text class="cell" x="282" y="619">rating</text><text class="typ" x="498" y="619" text-anchor="end">smallint</text>
+                </g>
+
+              </g>
+              <!-- /A 区 transform -->
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- 区 B · ER 元素图鉴                                      -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <line class="section-divider" x1="40" y1="1450" x2="1040" y2="1450"/>
+              <text class="section-label" x="40" y="1488">B · ER 元素图鉴 · 复制粘贴元素库</text>
+              <text class="section-sub"   x="40" y="1510">10 张卡 · 9 IE 标准 + 1 [ex] 常用扩展 · 主图实际使用的元素挂 olive ✓ 角标</text>
+
+              <!-- ── ROW 1 ── y=1520 -->
+
+              <!-- ① Strong Entity -->
+              <g class="node gallery-card-node" data-id="strong-entity" tabindex="0">
+                <rect class="gallery-card" x="40" y="1520" width="500" height="212"/>
+                <rect class="ribbon-shown-bg" x="490" y="1530" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="511" y="1540" text-anchor="middle">主图 ✓×7</text>
+                <text class="gallery-title" x="58" y="1550">① 强实体 · Strong Entity</text>
+                <text class="gallery-desc" x="58" y="1568">独立存在 · 自带 PK · IE 表格化（dark header + 斑马行）</text>
+                <!-- mini demo: users -->
+                <rect class="table-frame" x="180" y="1582" width="220" height="120"/>
+                <path class="table-header" d="M 180 1592 a10 10 0 0 1 10 -10 H 390 a10 10 0 0 1 10 10 V 1610 H 180 Z"/>
+                <text class="table-title" x="290" y="1601" text-anchor="middle">users</text>
+                <line class="row-divider" x1="180" y1="1610" x2="400" y2="1610"/>
+                <rect class="row-zebra" x="180" y="1610" width="220" height="22"/>
+                <text class="cell pk" x="192" y="1625">id</text><text class="tag-pk" x="212" y="1625">PK</text><text class="typ" x="388" y="1625" text-anchor="end">bigint</text>
+                <text class="cell" x="192" y="1647">email</text><text class="tag-uq" x="222" y="1647">UQ</text><text class="typ" x="388" y="1647" text-anchor="end">citext</text>
+                <rect class="row-zebra" x="180" y="1654" width="220" height="22"/>
+                <text class="cell" x="192" y="1669">name</text><text class="typ" x="388" y="1669" text-anchor="end">text</text>
+                <text class="cell" x="192" y="1691">created_at</text><text class="typ" x="388" y="1691" text-anchor="end">timestamptz</text>
+                <rect class="gallery-tag-ie-bg" x="480" y="1712" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="500" y="1722" text-anchor="middle">IE 1.1</text>
+              </g>
+
+              <!-- ② Weak Entity -->
+              <g class="node gallery-card-node" data-id="weak-entity" tabindex="0">
+                <rect class="gallery-card" x="560" y="1520" width="480" height="212"/>
+                <rect class="ribbon-shown-bg" x="990" y="1530" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="1011" y="1540" text-anchor="middle">主图 ✓×1</text>
+                <text class="gallery-title" x="578" y="1550">② 弱实体 · Weak Entity</text>
+                <text class="gallery-desc" x="578" y="1568">依赖父实体存在 · header 用虚线框 · order_items 是典型例</text>
+                <!-- mini demo: order_items (dashed header outline) -->
+                <rect class="table-frame" x="700" y="1582" width="220" height="120"/>
+                <path class="table-header weak" d="M 700 1592 a10 10 0 0 1 10 -10 H 910 a10 10 0 0 1 10 10 V 1610 H 700 Z"/>
+                <text class="table-title weak" x="810" y="1601" text-anchor="middle">order_items</text>
+                <line class="row-divider" x1="700" y1="1610" x2="920" y2="1610"/>
+                <rect class="row-zebra" x="700" y="1610" width="220" height="22"/>
+                <text class="cell pk" x="712" y="1625">id</text><text class="tag-pk" x="732" y="1625">PK</text><text class="typ" x="908" y="1625" text-anchor="end">bigint</text>
+                <text class="cell fk" x="712" y="1647">order_id</text><text class="tag-fk" x="768" y="1647">FK</text><text class="typ" x="908" y="1647" text-anchor="end">bigint</text>
+                <rect class="row-zebra" x="700" y="1654" width="220" height="22"/>
+                <text class="cell fk" x="712" y="1669">product_id</text><text class="tag-fk" x="782" y="1669">FK</text><text class="typ" x="908" y="1669" text-anchor="end">bigint</text>
+                <text class="cell" x="712" y="1691">quantity</text><text class="typ" x="908" y="1691" text-anchor="end">int</text>
+                <rect class="gallery-tag-ie-bg" x="980" y="1712" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="1000" y="1722" text-anchor="middle">IE 1.2</text>
+              </g>
+
+              <!-- ── ROW 2 ── y=1752 -->
+
+              <!-- ③ Junction Table -->
+              <g class="node gallery-card-node" data-id="junction-table" tabindex="0">
+                <rect class="gallery-card" x="40" y="1752" width="500" height="212"/>
+                <rect class="ribbon-shown-bg" x="490" y="1762" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="511" y="1772" text-anchor="middle">主图 ✓×1</text>
+                <text class="gallery-title" x="58" y="1782">③ 关联表 · Junction Table</text>
+                <text class="gallery-desc" x="58" y="1800">解 M:N · 双 FK 复合主键 (order_id, product_id) UQ</text>
+                <!-- mini demo: M:N bridge schematic -->
+                <rect class="table-frame" x="76" y="1818" width="120" height="60"/>
+                <path class="table-header" d="M 76 1828 a10 10 0 0 1 10 -10 H 186 a10 10 0 0 1 10 10 V 1844 H 76 Z"/>
+                <text class="table-title" x="136" y="1838" text-anchor="middle">orders</text>
+                <line class="row-divider" x1="76" y1="1844" x2="196" y2="1844"/>
+                <text class="cell pk" x="86" y="1860">id</text><text class="tag-pk" x="104" y="1860">PK</text>
+                <rect class="table-frame" x="380" y="1818" width="120" height="60"/>
+                <path class="table-header" d="M 380 1828 a10 10 0 0 1 10 -10 H 490 a10 10 0 0 1 10 10 V 1844 H 380 Z"/>
+                <text class="table-title" x="440" y="1838" text-anchor="middle">products</text>
+                <line class="row-divider" x1="380" y1="1844" x2="500" y2="1844"/>
+                <text class="cell pk" x="390" y="1860">id</text><text class="tag-pk" x="408" y="1860">PK</text>
+                <!-- middle bridge -->
+                <rect class="table-frame" x="220" y="1898" width="140" height="50"/>
+                <path class="table-header" d="M 220 1908 a10 10 0 0 1 10 -10 H 350 a10 10 0 0 1 10 10 V 1924 H 220 Z"/>
+                <text class="table-title" x="290" y="1918" text-anchor="middle">order_items</text>
+                <line class="row-divider" x1="220" y1="1924" x2="360" y2="1924"/>
+                <text class="cell fk" x="230" y="1940">order_id</text><text class="tag-fk" x="282" y="1940">FK</text>
+                <!-- lines -->
+                <path class="er-edge" d="M 136 1878 V 1898"/>
+                <line class="crowfoot" x1="124" y1="1894" x2="148" y2="1894"/>
+                <path class="er-edge" d="M 440 1878 V 1898"/>
+                <line class="crowfoot" x1="428" y1="1894" x2="452" y2="1894"/>
+                <rect class="gallery-tag-ie-bg" x="480" y="1944" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="500" y="1954" text-anchor="middle">IE 1.3</text>
+              </g>
+
+              <!-- ④ Primary Key -->
+              <g class="node gallery-card-node" data-id="pk-marker" tabindex="0">
+                <rect class="gallery-card" x="560" y="1752" width="480" height="212"/>
+                <rect class="ribbon-shown-bg" x="990" y="1762" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="1011" y="1772" text-anchor="middle">主图 ✓×7</text>
+                <text class="gallery-title" x="578" y="1782">④ 主键 · Primary Key (PK)</text>
+                <text class="gallery-desc" x="578" y="1800">唯一标识 · 加粗字段名 · 后缀 PK 金色 tag</text>
+                <!-- mini demo: 3 PK rows -->
+                <rect class="table-frame" x="690" y="1820" width="240" height="120"/>
+                <path class="table-header" d="M 690 1830 a10 10 0 0 1 10 -10 H 920 a10 10 0 0 1 10 10 V 1848 H 690 Z"/>
+                <text class="table-title" x="810" y="1839" text-anchor="middle">PK 三态</text>
+                <line class="row-divider" x1="690" y1="1848" x2="930" y2="1848"/>
+                <rect class="row-zebra" x="690" y="1848" width="240" height="22"/>
+                <text class="cell pk" x="702" y="1863">id</text><text class="tag-pk" x="722" y="1863">PK</text><text class="typ" x="918" y="1863" text-anchor="end">bigint · 自增</text>
+                <text class="cell pk" x="702" y="1885">uuid</text><text class="tag-pk" x="742" y="1885">PK</text><text class="typ" x="918" y="1885" text-anchor="end">uuid · v7</text>
+                <rect class="row-zebra" x="690" y="1892" width="240" height="22"/>
+                <text class="cell pk" x="702" y="1907">order_id, product_id</text><text class="tag-pk" x="846" y="1907">PK</text><text class="typ" x="918" y="1907" text-anchor="end">复合</text>
+                <text class="cell" x="702" y="1929">created_at</text><text class="typ" x="918" y="1929" text-anchor="end">timestamptz</text>
+                <rect class="gallery-tag-ie-bg" x="980" y="1944" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="1000" y="1954" text-anchor="middle">IE 2.1</text>
+              </g>
+
+              <!-- ── ROW 3 ── y=1984 -->
+
+              <!-- ⑤ Foreign Key -->
+              <g class="node gallery-card-node" data-id="fk-marker" tabindex="0">
+                <rect class="gallery-card" x="40" y="1984" width="500" height="212"/>
+                <rect class="ribbon-shown-bg" x="490" y="1994" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="511" y="2004" text-anchor="middle">主图 ✓×6</text>
+                <text class="gallery-title" x="58" y="2014">⑤ 外键 · Foreign Key (FK)</text>
+                <text class="gallery-desc" x="58" y="2032">引用其他表 PK · 斜体 + 紫色 · 后缀 FK 紫色 tag</text>
+                <!-- mini demo: orders with FK -->
+                <rect class="table-frame" x="170" y="2050" width="240" height="120"/>
+                <path class="table-header" d="M 170 2060 a10 10 0 0 1 10 -10 H 400 a10 10 0 0 1 10 10 V 2078 H 170 Z"/>
+                <text class="table-title" x="290" y="2069" text-anchor="middle">orders</text>
+                <line class="row-divider" x1="170" y1="2078" x2="410" y2="2078"/>
+                <rect class="row-zebra" x="170" y="2078" width="240" height="22"/>
+                <text class="cell pk" x="182" y="2093">id</text><text class="tag-pk" x="202" y="2093">PK</text><text class="typ" x="398" y="2093" text-anchor="end">bigint</text>
+                <text class="cell fk" x="182" y="2115">user_id</text><text class="tag-fk" x="230" y="2115">FK</text><text class="typ" x="398" y="2115" text-anchor="end">→ users.id</text>
+                <rect class="row-zebra" x="170" y="2122" width="240" height="22"/>
+                <text class="cell fk" x="182" y="2137">category_id</text><text class="tag-fk" x="252" y="2137">FK</text><text class="typ" x="398" y="2137" text-anchor="end">→ categories.id</text>
+                <text class="cell" x="182" y="2159">total</text><text class="typ" x="398" y="2159" text-anchor="end">numeric(10,2)</text>
+                <rect class="gallery-tag-ie-bg" x="480" y="2176" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="500" y="2186" text-anchor="middle">IE 2.2</text>
+              </g>
+
+              <!-- ⑥ Crow's foot endpoints -->
+              <g class="node gallery-card-node" data-id="crows-foot" tabindex="0">
+                <rect class="gallery-card" x="560" y="1984" width="480" height="212"/>
+                <rect class="ribbon-shown-bg" x="990" y="1994" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="1011" y="2004" text-anchor="middle">主图 ✓ 全用</text>
+                <text class="gallery-title" x="578" y="2014">⑥ Crow's foot · 4 种端点</text>
+                <text class="gallery-desc" x="578" y="2032">基数标记 · 决定多重性 · 实/虚线圆 = 必/可选</text>
+                <!-- 4 endpoints stacked -->
+                <!-- one (1) -->
+                <text class="typ" x="600" y="2070">one · 1</text>
+                <line class="crowfoot" x1="700" y1="2055" x2="700" y2="2075"/>
+                <line class="crowfoot" x1="704" y1="2055" x2="704" y2="2075"/>
+                <line class="er-edge" x1="708" y1="2065" x2="780" y2="2065"/>
+                <!-- zero-or-one (0..1) -->
+                <text class="typ" x="600" y="2100">zero-or-one · 0..1</text>
+                <circle class="endpoint-circle" cx="700" cy="2095" r="4"/>
+                <line class="crowfoot" x1="708" y1="2085" x2="708" y2="2105"/>
+                <line class="er-edge" x1="712" y1="2095" x2="780" y2="2095"/>
+                <!-- one-or-many (1..*) -->
+                <text class="typ" x="600" y="2130">one-or-many · 1..*</text>
+                <line class="crowfoot" x1="700" y1="2115" x2="700" y2="2135"/>
+                <line class="crowfoot" x1="704" y1="2118" x2="712" y2="2125"/>
+                <line class="crowfoot" x1="704" y1="2125" x2="712" y2="2125"/>
+                <line class="crowfoot" x1="704" y1="2132" x2="712" y2="2125"/>
+                <line class="er-edge" x1="712" y1="2125" x2="780" y2="2125"/>
+                <!-- zero-or-many (0..*) -->
+                <text class="typ" x="600" y="2160">zero-or-many · 0..*</text>
+                <circle class="endpoint-circle" cx="700" cy="2155" r="4"/>
+                <line class="crowfoot" x1="708" y1="2148" x2="716" y2="2155"/>
+                <line class="crowfoot" x1="708" y1="2155" x2="716" y2="2155"/>
+                <line class="crowfoot" x1="708" y1="2162" x2="716" y2="2155"/>
+                <line class="er-edge" x1="716" y1="2155" x2="780" y2="2155"/>
+                <rect class="gallery-tag-ie-bg" x="980" y="2176" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="1000" y="2186" text-anchor="middle">IE 3.1</text>
+              </g>
+
+              <!-- ── ROW 4 ── y=2216 -->
+
+              <!-- ⑦ 1—N relationship -->
+              <g class="node gallery-card-node" data-id="one-to-many" tabindex="0">
+                <rect class="gallery-card" x="40" y="2216" width="500" height="212"/>
+                <rect class="ribbon-shown-bg" x="490" y="2226" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="511" y="2236" text-anchor="middle">主图 ✓×4</text>
+                <text class="gallery-title" x="58" y="2246">⑦ 一对多 · 1—N</text>
+                <text class="gallery-desc" x="58" y="2264">最常见的关系 · 父端 1 / 子端 crow's foot</text>
+                <!-- demo: users(1) — orders(*) -->
+                <rect class="table-frame" x="80" y="2284" width="160" height="60"/>
+                <path class="table-header" d="M 80 2294 a10 10 0 0 1 10 -10 H 230 a10 10 0 0 1 10 10 V 2310 H 80 Z"/>
+                <text class="table-title" x="160" y="2304" text-anchor="middle">users</text>
+                <line class="row-divider" x1="80" y1="2310" x2="240" y2="2310"/>
+                <text class="cell pk" x="92" y="2327">id</text><text class="tag-pk" x="112" y="2327">PK</text>
+                <rect class="table-frame" x="360" y="2284" width="160" height="60"/>
+                <path class="table-header" d="M 360 2294 a10 10 0 0 1 10 -10 H 510 a10 10 0 0 1 10 10 V 2310 H 360 Z"/>
+                <text class="table-title" x="440" y="2304" text-anchor="middle">orders</text>
+                <line class="row-divider" x1="360" y1="2310" x2="520" y2="2310"/>
+                <text class="cell fk" x="372" y="2327">user_id</text><text class="tag-fk" x="420" y="2327">FK</text>
+                <!-- line + endpoints -->
+                <line class="er-edge" x1="240" y1="2314" x2="360" y2="2314"/>
+                <line class="crowfoot" x1="246" y1="2304" x2="246" y2="2324"/>
+                <line class="crowfoot" x1="250" y1="2304" x2="250" y2="2324"/>
+                <line class="crowfoot" x1="352" y1="2306" x2="360" y2="2314"/>
+                <line class="crowfoot" x1="352" y1="2314" x2="360" y2="2314"/>
+                <line class="crowfoot" x1="352" y1="2322" x2="360" y2="2314"/>
+                <rect class="edge-label-bg" x="263" y="2354" width="74" height="16"/>
+                <text class="edge-label" x="300" y="2366" text-anchor="middle">places · 1—*</text>
+                <text class="typ" x="58" y="2410">使用 1—N 时 FK 放 N 端 · users.id ⇐ orders.user_id</text>
+                <rect class="gallery-tag-ie-bg" x="480" y="2408" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="500" y="2418" text-anchor="middle">IE 3.2</text>
+              </g>
+
+              <!-- ⑧ M—N relationship -->
+              <g class="node gallery-card-node" data-id="many-to-many" tabindex="0">
+                <rect class="gallery-card" x="560" y="2216" width="480" height="212"/>
+                <rect class="ribbon-shown-bg" x="990" y="2226" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="1011" y="2236" text-anchor="middle">主图 ✓×1</text>
+                <text class="gallery-title" x="578" y="2246">⑧ 多对多 · M—N (via junction)</text>
+                <text class="gallery-desc" x="578" y="2264">不能直接画 · 必须拆 junction · 两端都是 crow's foot</text>
+                <!-- demo: orders ↔ order_items ↔ products -->
+                <rect class="table-frame" x="600" y="2282" width="110" height="50"/>
+                <path class="table-header" d="M 600 2292 a10 10 0 0 1 10 -10 H 700 a10 10 0 0 1 10 10 V 2306 H 600 Z"/>
+                <text class="table-title" x="655" y="2302" text-anchor="middle">orders</text>
+                <line class="row-divider" x1="600" y1="2306" x2="710" y2="2306"/>
+                <text class="cell pk" x="610" y="2322">id</text><text class="tag-pk" x="628" y="2322">PK</text>
+                <rect class="table-frame" x="770" y="2282" width="130" height="50"/>
+                <path class="table-header" d="M 770 2292 a10 10 0 0 1 10 -10 H 890 a10 10 0 0 1 10 10 V 2306 H 770 Z"/>
+                <text class="table-title" x="835" y="2302" text-anchor="middle">order_items</text>
+                <line class="row-divider" x1="770" y1="2306" x2="900" y2="2306"/>
+                <text class="cell fk" x="780" y="2322" font-size="10">order_id, product_id</text>
+                <rect class="table-frame" x="960" y="2282" width="80" height="50"/>
+                <path class="table-header" d="M 960 2292 a10 10 0 0 1 10 -10 H 1030 a10 10 0 0 1 10 10 V 2306 H 960 Z"/>
+                <text class="table-title" x="1000" y="2302" text-anchor="middle">products</text>
+                <line class="row-divider" x1="960" y1="2306" x2="1040" y2="2306"/>
+                <text class="cell pk" x="970" y="2322">id</text>
+                <!-- lines + crowfoot -->
+                <line class="er-edge" x1="710" y1="2310" x2="770" y2="2310"/>
+                <line class="crowfoot" x1="716" y1="2300" x2="716" y2="2320"/>
+                <line class="crowfoot" x1="720" y1="2300" x2="720" y2="2320"/>
+                <line class="crowfoot" x1="762" y1="2302" x2="770" y2="2310"/>
+                <line class="crowfoot" x1="762" y1="2310" x2="770" y2="2310"/>
+                <line class="crowfoot" x1="762" y1="2318" x2="770" y2="2310"/>
+                <line class="er-edge" x1="900" y1="2310" x2="960" y2="2310"/>
+                <line class="crowfoot" x1="906" y1="2302" x2="914" y2="2310"/>
+                <line class="crowfoot" x1="906" y1="2310" x2="914" y2="2310"/>
+                <line class="crowfoot" x1="906" y1="2318" x2="914" y2="2310"/>
+                <line class="crowfoot" x1="952" y1="2300" x2="952" y2="2320"/>
+                <line class="crowfoot" x1="956" y1="2300" x2="956" y2="2320"/>
+                <text class="typ" x="578" y="2400">order_items 是 junction · 自身可携属性（quantity / price）</text>
+                <rect class="gallery-tag-ie-bg" x="980" y="2408" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="1000" y="2418" text-anchor="middle">IE 3.3</text>
+              </g>
+
+              <!-- ── ROW 5 ── y=2448 -->
+
+              <!-- ⑨ Self-reference -->
+              <g class="node gallery-card-node" data-id="self-ref" tabindex="0">
+                <rect class="gallery-card" x="40" y="2448" width="500" height="212"/>
+                <rect class="ribbon-shown-bg" x="490" y="2458" width="42" height="14"/>
+                <text class="ribbon-shown-text" x="511" y="2468" text-anchor="middle">主图 ✓×1</text>
+                <text class="gallery-title" x="58" y="2478">⑨ 自引用 · Self-reference</text>
+                <text class="gallery-desc" x="58" y="2496">单表上下级树形结构 · parent_id 引用本表 id · 必须可空</text>
+                <!-- demo: categories self-loop -->
+                <rect class="table-frame" x="190" y="2516" width="200" height="90"/>
+                <path class="table-header" d="M 190 2526 a10 10 0 0 1 10 -10 H 380 a10 10 0 0 1 10 10 V 2544 H 190 Z"/>
+                <text class="table-title" x="290" y="2537" text-anchor="middle">categories</text>
+                <line class="row-divider" x1="190" y1="2544" x2="390" y2="2544"/>
+                <rect class="row-zebra" x="190" y="2544" width="200" height="22"/>
+                <text class="cell pk" x="202" y="2559">id</text><text class="tag-pk" x="222" y="2559">PK</text>
+                <text class="cell" x="202" y="2581">name</text>
+                <rect class="row-zebra" x="190" y="2588" width="200" height="22"/>
+                <text class="cell fk" x="202" y="2602">parent_id</text><text class="tag-fk" x="270" y="2602">FK</text><text class="typ" x="378" y="2602" text-anchor="end">bigint?</text>
+                <!-- self-loop arrow on the right -->
+                <path class="er-edge dashed" d="M 390 2540 H 420 V 2590 H 390"/>
+                <circle class="endpoint-circle" cx="394" cy="2540" r="4"/>
+                <line class="crowfoot" x1="398" y1="2582" x2="390" y2="2590"/>
+                <line class="crowfoot" x1="398" y1="2590" x2="390" y2="2590"/>
+                <line class="crowfoot" x1="398" y1="2598" x2="390" y2="2590"/>
+                <rect class="edge-label-bg" x="425" y="2557" width="60" height="16"/>
+                <text class="edge-label" x="455" y="2569" text-anchor="middle">parent · 0..1</text>
+                <text class="typ" x="58" y="2638">使用 WITH RECURSIVE 递归查询树 · 应用层 capped depth=4</text>
+                <rect class="gallery-tag-ie-bg" x="480" y="2640" width="40" height="14"/>
+                <text class="gallery-tag-ie-text" x="500" y="2650" text-anchor="middle">IE 3.4</text>
+              </g>
+
+              <!-- ⑩ Field markers UQ / IDX / NN -->
+              <g class="node gallery-card-node" data-id="field-markers" tabindex="0">
+                <rect class="gallery-card" x="560" y="2448" width="480" height="212"/>
+                <rect class="ribbon-ref-bg" x="990" y="2458" width="42" height="14"/>
+                <text class="ribbon-ref-text" x="1011" y="2468" text-anchor="middle">主图 ⊘</text>
+                <text class="gallery-title" x="578" y="2478">⑩ 字段标记 · UQ / IDX / NN [ex]</text>
+                <text class="gallery-desc" x="578" y="2496">本图谱扩展约定 · 把约束/索引以 inline tag 形式标注在字段右侧</text>
+                <!-- demo: products with UQ / IDX / NN inline tags -->
+                <rect class="table-frame" x="700" y="2516" width="280" height="120"/>
+                <path class="table-header" d="M 700 2526 a10 10 0 0 1 10 -10 H 970 a10 10 0 0 1 10 10 V 2544 H 700 Z"/>
+                <text class="table-title" x="840" y="2537" text-anchor="middle">products (with markers)</text>
+                <line class="row-divider" x1="700" y1="2544" x2="980" y2="2544"/>
+                <rect class="row-zebra" x="700" y="2544" width="280" height="22"/>
+                <text class="cell pk" x="712" y="2559">id</text><text class="tag-pk" x="732" y="2559">PK</text><text class="typ" x="968" y="2559" text-anchor="end">bigint</text>
+                <text class="cell" x="712" y="2581">sku</text><text class="tag-uq" x="738" y="2581">UQ</text><text class="tag-nn" x="762" y="2581">NN</text><text class="typ" x="968" y="2581" text-anchor="end">text</text>
+                <rect class="row-zebra" x="700" y="2588" width="280" height="22"/>
+                <text class="cell" x="712" y="2603">name</text><text class="tag-idx" x="746" y="2603">IDX</text><text class="tag-nn" x="774" y="2603">NN</text><text class="typ" x="968" y="2603" text-anchor="end">text</text>
+                <text class="cell fk" x="712" y="2625">category_id</text><text class="tag-fk" x="782" y="2625">FK</text><text class="tag-idx" x="804" y="2625">IDX</text><text class="typ" x="968" y="2625" text-anchor="end">bigint</text>
+                <rect class="gallery-tag-ex-bg" x="980" y="2640" width="40" height="14"/>
+                <text class="gallery-tag-ex-text" x="1000" y="2650" text-anchor="middle">[ex]</text>
+              </g>
+
+            </svg>
+          </div>
+        </div>
+        <div class="canvas-toolbar">
+          <button id="zoomOut">−</button>
+          <button id="zoomIn">+</button>
+          <span class="zoom-display" id="zoomDisplay">100%</span>
+          <span class="sep"></span>
+          <button id="zoomFit">FIT</button>
+          <button id="zoomReset">↺</button>
+        </div>
+        <div class="canvas-help">拖拽平移 · 滚轮缩放 · 双击元素居中</div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="panel detail" id="detailPanel">
+        <div class="hint">点击任一实体 / 元素图鉴卡查看含义和实现</div>
+        <h3 id="d-title">订单业务 ER 图 · IE Notation 完整覆盖</h3>
+        <div class="meta" id="d-meta"><span>7 实体</span><span class="dot">·</span><span>8 关系</span><span class="dot">·</span><span>10 元素图鉴</span></div>
+        <div id="d-body">
+          <p><b>A 区 · 订单业务 ER 主图</b> — 电商核心域的 7 张表：<code>users / orders / order_items / products / categories / payments / reviews</code>。用 IE notation（crow's foot）表达 8 条关系，含 <b>1—N</b> / <b>1—1</b> / <b>M—N (via junction)</b> / <b>自引用（categories.parent_id）</b>。</p>
+          <p><b>B 区 · 元素图鉴</b> — 10 张卡：实体三类（强 / 弱 / 关联表）+ 字段标记（PK / FK + [ex] UQ/IDX/NN）+ 4 种 crow's foot 端点 + 三种关系（1—N / M—N / 自引用）。主图实际使用的元素挂 olive ✓ 角标。</p>
+          <p>IE notation 的特点：表头是深色色块 + 字段以 zebra 行罗列 + PK/FK 用 inline tag 而非区域分隔 — 让阅读者一眼分清哪些字段是身份、哪些是引用、哪些是普通属性。</p>
+        </div>
+        <div class="tags" id="d-tags">
+          <span class="tag t-state">entity</span><span class="tag t-decision">relationship</span><span class="tag t-event">crow's foot</span><span class="tag t-success">PK</span><span class="tag t-fail">FK</span>
+        </div>
+      </div>
+
+      <div class="panel howto">
+        <div class="eyebrow">How to draw</div>
+        <h2>ER 图的八步骨架</h2>
+        <ol>
+          <li><b>圈出核心域</b>：先列业务名词（订单 / 商品 / 用户 / 支付 …），每个名词是一个候选实体。再判断哪些是 <b>强实体</b>（独立 PK），哪些是 <b>弱实体</b>（依赖父）。</li>
+          <li><b>选 PK</b>：每个实体必有一个 PK · 优先用 <code>bigint id</code> 自增 或 <code>uuid v7</code>。复合 PK 仅用于 junction（双 FK 组合）。</li>
+          <li><b>画 FK 引用</b>：父表 PK ⇐ 子表 FK · 命名 <code>{parent_name}_id</code> · 在子表用 <code>FK</code> 紫色 tag 标注 · 同时给 FK 建索引。</li>
+          <li><b>识别关系类型</b>：1—1（unique FK）/ 1—N（FK 放 N 端）/ M—N（必拆 junction）/ 自引用（FK 引用本表 · 必须 nullable）。</li>
+          <li><b>画 crow's foot 端点</b>：one = 双竖线 / many = 三叉 / 0..1 = 圆 + 竖线 / 0..* = 圆 + 三叉。基数同时决定 FK 是否 nullable。</li>
+          <li><b>标关系动词</b>：用 <code>places / contains / sold as / parent</code> 等动词描述关系 · 不是 <code>has / belongs to</code> · 关系名用白底 badge 浮在连线上。</li>
+          <li><b>加约束标记</b>：<code>UQ</code>（unique · olive）/ <code>IDX</code>（index · teal）/ <code>NN</code>（not null · clay）— 这是本图谱的 [ex] 扩展约定，让常用约束在 ER 图上一眼可见。</li>
+          <li><b>验证范式</b>：1NF 字段原子 · 2NF 非键完全依赖主键 · 3NF 消除传递依赖 · BCNF 进一步严格。常用到 3NF；商业 OLTP 在性能场景下故意反范式（如 order_items.price 快照）。</li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ── Bottom legend · 全宽 · 分两组 · 学 03/04 版式 ── -->
+  <div class="legend-group" aria-label="legend - 关系基数">
+    <div class="legend-group-label">关系基数 · CARDINALITY (crow's foot)</div>
+    <div class="legend">
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="6" y1="3" x2="6" y2="13" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="3" x2="9" y2="13" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">one (1)</span><span class="sub">双竖线 · 必填一个</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="6" cy="8" r="2.5" fill="#FAF9F5" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="3" x2="9" y2="13" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">zero-or-one (0..1)</span><span class="sub">圆 + 竖线 · 可选</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="6" y1="3" x2="6" y2="13" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="3.5" x2="16" y2="8" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="8" x2="16" y2="8" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="12.5" x2="16" y2="8" stroke="#87867F" stroke-width="1.3"/><line x1="16" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">one-or-many (1..*)</span><span class="sub">竖线 + 三叉</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="6" cy="8" r="2.5" fill="#FAF9F5" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="3.5" x2="16" y2="8" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="8" x2="16" y2="8" stroke="#87867F" stroke-width="1.3"/><line x1="9" y1="12.5" x2="16" y2="8" stroke="#87867F" stroke-width="1.3"/><line x1="16" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">zero-or-many (0..*)</span><span class="sub">圆 + 三叉</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="24" y2="8" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">identifying</span><span class="sub">实线 · 子依赖父</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="24" y2="8" stroke="#87867F" stroke-width="1.3" stroke-dasharray="3 2"/></svg></span><span class="name">non-identifying</span><span class="sub">虚线 · 弱关系 / 自引用</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FAF9F5" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">strong entity</span><span class="sub">实线表 · 独立 PK</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FAF9F5" stroke="#141413" stroke-width="1.3" stroke-dasharray="3 2"/></svg></span><span class="name">weak entity</span><span class="sub">虚线 header · 依赖父</span></div>
+    </div>
+  </div>
+
+  <div class="legend-group" aria-label="legend - 字段标记">
+    <div class="legend-group-label">字段标记 · FIELD MARKERS</div>
+    <div class="legend">
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#C4994E" font-weight="700">PK</text></svg></span><span class="name">PK · primary key</span><span class="sub">金色 · 加粗字段名</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#6B5B95" font-weight="700">FK</text></svg></span><span class="name">FK · foreign key</span><span class="sub">紫色 · 斜体字段名</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#788C5D" font-weight="700">UQ</text></svg></span><span class="name">UQ · unique constraint</span><span class="sub">olive · 唯一</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#4A8585" font-weight="700">IDX</text></svg></span><span class="name">IDX · index</span><span class="sub">teal · 索引</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#D97757" font-weight="700">NN</text></svg></span><span class="name">NN · not null</span><span class="sub">clay · 非空</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#141413" font-weight="700" font-style="italic">italic</text></svg></span><span class="name">italic = FK 字段</span><span class="sub">紫色斜体 · 引用字段</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#141413" font-weight="700">bold</text></svg></span><span class="name">bold = PK 字段</span><span class="sub">加粗 · 标识字段</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="20" height="8" rx="2" fill="#C4994E33" stroke="#C4994E"/><text x="12" y="10.5" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#C4994E" font-weight="700">ex</text></svg></span><span class="name">[ex] 扩展</span><span class="sub">本图谱约定 · 非 IE 标准</span></div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span>Engineering Diagram Library · 05 / 10 · ER 图 · IE Notation · 7 实体 + 10 元素图鉴</span>
+    <span><a href="index.html">← 返回图谱总览</a></span>
+  </div>
+</div>
+
+<script>
+window.DIAGRAM_CONFIG = {
+  viewBox: { w: 1080, h: 2680 },
+  exportName: '05-er-diagram-ie-complete',
+  nodeData: {
+    // ─── A 区 · 7 实体 ───
+    'users': {
+      type: 'state', tagClass: 't-state',
+      title: 'users · 用户表',
+      meta: ['4 列', 'dimension', '根身份表'],
+      body: `<p>所有注册用户。<code>email</code> citext 唯一 · 软删走单独审计表。</p><pre>id          bigint  PK
+email       citext  UQ
+name        text
+created_at  timestamptz</pre><p><b>关系</b>：1—* orders / 1—* reviews</p><p><b>索引</b>：users_pkey (id) · users_email_uniq (email)</p>`,
+      tags: ['strong-entity','dimension','identity']
+    },
+    'products': {
+      type: 'state', tagClass: 't-state',
+      title: 'products · 商品表',
+      meta: ['4 列', 'dimension', '归属一个 category'],
+      body: `<p>商品目录 · price 是当前定价 · 历史价存在 <code>order_items.price</code>（快照防漂移）。</p><pre>id           bigint        PK
+name         text
+price        numeric(10,2)
+category_id  bigint        FK → categories.id</pre><p><b>关系</b>：1—* order_items · 1—* reviews · *—1 categories</p>`,
+      tags: ['strong-entity','catalog']
+    },
+    'categories': {
+      type: 'state', tagClass: 't-state',
+      title: 'categories · 商品分类（自引用树）',
+      meta: ['3 列', '自引用', '应用层 cap depth=4'],
+      body: `<p>嵌套分类树 · <code>parent_id</code> 可空 · null = 顶层。</p><pre>id         bigint   PK
+name       text
+parent_id  bigint?  FK → categories.id (self)</pre><p><b>递归查询</b>：</p><pre>WITH RECURSIVE tree AS (
+  SELECT id, name, parent_id, 1 AS depth
+  FROM categories WHERE parent_id IS NULL
+  UNION ALL
+  SELECT c.id, c.name, c.parent_id, t.depth + 1
+  FROM categories c JOIN tree t ON c.parent_id = t.id
+)
+SELECT * FROM tree;</pre>`,
+      tags: ['self-reference','tree']
+    },
+    'orders': {
+      type: 'state', tagClass: 't-state',
+      title: 'orders · 订单事实表',
+      meta: ['5 列', 'fact table', '状态由 payments 服务驱动'],
+      body: `<p>单次购买事件 · 拥有 line items 与唯一 payment 行 · status 由 payment service 改写。</p><pre>id          bigint        PK
+user_id     bigint        FK → users.id
+total       numeric(10,2)
+status      order_status  enum
+created_at  timestamptz</pre><p><b>索引</b>：orders_pkey · orders_user_idx (user_id, created_at desc) · orders_status_idx (status)</p><pre>SELECT id, total, status
+FROM orders
+WHERE user_id = $1
+ORDER BY created_at DESC LIMIT 20;</pre>`,
+      tags: ['fact-table','transactional']
+    },
+    'order_items': {
+      type: 'state', tagClass: 't-state',
+      title: 'order_items · 订单明细（关联表 / 弱实体）',
+      meta: ['5 列', 'junction', '价格快照 · 防目录漂移'],
+      body: `<p>一笔订单中一个商品的快照 · 价格在结算时冻结 · (order_id, product_id) 在订单内唯一。</p><pre>id          bigint        PK
+order_id    bigint        FK → orders.id
+product_id  bigint        FK → products.id
+quantity    int           CHECK >= 1
+price       numeric(10,2) snapshot</pre><p><b>属于</b>：弱实体 / 关联表（同时解 orders↔products 的 M:N）。</p>`,
+      tags: ['junction','weak-entity']
+    },
+    'payments': {
+      type: 'state', tagClass: 't-state',
+      title: 'payments · 支付记录',
+      meta: ['5 列', 'per-order=1', 'Stripe webhook only writer'],
+      body: `<p>Stripe payment intent 的镜像 · order_id unique · webhook 是唯一写者。</p><pre>id         bigint        PK
+order_id   bigint        FK UQ → orders.id
+amount     numeric(10,2)
+status     payment_status enum
+stripe_id  text           UQ</pre><p><b>关系</b>：1—1 orders (settled)</p>`,
+      tags: ['1-1','external-system']
+    },
+    'reviews': {
+      type: 'state', tagClass: 't-state',
+      title: 'reviews · 评价桥',
+      meta: ['5 列', 'users ↔ products bridge', 'rating 1..5'],
+      body: `<p>每个 (user, product) 一条 · 实际上是 users 与 products 的 M:N 桥。rating 限 1..5。</p><pre>id          bigint   PK
+user_id     bigint   FK → users.id
+product_id  bigint   FK → products.id
+rating      smallint CHECK 1..5
+body        text</pre>`,
+      tags: ['bridge','m-n']
+    },
+
+    // ─── B 区 · 10 元素图鉴 ───
+    'strong-entity': {
+      type: 'state', tagClass: 't-state',
+      title: '① 强实体 · Strong Entity',
+      meta: ['IE 1.1', '独立 PK', '主图实例 × 7'],
+      body: `<p>独立存在的实体 · 自己拥有 <b>PK</b> · 不依赖其他实体即可被引用。本图谱中所有非桥接表都是强实体（users / products / categories / orders / payments / reviews 等 7 张）。</p><p><b>IE 表格化画法</b>：dark slate header（深色色块 + 白字表名）· 斑马行（zebra rows）· PK 字段加粗 + 金色 PK tag · FK 字段斜体紫色 + 紫色 FK tag · 字段类型右对齐灰色 mono · 字段额外标记（UQ/IDX/NN）以 inline tag 形式紧贴字段名右侧。</p><p>所有表均可点击主图中的实体节点查看完整 columns / indexes / SQL。</p>`,
+      tags: ['strong','entity','IE-1.1']
+    },
+    'weak-entity': {
+      type: 'state', tagClass: 't-state',
+      title: '② 弱实体 · Weak Entity',
+      meta: ['IE 1.2', '依赖父存在', '主图实例 × 1 (order_items)'],
+      body: `<p>不能独立存在的实体 · 依赖另一个实体才有意义。识别条件：删除父实体时，子实体也应一并删除（CASCADE）。</p><p><b>IE 画法</b>：header 用 <b>虚线轮廓 + 浅底</b>（不是 dark slate）· 字段照常。本图中 <code>order_items</code> 没有独立业务意义（必须挂在某个 order 上），是典型弱实体。</p><p>弱实体通常同时是 junction（关联表）— 见下一张卡。</p>`,
+      tags: ['weak','entity','IE-1.2']
+    },
+    'junction-table': {
+      type: 'state', tagClass: 't-state',
+      title: '③ 关联表 · Junction Table',
+      meta: ['IE 1.3', '解 M:N', '主图实例 × 1 (order_items)'],
+      body: `<p>用来表达 <b>M—N</b> 关系的中间表 · 关系数据库不能直接画 M—N · 必须拆 junction。</p><p><b>骨架</b>：两个 FK + 可选属性（quantity / price）· 复合主键 <code>(parent_a_id, parent_b_id) UNIQUE</code> 或单 PK + 复合 UQ。</p><pre>order_items (
+  id           bigint PK,
+  order_id     bigint FK → orders.id,
+  product_id   bigint FK → products.id,
+  quantity     int,
+  price        numeric(10,2),
+  UNIQUE (order_id, product_id)
+)</pre>`,
+      tags: ['junction','M-N','IE-1.3']
+    },
+    'pk-marker': {
+      type: 'state', tagClass: 't-state',
+      title: '④ 主键 · Primary Key (PK)',
+      meta: ['IE 2.1', '唯一标识', '主图实例 × 7'],
+      body: `<p>每个实体必有一个 PK · 用于唯一标识一行。<b>IE 表示</b>：字段名加粗 + 后缀金色 <code>PK</code> tag。</p><p><b>三种常见 PK</b>：</p><ul><li><b>自增 bigint</b>：性能最好 · 适合内部表</li><li><b>UUID v7</b>：时间有序 · 跨服务安全 · 适合公开接口</li><li><b>复合主键</b>：junction 表的 <code>(parent_a_id, parent_b_id)</code></li></ul><p>反例：不要用业务字段（email / phone）当 PK · 业务字段会变。</p>`,
+      tags: ['PK','key','IE-2.1']
+    },
+    'fk-marker': {
+      type: 'state', tagClass: 't-state',
+      title: '⑤ 外键 · Foreign Key (FK)',
+      meta: ['IE 2.2', '引用其他表 PK', '主图实例 × 6'],
+      body: `<p>FK 字段引用其他表的 PK · 维护引用完整性。<b>IE 表示</b>：字段名 <b>紫色斜体</b> + 后缀紫色 <code>FK</code> tag。</p><p><b>三个准则</b>：</p><ul><li>FK 字段名约定 <code>{parent_name}_id</code>（user_id / category_id）</li><li>FK 必须建索引（否则 JOIN 全表扫）</li><li>1—N 关系中 FK 放在 N 端 · 自引用时 FK 必须 nullable</li></ul><p><b>ON DELETE 策略</b>：CASCADE（强子关系）/ SET NULL（弱关系）/ RESTRICT（默认 · 防误删）。</p>`,
+      tags: ['FK','reference','IE-2.2']
+    },
+    'crows-foot': {
+      type: 'state', tagClass: 't-state',
+      title: '⑥ Crow\'s foot · 4 种端点',
+      meta: ['IE 3.1', '基数标记', '主图实例 全用'],
+      body: `<p>IE notation 的核心 · 用线条端点表达多重性。</p><ul><li><b>one (1)</b>：双竖线 — 必填恰好一个</li><li><b>zero-or-one (0..1)</b>：圆 + 单竖线 — 可选最多一个</li><li><b>one-or-many (1..*)</b>：竖线 + 三叉 — 至少一个</li><li><b>zero-or-many (0..*)</b>：圆 + 三叉 — 任意数量</li></ul><p><b>记忆口诀</b>：圆 = 可选（zero）· 三叉 = 多（many）· 竖线 = 必须（one）。</p><p><b>FK 可空规则</b>：父端是 0..1 时，子端 FK 必须 nullable。</p>`,
+      tags: ['cardinality','crow-foot','IE-3.1']
+    },
+    'one-to-many': {
+      type: 'state', tagClass: 't-state',
+      title: '⑦ 一对多 · 1—N',
+      meta: ['IE 3.2', '最常见关系', '主图实例 × 4'],
+      body: `<p>父端 1 · 子端 *（many）· 子端持有 FK 引用父端 PK。本图中：</p><ul><li><code>users(1) — orders(*)</code> places</li><li><code>orders(1) — order_items(*)</code> contains</li><li><code>products(1) — order_items(*)</code> sold as</li><li><code>categories(1) — products(*)</code> groups</li></ul><p><b>SQL</b>：父查子用 JOIN · 子查父用单点查询。</p><pre>SELECT u.name, count(o.id) AS orders
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+GROUP BY u.id;</pre>`,
+      tags: ['1-N','one-to-many','IE-3.2']
+    },
+    'many-to-many': {
+      type: 'state', tagClass: 't-state',
+      title: '⑧ 多对多 · M—N (via junction)',
+      meta: ['IE 3.3', '不可直接画', '主图实例 × 1 (orders↔products)'],
+      body: `<p>关系数据库不能直接表达 M—N · 必须引入 <b>junction table</b> 拆成两个 1—N。</p><p><b>本图实例</b>：<code>orders ↔ products</code> 通过 <code>order_items</code> 桥接。</p><pre>orders (1) —— (*) order_items (*) —— (1) products</pre><p><b>junction 优点</b>：可以在中间表上挂额外属性（quantity / price snapshot / created_at）· 没法挂在两个父表上。</p><p>反例：直接在 orders 表加 <code>products_id_list jsonb</code> 字段 · 破坏 1NF · 索引/JOIN 都用不上。</p>`,
+      tags: ['M-N','many-to-many','junction','IE-3.3']
+    },
+    'self-ref': {
+      type: 'state', tagClass: 't-state',
+      title: '⑨ 自引用 · Self-reference',
+      meta: ['IE 3.4', '树形结构', '主图实例 × 1 (categories)'],
+      body: `<p>实体引用自身 · 形成树或图。本图中 <code>categories.parent_id</code> 引用 <code>categories.id</code> 表达分类层级。</p><p><b>三个要点</b>：</p><ul><li>FK 字段必须 <b>nullable</b>（根节点没有父）</li><li>用 <b>虚线</b> 表达 non-identifying（弱依赖）</li><li>应用层 cap depth · 避免无限递归</li></ul><p><b>递归查询</b>：</p><pre>WITH RECURSIVE tree AS (
+  SELECT id, name, parent_id, 1 AS depth
+  FROM categories WHERE parent_id IS NULL
+  UNION ALL
+  SELECT c.id, c.name, c.parent_id, t.depth + 1
+  FROM categories c JOIN tree t ON c.parent_id = t.id
+)
+SELECT * FROM tree;</pre>`,
+      tags: ['self-ref','tree','recursive','IE-3.4']
+    },
+    'field-markers': {
+      type: 'state', tagClass: 't-state',
+      title: '⑩ 字段标记 · UQ / IDX / NN [ex]',
+      meta: ['本图谱扩展', '约束 / 索引 inline tag', '主图未用'],
+      body: `<p>标准 IE notation 只有 PK / FK 两种字段 tag · 本图谱扩展三种：</p><ul><li><b>UQ</b>（olive）— UNIQUE 约束 · 字段值在表内唯一（如 <code>email</code> / <code>stripe_id</code>）</li><li><b>IDX</b>（teal）— 索引 · 加速查询 · 不是约束</li><li><b>NN</b>（clay）— NOT NULL · 字段不能空</li></ul><p><b>使用规则</b>：每个字段最多 3 个 inline tag · 顺序固定 <code>PK / FK · UQ · IDX · NN</code>。</p><p><b>例</b>：<code>email citext UQ NN</code> = 邮箱字段 · 唯一 · 非空。</p><pre>CREATE UNIQUE INDEX users_email_uniq
+       ON users (lower(email));</pre>`,
+      tags: ['ex','UQ','IDX','NN','extension']
+    }
+  }
+};
+</script>
+<script>
+/* ─── Shared interactivity for Engineering Diagram Library
+       Expects window.DIAGRAM_CONFIG = {
+         nodeData: { [id]: { type, tagClass, title, meta, body, tags } },
+         viewBox: { w, h },         // SVG natural size
+         exportName: 'NN-slug',     // file basename (no extension)
+         svgStyle: '...'            // (optional) inline CSS string injected into export svg
+       } ─── */
+(function(){
+  const cfg = window.DIAGRAM_CONFIG || {};
+  const NODE_DATA = cfg.nodeData || {};
+  const VBW = (cfg.viewBox && cfg.viewBox.w) || 1080;
+  const VBH = (cfg.viewBox && cfg.viewBox.h) || 1500;
+  const EXPORT_NAME = cfg.exportName || 'diagram';
+  const SVG_EXPORT_STYLE = cfg.svgStyle || '';
+
+  /* ── Detail panel ── */
+  const detailEl = {
+    title: document.getElementById('d-title'),
+    meta:  document.getElementById('d-meta'),
+    body:  document.getElementById('d-body'),
+    tags:  document.getElementById('d-tags'),
+  };
+  function showDetail(id) {
+    const data = NODE_DATA[id];
+    if (!data || !detailEl.title) return;
+    detailEl.title.textContent = data.title;
+    detailEl.meta.innerHTML = (data.meta || []).map((m, i, arr) =>
+      `<span>${m}</span>${i < arr.length - 1 ? '<span class="dot">·</span>' : ''}`
+    ).join('');
+    detailEl.body.innerHTML = data.body || '';
+    detailEl.tags.innerHTML = (data.tags || []).map(t =>
+      `<span class="tag ${data.tagClass || ''}">${t}</span>`
+    ).join('');
+    document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+    const node = document.querySelector(`.node[data-id="${id}"]`);
+    if (node) node.classList.add('active');
+  }
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('click', () => showDetail(node.dataset.id));
+    node.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDetail(node.dataset.id); }
+    });
+  });
+
+  /* ── Pan & Zoom ── */
+  const stage = document.getElementById('stage');
+  const inner = document.getElementById('canvasInner');
+  const zoomReadout = document.getElementById('zoomReadout');
+  if (!stage || !inner) return;
+
+  let scale = 0.5, tx = 0, ty = 0;
+  const MIN_SCALE = 0.2, MAX_SCALE = 4;
+
+  function applyTransform() {
+    inner.style.transform = `translate(calc(-50% + ${tx}px), ${ty}px) scale(${scale})`;
+    if (zoomReadout) zoomReadout.textContent = Math.round(scale * 100) + '%';
+  }
+  function fitToFrame() {
+    const rect = stage.getBoundingClientRect();
+    const padX = 40, padY = 60;
+    const sX = (rect.width - padX * 2) / VBW;
+    const sY = (rect.height - padY * 2) / VBH;
+    scale = Math.min(sX, sY, 1);
+    tx = 0; ty = 0;
+    applyTransform();
+  }
+  function resetView() { scale = 0.5; tx = 0; ty = 0; applyTransform(); }
+
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    const delta = -e.deltaY * 0.0015;
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * (1 + delta)));
+    const k = newScale / scale;
+    const stageCx = rect.width / 2;
+    const dx = cx - stageCx - tx;
+    const dy = cy - 24 - ty;
+    tx -= dx * (k - 1);
+    ty -= dy * (k - 1);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  let dragging = false, dragStart = { x: 0, y: 0, tx: 0, ty: 0 };
+  stage.addEventListener('mousedown', e => {
+    if (e.target.closest('.node')) return;
+    dragging = true;
+    stage.classList.add('dragging');
+    dragStart = { x: e.clientX, y: e.clientY, tx, ty };
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx = dragStart.tx + (e.clientX - dragStart.x);
+    ty = dragStart.ty + (e.clientY - dragStart.y);
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    dragging = false;
+    stage.classList.remove('dragging');
+  });
+
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      try {
+        const bbox = node.getBBox();
+        const cx = bbox.x + bbox.width / 2;
+        const cy = bbox.y + bbox.height / 2;
+        const rect = stage.getBoundingClientRect();
+        scale = 1.4;
+        tx = -(cx - VBW / 2) * scale;
+        ty = -cy * scale + (rect.height / 2 - 24);
+        applyTransform();
+      } catch (err) {}
+    });
+  });
+
+  const elIn  = document.getElementById('zoomIn');
+  const elOut = document.getElementById('zoomOut');
+  const elFit = document.getElementById('zoomFit');
+  const elRes = document.getElementById('zoomReset');
+  if (elIn)  elIn.addEventListener('click', () => { scale = Math.min(MAX_SCALE, scale * 1.2); applyTransform(); });
+  if (elOut) elOut.addEventListener('click', () => { scale = Math.max(MIN_SCALE, scale / 1.2); applyTransform(); });
+  if (elFit) elFit.addEventListener('click', fitToFrame);
+  if (elRes) elRes.addEventListener('click', resetView);
+
+  window.addEventListener('load', fitToFrame);
+  window.addEventListener('resize', fitToFrame);
+
+  /* ── Theme ── */
+  const sunIcon  = document.getElementById('themeIconSun');
+  const moonIcon = document.getElementById('themeIconMoon');
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    if (sunIcon)  sunIcon.style.display  = t === 'dark' ? 'none' : '';
+    if (moonIcon) moonIcon.style.display = t === 'dark' ? '' : 'none';
+  }
+  const savedTheme = localStorage.getItem('diagram-theme') || 'light';
+  applyTheme(savedTheme);
+  const tt = document.getElementById('themeToggle');
+  if (tt) tt.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('diagram-theme', next);
+  });
+
+  /* ── Export ── */
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function paletteFor(theme) {
+    return theme === 'dark' ? {
+      paper: '#211F1C', slate: '#F5F3EC', clay: '#E08E6F', olive: '#93A872',
+      rust: '#C46559', plum: '#8E81B5', teal: '#5DA0A0', gold: '#D4AB66',
+      gray150: '#26241F', gray300: '#3D3A33', gray500: '#87867F', gray700: '#B8B6AA', bg: '#1A1917'
+    } : {
+      paper: '#FFFFFF', slate: '#141413', clay: '#D97757', olive: '#788C5D',
+      rust: '#B04A3F', plum: '#6B5B95', teal: '#4A8585', gold: '#C4994E',
+      gray150: '#F0EEE6', gray300: '#D1CFC5', gray500: '#87867F', gray700: '#3D3D3A', bg: '#FAF9F5'
+    };
+  }
+  function inlineStyleBlock(p) {
+    return `
+      text { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: ${p.slate}; }
+      text.t-title { font-family: system-ui, sans-serif; font-weight: 500; font-size: 13px; fill: ${p.slate}; }
+      text.t-sub { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl-yes { fill: ${p.olive}; }
+      text.t-lbl-no { fill: ${p.rust}; }
+      text.t-connector { font-family: Georgia, serif; font-weight: 500; font-size: 14px; fill: ${p.clay}; }
+      text.t-ann { font-size: 10.5px; fill: ${p.gray700}; }
+      text.t-lane { font-family: Georgia, serif; font-size: 16px; fill: ${p.slate}; font-weight: 500; }
+      text.t-big  { font-family: Georgia, serif; font-size: 18px; fill: ${p.slate}; font-weight: 500; }
+      text.t-stage { font-size: 10px; letter-spacing: 0.1em; fill: ${p.gray500}; text-transform: uppercase; }
+      .node .shape { fill: ${p.paper}; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node .shape-inner { fill: none; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node.term .shape { fill: ${p.gray150}; }
+      .node.io .shape, .node.io .shape-inner { stroke: ${p.plum}; }
+      .node.io .shape { fill: ${p.plum}22; }
+      .node.db .shape, .node.db .shape-inner { stroke: ${p.clay}; }
+      .node.db .shape { fill: ${p.clay}22; }
+      .node.subprocess .shape, .node.subprocess .shape-inner { stroke: ${p.olive}; }
+      .node.subprocess .shape { fill: ${p.olive}22; }
+      .node.document .shape { fill: ${p.rust}22; stroke: ${p.rust}; }
+      .node.connector .shape { stroke: ${p.clay}; }
+      .node.success .shape { fill: ${p.olive}33; stroke: ${p.olive}; }
+      .node.fail .shape { fill: ${p.rust}33; stroke: ${p.rust}; }
+      .node.actor .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.actor-system .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.actor-external .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.state .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.state-initial .shape { fill: ${p.slate}; stroke: ${p.slate}; }
+      .node.state-final .shape { fill: ${p.paper}; stroke: ${p.slate}; }
+      .node.state-final .shape-inner { fill: ${p.slate}; }
+      .node.state-composite .shape { fill: ${p.olive}11; stroke: ${p.olive}; }
+      .node.entity .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute-key .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.relationship .shape { fill: ${p.clay}22; stroke: ${p.clay}; }
+      .node.gateway .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.event .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.event-end .shape { fill: ${p.paper}; stroke: ${p.rust}; stroke-width: 2.5; }
+      .node.event-msg .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.tier .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 5 3; }
+      .node.cache .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.queue .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.gateway-api .shape { fill: ${p.clay}33; stroke: ${p.clay}; stroke-width: 2; }
+      .node.commit .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.commit-main .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.commit-develop .shape { fill: ${p.paper}; stroke: ${p.plum}; }
+      .node.commit-feature .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.commit-release .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.commit-hotfix .shape { fill: ${p.paper}; stroke: ${p.rust}; }
+      .node.tag .shape { fill: ${p.gold}33; stroke: ${p.gold}; }
+      .node.zone .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 6 3; }
+      .node.zone-dmz .shape { fill: ${p.gold}11; stroke: ${p.gold}; stroke-dasharray: 6 3; }
+      .node.zone-internal .shape { fill: ${p.plum}11; stroke: ${p.plum}; stroke-dasharray: 6 3; }
+      .node.firewall .shape { fill: ${p.rust}22; stroke: ${p.rust}; stroke-width: 2; }
+      .node.router .shape { fill: ${p.teal}22; stroke: ${p.teal}; }
+      .node.switch-net .shape { fill: ${p.paper}; stroke: ${p.gray700}; }
+      .node.server .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .edge { stroke: ${p.gray500}; stroke-width: 1.5; fill: none; }
+      .edge.yes { stroke: ${p.olive}; }
+      .edge.no { stroke: ${p.rust}; stroke-dasharray: 5 4; }
+      .edge.db { stroke: ${p.clay}; stroke-dasharray: 3 3; }
+      .edge.async { stroke-dasharray: 6 3; }
+      .edge.return { stroke: ${p.gray500}; stroke-dasharray: 4 3; }
+      .edge.sync { stroke: ${p.slate}; }
+      .edge.msg { stroke: ${p.plum}; }
+      .edge.relation { stroke: ${p.clay}; }
+      .edge.lane { stroke: ${p.gray300}; stroke-width: 1; }
+      .annotation .bracket { fill: none; stroke: ${p.gray500}; stroke-width: 1.2; stroke-dasharray: 3 3; }
+      .annotation .leader { stroke: ${p.gray500}; stroke-width: 1; stroke-dasharray: 2 3; }
+      .annotation .note { fill: ${p.gold}22; stroke: ${p.gold}; stroke-width: 1.2; }
+      .annotation .note-text { font-size: 10.5px; fill: ${p.gray700}; }
+      ${SVG_EXPORT_STYLE}
+    `;
+  }
+  function buildExportableSvg() {
+    const svg = document.getElementById('diagram').cloneNode(true);
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const p = paletteFor(theme);
+    svg.setAttribute('data-theme', theme);
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    const allDocStyles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    style.textContent = allDocStyles + '\n' + inlineStyleBlock(p);
+    svg.insertBefore(style, svg.firstChild);
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('x', '0'); bg.setAttribute('y', '0');
+    bg.setAttribute('width', VBW); bg.setAttribute('height', VBH);
+    bg.setAttribute('fill', p.bg);
+    svg.insertBefore(bg, svg.firstChild.nextSibling);
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    return new XMLSerializer().serializeToString(svg);
+  }
+  function exportSvg() {
+    const blob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    downloadBlob(blob, `${EXPORT_NAME}-${theme}.svg`);
+  }
+  function exportPng() {
+    const svgBlob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const dpr = 3;
+      const canvas = document.createElement('canvas');
+      canvas.width = VBW * dpr; canvas.height = VBH * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(img, 0, 0, VBW, VBH);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+        downloadBlob(blob, `${EXPORT_NAME}-${theme}.png`);
+      }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); alert('PNG 导出失败 — 请改用 SVG。'); };
+    img.src = url;
+  }
+  const sv = document.getElementById('exportSvg');
+  const pn = document.getElementById('exportPng');
+  if (sv) sv.addEventListener('click', exportSvg);
+  if (pn) pn.addEventListener('click', exportPng);
+
+  /* ── Copy HTML source ── */
+  const ch = document.getElementById('copyHtml');
+  if (ch) ch.addEventListener('click', async () => {
+    const src = '<!doctype html>\n' + document.documentElement.outerHTML;
+    const orig = ch.innerHTML;
+    try {
+      await navigator.clipboard.writeText(src);
+      ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制';
+    } catch (err) {
+      const ta = document.createElement('textarea');
+      ta.value = src; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制'; }
+      catch (e) { ch.innerHTML = '复制失败'; }
+      ta.remove();
+    }
+    setTimeout(() => { ch.innerHTML = orig; }, 1800);
+  });
+})();
+
+</script>
+
+</body>
+</html>

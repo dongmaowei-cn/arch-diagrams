@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时序图 · 订单结算 idempotency — Engineering Diagram Library</title>
+<style>
+/* ─── Shared design tokens + chrome for Engineering Diagram Library
+       v1 · paired with diagram-shared.js
+       Each diagram page only needs to layer its own SVG content. ─── */
+:root {
+  --ivory:   #FAF9F5;
+  --paper:   #FFFFFF;
+  --slate:   #141413;
+  --clay:    #D97757;
+  --oat:     #E3DACC;
+  --olive:   #788C5D;
+  --rust:    #B04A3F;
+  --plum:    #6B5B95;
+  --teal:    #4A8585;
+  --gold:    #C4994E;
+  --gray-150:#F0EEE6;
+  --gray-300:#D1CFC5;
+  --gray-500:#87867F;
+  --gray-700:#3D3D3A;
+  --shadow: 0 1px 2px rgba(20,20,19,0.04), 0 8px 24px rgba(20,20,19,0.06);
+
+  --serif: ui-serif, Georgia, "Times New Roman", serif;
+  --sans:  system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  --ivory:   #1A1917;
+  --paper:   #211F1C;
+  --slate:   #F5F3EC;
+  --clay:    #E08E6F;
+  --oat:     #3A342B;
+  --olive:   #93A872;
+  --rust:    #C46559;
+  --plum:    #8E81B5;
+  --teal:    #5DA0A0;
+  --gold:    #D4AB66;
+  --gray-150:#26241F;
+  --gray-300:#3D3A33;
+  --gray-500:#87867F;
+  --gray-700:#B8B6AA;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Dark-mode override: map inline SVG hex (fill/stroke presentation attrs)
+       to dark equivalents via attribute selectors. Lower specificity than
+       any class-based rule, higher than presentation attrs. ── */
+:root[data-theme="dark"] svg [fill="#FFFFFF"], :root[data-theme="dark"] svg [fill="#ffffff"], :root[data-theme="dark"] svg [fill="#fff"] { fill: #211F1C; }
+:root[data-theme="dark"] svg [stroke="#FFFFFF"], :root[data-theme="dark"] svg [stroke="#ffffff"], :root[data-theme="dark"] svg [stroke="#fff"] { stroke: #211F1C; }
+:root[data-theme="dark"] svg [fill="#FAF9F5"] { fill: #1A1917; }
+:root[data-theme="dark"] svg [stroke="#FAF9F5"] { stroke: #1A1917; }
+:root[data-theme="dark"] svg [fill="#141413"] { fill: #F5F3EC; }
+:root[data-theme="dark"] svg [stroke="#141413"] { stroke: #F5F3EC; }
+:root[data-theme="dark"] svg [fill="#D97757"] { fill: #E08E6F; }
+:root[data-theme="dark"] svg [stroke="#D97757"] { stroke: #E08E6F; }
+:root[data-theme="dark"] svg [fill="#788C5D"] { fill: #93A872; }
+:root[data-theme="dark"] svg [stroke="#788C5D"] { stroke: #93A872; }
+:root[data-theme="dark"] svg [fill="#B04A3F"] { fill: #C46559; }
+:root[data-theme="dark"] svg [stroke="#B04A3F"] { stroke: #C46559; }
+:root[data-theme="dark"] svg [fill="#6B5B95"] { fill: #8E81B5; }
+:root[data-theme="dark"] svg [stroke="#6B5B95"] { stroke: #8E81B5; }
+:root[data-theme="dark"] svg [fill="#4A8585"] { fill: #5DA0A0; }
+:root[data-theme="dark"] svg [stroke="#4A8585"] { stroke: #5DA0A0; }
+:root[data-theme="dark"] svg [fill="#C4994E"] { fill: #D4AB66; }
+:root[data-theme="dark"] svg [stroke="#C4994E"] { stroke: #D4AB66; }
+:root[data-theme="dark"] svg [fill="#F0EEE6"] { fill: #26241F; }
+:root[data-theme="dark"] svg [stroke="#F0EEE6"] { stroke: #26241F; }
+:root[data-theme="dark"] svg [fill="#D1CFC5"] { fill: #3D3A33; }
+:root[data-theme="dark"] svg [stroke="#D1CFC5"] { stroke: #3D3A33; }
+:root[data-theme="dark"] svg [fill="#3D3D3A"] { fill: #B8B6AA; }
+:root[data-theme="dark"] svg [stroke="#3D3D3A"] { stroke: #B8B6AA; }
+:root[data-theme="dark"] svg [fill="#E3DACC"] { fill: #3A342B; }
+:root[data-theme="dark"] svg [stroke="#E3DACC"] { stroke: #3A342B; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--ivory); color: var(--slate); font-family: var(--sans); -webkit-font-smoothing: antialiased; line-height: 1.55; transition: background 200ms ease, color 200ms ease; }
+
+/* ── Topbar ── */
+.topbar { position: sticky; top: 0; z-index: 50; background: color-mix(in oklab, var(--ivory), transparent 8%); backdrop-filter: blur(8px); border-bottom: 1px solid var(--gray-300); }
+.topbar-inner { max-width: 1480px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.crumb { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--gray-500); }
+.crumb a { color: var(--gray-500); text-decoration: none; }
+.crumb a:hover { color: var(--slate); }
+.crumb .sep { opacity: 0.5; }
+.crumb .here { color: var(--slate); }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 50%; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; }
+.icon-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 17px; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; }
+.pill-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn svg { width: 12px; height: 12px; }
+
+/* ── Header ── */
+.sheet { max-width: 1480px; margin: 0 auto; padding: 36px 28px 28px; }
+.title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+.title-block { max-width: 760px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); margin-bottom: 12px; }
+h1 { font-family: var(--serif); font-weight: 500; font-size: 40px; letter-spacing: -0.014em; line-height: 1.15; margin-bottom: 14px; }
+h1 em { font-style: italic; color: var(--gray-500); font-weight: 400; }
+.lead { font-size: 14.5px; line-height: 1.65; color: var(--gray-700); max-width: 660px; }
+.lead b { color: var(--slate); font-weight: 600; }
+.lead code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 6px; border-radius: 4px; }
+.stat-row { display: flex; gap: 28px; align-items: baseline; font-family: var(--mono); font-size: 11px; color: var(--gray-500); }
+.stat-row .v { color: var(--slate); font-size: 24px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.1; margin-bottom: 2px; }
+
+/* ── Layout ── */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-top: 28px; align-items: start; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── Canvas ── */
+.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; box-shadow: var(--shadow); }
+.canvas-stage { position: absolute; inset: 0; cursor: grab; user-select: none; touch-action: none; }
+.canvas-stage.dragging { cursor: grabbing; }
+.canvas-grid { position: absolute; inset: -2000px; background-image: radial-gradient(circle, var(--gray-300) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+.canvas-inner { position: absolute; left: 50%; top: 24px; transform-origin: center top; transition: transform 60ms ease; }
+svg.diagram { display: block; }
+.diagram text { font-family: var(--mono); font-size: 12px; fill: var(--slate); pointer-events: none; }
+.diagram text.t-title { font-family: var(--sans); font-weight: 500; font-size: 13px; }
+.diagram text.t-sub { font-size: 10px; fill: var(--gray-500); }
+.diagram text.t-lbl { font-size: 10px; fill: var(--gray-500); font-family: var(--mono); }
+.diagram text.t-lbl-no { fill: var(--rust); }
+.diagram text.t-lbl-yes { fill: var(--olive); }
+.diagram text.t-connector { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--clay); }
+.diagram text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.diagram text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+
+/* ── Generic node shapes (per-diagram pages add specifics) ── */
+.node { cursor: pointer; transition: opacity 150ms ease; }
+.node .shape { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
+.node .shape-inner { fill: none; stroke: var(--gray-500); stroke-width: 1.5; }
+.node.term .shape { fill: var(--gray-150); }
+.node.process .shape { fill: var(--paper); }
+.node.decision .shape { fill: var(--paper); }
+.node.io .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.io .shape-inner { stroke: var(--plum); }
+.node.io text { fill: var(--slate); }
+.node.db .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.db .shape-inner { stroke: var(--clay); }
+.node.subprocess .shape { fill: color-mix(in oklab, var(--olive), transparent 92%); stroke: var(--olive); }
+.node.subprocess .shape-inner { stroke: var(--olive); }
+.node.document .shape { fill: color-mix(in oklab, var(--rust), transparent 92%); stroke: var(--rust); }
+.node.document .shape-inner { stroke: var(--rust); }
+.node.connector .shape { fill: var(--paper); stroke: var(--clay); stroke-width: 1.5; }
+.node.success .shape { fill: color-mix(in oklab, var(--olive), transparent 85%); stroke: var(--olive); }
+.node.fail .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); }
+.node.actor .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.actor-system .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.actor-external .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.state .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.state-initial .shape { fill: var(--slate); stroke: var(--slate); }
+.node.state-final .shape { fill: var(--paper); stroke: var(--slate); }
+.node.state-final .shape-inner { fill: var(--slate); }
+.node.state-composite .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); }
+.node.entity .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.entity-weak .shape { fill: var(--paper); stroke: var(--gray-500); stroke-dasharray: none; }
+.node.attribute .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.attribute-key .shape { fill: var(--paper); stroke: var(--clay); }
+.node.relationship .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.gateway .shape { fill: var(--paper); stroke: var(--gold); }
+.node.event .shape { fill: var(--paper); stroke: var(--olive); }
+.node.event-end .shape { fill: var(--paper); stroke: var(--rust); stroke-width: 2.5; }
+.node.event-msg .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.tier .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 5 3; }
+.node.cache .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.queue .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.gateway-api .shape { fill: color-mix(in oklab, var(--clay), transparent 85%); stroke: var(--clay); stroke-width: 2; }
+.node.commit .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.commit-main .shape { fill: var(--paper); stroke: var(--clay); }
+.node.commit-develop .shape { fill: var(--paper); stroke: var(--plum); }
+.node.commit-feature .shape { fill: var(--paper); stroke: var(--olive); }
+.node.commit-release .shape { fill: var(--paper); stroke: var(--gold); }
+.node.commit-hotfix .shape { fill: var(--paper); stroke: var(--rust); }
+.node.tag .shape { fill: color-mix(in oklab, var(--gold), transparent 80%); stroke: var(--gold); }
+.node.zone .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 6 3; }
+.node.zone-dmz .shape { fill: color-mix(in oklab, var(--gold), transparent 95%); stroke: var(--gold); stroke-dasharray: 6 3; }
+.node.zone-internal .shape { fill: color-mix(in oklab, var(--plum), transparent 95%); stroke: var(--plum); stroke-dasharray: 6 3; }
+.node.firewall .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); stroke-width: 2; }
+.node.router .shape { fill: color-mix(in oklab, var(--teal), transparent 85%); stroke: var(--teal); }
+.node.switch-net .shape { fill: var(--paper); stroke: var(--gray-700); }
+.node.server .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node:hover .shape { stroke-width: 2; }
+.node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.node.active:not(.gallery-card-node) .shape { stroke: var(--clay); stroke-width: 2.6; }
+.node.active:not(.gallery-card-node) .shape-inner { stroke: var(--clay); }
+
+/* ── Edges ── */
+.edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#arrow); }
+.edge.yes { stroke: var(--olive); marker-end: url(#arrow-olive); }
+.edge.no { stroke: var(--rust); stroke-dasharray: 5 4; marker-end: url(#arrow-rust); }
+.edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#arrow-clay); }
+.edge.async { stroke-dasharray: 6 3; }
+.edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#arrow-open); }
+.edge.sync { stroke: var(--slate); marker-end: url(#arrow-slate); }
+.edge.msg { stroke: var(--plum); marker-end: url(#arrow-plum); }
+.edge.thick { stroke-width: 2.2; }
+.edge.bidir { marker-start: url(#arrow-rev); marker-end: url(#arrow); }
+.edge.no-arrow { marker-end: none; }
+.edge.relation { stroke: var(--clay); stroke-width: 1.5; }
+.edge.attr-link { stroke: var(--gray-500); stroke-width: 1.2; }
+.edge.lane { stroke: var(--gray-300); stroke-width: 1; }
+
+/* ── Annotation ── */
+.annotation .bracket { fill: none; stroke: var(--gray-500); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.annotation .leader { stroke: var(--gray-500); stroke-width: 1; stroke-dasharray: 2 3; }
+.annotation .note { fill: color-mix(in oklab, var(--gold), transparent 92%); stroke: var(--gold); stroke-width: 1.2; }
+.annotation .note-text { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+
+/* ── Floating canvas controls ── */
+.canvas-controls { position: absolute; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 4px; background: var(--paper); border: 1px solid var(--gray-300); border-radius: 20px; padding: 4px; box-shadow: var(--shadow); }
+.canvas-controls button { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--slate); border-radius: 50%; cursor: pointer; font-family: var(--mono); font-size: 14px; transition: background 150ms ease; }
+.canvas-controls button:hover { background: var(--gray-150); color: var(--clay); }
+.canvas-controls .zoom-readout { width: 46px; text-align: center; font-family: var(--mono); font-size: 10px; color: var(--gray-700); padding: 0 2px; letter-spacing: 0.02em; }
+.canvas-controls .sep { width: 1px; height: 18px; background: var(--gray-300); }
+.canvas-help { position: absolute; left: 16px; bottom: 16px; font-family: var(--mono); font-size: 10px; color: var(--gray-500); letter-spacing: 0.04em; background: color-mix(in oklab, var(--paper), transparent 20%); padding: 6px 10px; border-radius: 12px; border: 1px solid var(--gray-300); }
+
+/* ── Aside ── */
+aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 110px); }
+.panel { border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+.detail { padding: 22px 22px 22px; max-height: 50vh; overflow-y: auto; }
+.detail .hint { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.04em; }
+.detail .hint::before { content: "→"; color: var(--clay); font-size: 13px; }
+.detail h3 { font-family: var(--serif); font-weight: 500; font-size: 21px; margin-bottom: 4px; letter-spacing: -0.008em; line-height: 1.2; }
+.detail .meta { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 16px; letter-spacing: 0.03em; }
+.detail .meta .dot { color: var(--clay); margin: 0 7px; }
+.detail p { font-size: 13.5px; line-height: 1.6; color: var(--gray-700); margin-bottom: 12px; }
+.detail p code { font-family: var(--mono); font-size: 12px; background: var(--gray-150); padding: 1px 5px; border-radius: 3px; color: var(--slate); }
+.detail pre { font-family: var(--mono); font-size: 11.5px; line-height: 1.55; background: var(--gray-150); border: 1px solid var(--gray-300); border-radius: 8px; padding: 11px 13px; white-space: pre-wrap; color: var(--slate); overflow-x: auto; margin-bottom: 12px; }
+.detail .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.detail .tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border: 1px solid var(--gray-300); border-radius: 11px; color: var(--gray-700); letter-spacing: 0.04em; }
+.detail .tag.t-term { color: var(--gray-500); }
+.detail .tag.t-process { color: var(--slate); }
+.detail .tag.t-decision { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-io { color: var(--plum); border-color: var(--plum); }
+.detail .tag.t-db { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-subprocess { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-document { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-connector { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-success { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-fail { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-actor { color: var(--slate); }
+.detail .tag.t-state { color: var(--slate); }
+.detail .tag.t-entity { color: var(--slate); }
+.detail .tag.t-rel { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-gate { color: var(--gold); border-color: var(--gold); }
+.detail .tag.t-event { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-zone { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-firewall { color: var(--rust); border-color: var(--rust); }
+
+.howto { padding: 22px; max-height: 40vh; overflow-y: auto; }
+.howto .eyebrow { color: var(--clay); margin-bottom: 8px; }
+.howto h2 { font-family: var(--serif); font-weight: 500; font-size: 18px; margin-bottom: 14px; letter-spacing: -0.005em; }
+.howto ol { list-style: none; counter-reset: step; }
+.howto ol li { counter-increment: step; padding: 9px 0 9px 30px; position: relative; font-size: 12.5px; color: var(--gray-700); line-height: 1.55; border-top: 1px dashed var(--gray-300); }
+.howto ol li:first-child { border-top: none; }
+.howto ol li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 10px; font-family: var(--mono); font-size: 10px; color: var(--clay); letter-spacing: 0; }
+.howto ol li b { font-weight: 600; color: var(--slate); }
+
+/* ── Gallery card (B 区元素图鉴 · 与 03 范本对齐) ── */
+.diagram text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+.diagram text.section-sub   { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.diagram .section-divider   { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+.diagram .gallery-card      { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; transition: stroke 150ms ease, stroke-width 150ms ease; }
+.diagram .gallery-card-node { cursor: pointer; }
+.diagram .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.diagram .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.diagram .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.diagram text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.diagram text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.diagram .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .ribbon-shown-bg   { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.diagram .ribbon-ref-bg     { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+/* ── Legend ── */
+.legend-group { margin-top: 18px; }
+.legend-group + .legend-group { margin-top: 14px; }
+.legend-group-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; padding: 0 6px 8px; }
+.legend-group .legend { margin-top: 0; }
+.legend { margin-top: 18px; padding: 18px 22px; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 22px; }
+.legend-item { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--gray-700); }
+.legend-item .name { color: var(--slate); }
+.legend-item .sub { color: var(--gray-500); margin-left: 4px; }
+.chip { width: 26px; height: 16px; flex-shrink: 0; }
+.chip svg { width: 100%; height: 100%; overflow: visible; }
+
+/* ── Footer ── */
+.footer-note { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 11px; color: var(--gray-500); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.footer-note a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+
+</style>
+<style>
+  /* Sequence-specific layering */
+  .diagram .lifeline       { stroke: var(--gray-300); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
+  .diagram .activation     { fill: color-mix(in oklab, var(--plum), transparent 76%); stroke: var(--plum); stroke-width: 1; }
+  .diagram .phase-frame    { fill: none; stroke: var(--clay); stroke-width: 1; stroke-dasharray: 8 4; }
+  .diagram .phase-tab      { fill: var(--paper); stroke: var(--clay); stroke-width: 1; }
+  .diagram .fragment       { fill: none; stroke: var(--olive); stroke-width: 1.2; stroke-dasharray: 5 3; }
+  .diagram .fragment-tab   { fill: color-mix(in oklab, var(--olive), transparent 82%); stroke: var(--olive); stroke-width: 1; }
+  .diagram .fragment-divider { stroke: var(--olive); stroke-width: 1; stroke-dasharray: 5 4; }
+  .diagram text.t-phase    { font-family: var(--mono); font-size: 11px; font-weight: 700; fill: var(--clay); letter-spacing: 0.12em; text-transform: uppercase; }
+  .diagram text.t-frag     { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--olive); letter-spacing: 0.06em; text-transform: uppercase; }
+  .diagram text.t-cond     { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); font-style: italic; }
+  .diagram text.t-msg      { font-family: var(--mono); font-size: 11px; fill: var(--slate); }
+  .diagram text.t-msg-ret  { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-500); font-style: italic; }
+  .diagram text.t-ord      { font-family: var(--mono); font-size: 9px; fill: var(--clay); font-weight: 700; letter-spacing: 0.04em; }
+  .diagram .destroy        { stroke: var(--rust); stroke-width: 2.8; }
+  .diagram .note-box       { fill: color-mix(in oklab, var(--gold), transparent 84%); stroke: var(--gold); stroke-width: 1.2; }
+  .diagram .note-fold      { fill: var(--gold); fill-opacity: 0.35; stroke: var(--gold); stroke-width: 1; }
+  .diagram .actor-head     { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="crumb">
+      <a href="index.html">Engineering Diagram Library</a>
+      <span class="sep">/</span>
+      <span class="here">02 · 时序图</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="pill-btn" id="exportSvg" title="导出为 SVG"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>SVG</button>
+      <button class="pill-btn" id="exportPng" title="导出为 PNG @2x"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>PNG</button>
+      <button class="pill-btn" id="copyHtml" title="复制 HTML 源码"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V3a1 1 0 011-1h7"/></svg>HTML</button>
+      <button class="icon-btn" id="themeToggle" title="切换暗色主题"><svg id="themeIconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg><svg id="themeIconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="display:none"><path d="M13 9.5A6 6 0 116.5 3a5 5 0 006.5 6.5z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet">
+  <header>
+    <div class="title-row">
+      <div class="title-block">
+        <div class="eyebrow">Diagram type 02 · 时序图 / Sequence Diagram</div>
+        <h1>订单结算的幂等时序 <em>— order settlement with idempotency</em></h1>
+        <p class="lead">五个参与者，四个 <b>阶段（phase）</b> 串成一笔从下单到银行扣款的真实链路。每条消息严格从一根<b>激活框边缘</b>出发、落到另一根<b>激活框边缘</b>，全部走 90° 正交。调用方激活长度 ≥ 被调用方 — 这是时序图的「骨」。</p>
+      </div>
+      <div class="stat-row">
+        <div><span class="v">5</span>参与者</div>
+        <div><span class="v">4</span>阶段</div>
+        <div><span class="v">17</span>消息</div>
+        <div><span class="v">3</span>fragment</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <div class="canvas-frame">
+        <div class="canvas-stage" id="stage">
+          <div class="canvas-grid"></div>
+          <div class="canvas-inner" id="canvasInner">
+            <svg class="diagram" id="diagram" width="1080" height="2680" viewBox="0 0 1080 2680" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
+                <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+                <marker id="arrow-plum"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
+                <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="arrow-rust"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
+                <marker id="arrow-clay"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+                <marker id="arrow-open"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#87867F" stroke-width="1.4"/></marker>
+                <marker id="arrow-rev"   viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#87867F"/></marker>
+              </defs>
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- A · 订单结算 idempotency 时序主图                          -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <text class="section-label" x="40" y="24">A · 订单结算 idempotency 时序主图</text>
+              <text class="section-sub"   x="40" y="42">5 参与者 · 4 阶段 · 17 消息 · 3 fragment · 主路径 sync + return + plum async</text>
+
+
+              <!-- ============================================
+                   PARTICIPANT BOXES (top row, y=80→130)
+                   Lifelines at cx=120 / 300 / 520 / 740 / 960
+                   ============================================ -->
+
+              <!-- Actor 1: Client App (user, stick figure head) -->
+              <g class="node actor" data-id="client" tabindex="0">
+                <circle class="actor-head" cx="120" cy="60" r="11"/>
+                <path class="actor-head" d="M108,76 L108,80 L132,80 L132,76 Z"/>
+                <rect class="shape" x="60" y="80" width="120" height="50" rx="4"/>
+                <text class="t-title" x="120" y="106" text-anchor="middle">Client App</text>
+                <text class="t-sub" x="120" y="122" text-anchor="middle">iOS · Android · Web</text>
+              </g>
+              <g class="node actor-system" data-id="gateway" tabindex="0">
+                <rect class="shape" x="240" y="80" width="120" height="50" rx="4"/>
+                <text class="t-title" x="300" y="106" text-anchor="middle">API Gateway</text>
+                <text class="t-sub" x="300" y="122" text-anchor="middle">edge · authz</text>
+              </g>
+              <g class="node actor-system" data-id="order" tabindex="0">
+                <rect class="shape" x="460" y="80" width="120" height="50" rx="4"/>
+                <text class="t-title" x="520" y="106" text-anchor="middle">Order Service</text>
+                <text class="t-sub" x="520" y="122" text-anchor="middle">orchestrator</text>
+              </g>
+              <g class="node actor-system" data-id="payment" tabindex="0">
+                <rect class="shape" x="680" y="80" width="120" height="50" rx="4"/>
+                <text class="t-title" x="740" y="106" text-anchor="middle">Payment Svc</text>
+                <text class="t-sub" x="740" y="122" text-anchor="middle">async gateway</text>
+              </g>
+              <g class="node actor-external" data-id="bank" tabindex="0">
+                <rect class="shape" x="900" y="80" width="120" height="50" rx="4"/>
+                <text class="t-title" x="960" y="106" text-anchor="middle">Bank / UnionPay</text>
+                <text class="t-sub" x="960" y="122" text-anchor="middle">external</text>
+              </g>
+
+              <!-- ============================================
+                   LIFELINES (dashed verticals)
+                   ============================================ -->
+              <line class="lifeline" x1="120" y1="130" x2="120" y2="1430"/>
+              <line class="lifeline" x1="300" y1="130" x2="300" y2="1430"/>
+              <line class="lifeline" x1="520" y1="130" x2="520" y2="1430"/>
+              <line class="lifeline" x1="740" y1="130" x2="740" y2="1430"/>
+              <line class="lifeline" x1="960" y1="130" x2="960" y2="1380"/>
+
+              <!-- ============================================
+                   PHASE FRAMES (visible labeled containers)
+                   ============================================ -->
+              <!-- Phase 1 -->
+              <rect class="phase-frame" x="36" y="160" width="1008" height="290" rx="6" ry="6"/>
+              <rect class="phase-tab"   x="36" y="146" width="270" height="22" rx="3" ry="3"/>
+              <text class="t-phase"     x="48" y="161">Phase 1 · 幂等键校验</text>
+
+              <!-- Phase 2 -->
+              <rect class="phase-frame" x="36" y="486" width="1008" height="276" rx="6" ry="6"/>
+              <rect class="phase-tab"   x="36" y="472" width="270" height="22" rx="3" ry="3"/>
+              <text class="t-phase"     x="48" y="487">Phase 2 · 发起支付</text>
+
+              <!-- Phase 3 -->
+              <rect class="phase-frame" x="36" y="798" width="1008" height="240" rx="6" ry="6"/>
+              <rect class="phase-tab"   x="36" y="784" width="270" height="22" rx="3" ry="3"/>
+              <text class="t-phase"     x="48" y="799">Phase 3 · 状态轮询</text>
+
+              <!-- Phase 4 -->
+              <rect class="phase-frame" x="36" y="1074" width="1008" height="336" rx="6" ry="6"/>
+              <rect class="phase-tab"   x="36" y="1060" width="270" height="22" rx="3" ry="3"/>
+              <text class="t-phase"     x="48" y="1075">Phase 4 · 异步完成</text>
+
+              <!-- ============================================
+                   ACTIVATION BOXES (drawn BEFORE messages)
+                   width=10, centered on lifeline (cx-5 → cx+5)
+                   Caller's activation always extends past callee's
+                   ============================================ -->
+              <!-- Activations aligned to first/last message at each lifeline.
+                   Caller's span MUST contain callee's span (UML rule).
+                   Client  205 → 1340  (M1 out … M15 in)        h=1135
+                   Gateway 205 → 1340  (M1 in  … M15 out)        h=1135   == Client
+                   Order   245 → 1305  (M2 in  … M14 out)        h=1060   ⊂ Gateway
+                   Payment 525 → 1240  (M6 in  … M13 out)        h=715    ⊂ Order
+                   Bank-1  575 →  650  (M7 in  … M8  out)        h=75     ⊂ Payment
+                   Bank-2  1195 → 1210 (M12 out)                 h=15     ⊂ Payment -->
+              <rect class="activation" x="115" y="205" width="10" height="1135" rx="1"/>
+              <rect class="activation" x="295" y="205" width="10" height="1135" rx="1"/>
+              <rect class="activation" x="515" y="245" width="10" height="1060" rx="1"/>
+              <rect class="activation" x="735" y="525" width="10" height="715" rx="1"/>
+              <rect class="activation" x="955" y="575" width="10" height="75" rx="1"/>
+              <rect class="activation" x="955" y="1195" width="10" height="15" rx="1"/>
+
+              <!-- ============================================
+                   PHASE 1 MESSAGES
+                   ============================================ -->
+              <!-- M1 Client → Gateway (sync) -->
+              <text class="t-ord" x="130" y="196">①</text>
+              <path class="edge sync" d="M125,205 L295,205"/>
+              <text class="t-msg"  x="145" y="200">POST /v1/checkout</text>
+              <text class="t-msg-ret" x="145" y="217">headers: Idempotency-Key</text>
+
+              <!-- M2 Gateway → Order (sync) -->
+              <text class="t-ord" x="310" y="236">②</text>
+              <path class="edge sync" d="M305,245 L515,245"/>
+              <text class="t-msg"  x="325" y="240">forwardWithKey(req, key)</text>
+
+              <!-- M3 Order self-message -->
+              <text class="t-ord" x="535" y="276">③</text>
+              <path class="edge" d="M525,285 L568,285 L568,308 L525,308" stroke="#141413"/>
+              <text class="t-msg" x="555" y="280">SETNX idempotency_key</text>
+              <text class="t-msg-ret" x="555" y="297">→ existing? cached_order_id</text>
+
+              <!-- ALT FRAGMENT (within Phase 1) -->
+              <g data-id="frag-alt" tabindex="0" class="node">
+                <rect class="shape" x="80" y="330" width="478" height="106" rx="4" ry="4" fill="transparent" stroke="transparent"/>
+              </g>
+              <rect class="fragment" x="80" y="330" width="478" height="106" rx="4" ry="4"/>
+              <path class="fragment-tab" d="M80,330 L120,330 L128,344 L128,354 L80,354 Z"/>
+              <text class="t-frag" x="92" y="347">alt</text>
+              <text class="t-cond" x="142" y="347">[ key exists · cached_order_id present ]</text>
+
+              <!-- M4 Order → Gateway return (cached) -->
+              <text class="t-ord" x="335" y="368">④</text>
+              <path class="edge return" d="M515,377 L305,377"/>
+              <text class="t-msg" x="325" y="372">200 OK + cached order_id</text>
+
+              <!-- M5 Gateway → Client return -->
+              <text class="t-ord" x="135" y="402">⑤</text>
+              <path class="edge return" d="M295,411 L125,411"/>
+              <text class="t-msg" x="145" y="406">200 OK ↩ 幂等命中 (early return)</text>
+
+              <!-- alt divider -->
+              <line class="fragment-divider" x1="80" y1="421" x2="558" y2="421"/>
+              <text class="t-cond" x="92" y="433">[ new key · continue ↓ ]</text>
+
+              <!-- ============================================
+                   PHASE 2 MESSAGES
+                   ============================================ -->
+              <!-- M6 Order → Payment (sync) -->
+              <text class="t-ord" x="535" y="516">⑥</text>
+              <path class="edge sync" d="M525,525 L735,525"/>
+              <text class="t-msg" x="545" y="520">chargeAsync(amount, out_trade_no)</text>
+
+              <!-- M7 Payment → Bank (sync) -->
+              <text class="t-ord" x="755" y="566">⑦</text>
+              <path class="edge sync" d="M745,575 L955,575"/>
+              <text class="t-msg" x="765" y="570">POST /settle</text>
+
+              <!-- M8 Bank → Payment return (202) -->
+              <text class="t-ord" x="775" y="641">⑧</text>
+              <path class="edge return" d="M955,650 L745,650"/>
+              <text class="t-msg-ret" x="765" y="645">return: 202 Accepted (async)</text>
+
+              <!-- M9 Payment → Order return (pending) -->
+              <text class="t-ord" x="555" y="721">⑨</text>
+              <path class="edge return" d="M735,730 L525,730"/>
+              <text class="t-msg-ret" x="545" y="725">return: { txn_id, status: pending }</text>
+
+              <!-- ============================================
+                   PHASE 3 — LOOP fragment
+                   ============================================ -->
+              <g data-id="frag-loop" tabindex="0" class="node">
+                <rect class="shape" x="460" y="830" width="380" height="180" rx="4" ry="4" fill="transparent" stroke="transparent"/>
+              </g>
+              <rect class="fragment" x="460" y="830" width="380" height="180" rx="4" ry="4"/>
+              <path class="fragment-tab" d="M460,830 L508,830 L516,844 L516,854 L460,854 Z"/>
+              <text class="t-frag" x="472" y="847">loop</text>
+              <text class="t-cond" x="530" y="847">[ retry ≤ 3 · backoff 1s / 2s / 4s ]</text>
+
+              <!-- M10 Order → Payment (poll) -->
+              <text class="t-ord" x="535" y="876">⑩</text>
+              <path class="edge sync" d="M525,885 L735,885"/>
+              <text class="t-msg" x="545" y="880">queryStatus(out_trade_no)</text>
+
+              <!-- M11 Payment → Order return -->
+              <text class="t-ord" x="555" y="921">⑪</text>
+              <path class="edge return" d="M735,930 L525,930"/>
+              <text class="t-msg-ret" x="545" y="925">return: status: pending</text>
+
+              <!-- Iteration hint -->
+              <text class="t-cond" x="538" y="980">⤴ 重复至 status ≠ pending 或 attempt = 3</text>
+
+              <!-- ============================================
+                   PHASE 4 — OPT fragment + finalize
+                   ============================================ -->
+              <g data-id="frag-opt" tabindex="0" class="node">
+                <rect class="shape" x="460" y="1110" width="558" height="142" rx="4" ry="4" fill="transparent" stroke="transparent"/>
+              </g>
+              <rect class="fragment" x="460" y="1110" width="558" height="142" rx="4" ry="4"/>
+              <path class="fragment-tab" d="M460,1110 L500,1110 L508,1124 L508,1134 L460,1134 Z"/>
+              <text class="t-frag" x="472" y="1127">opt</text>
+              <text class="t-cond" x="522" y="1127">[ webhook arrived · ~98% within 30s ]</text>
+
+              <!-- M12 Bank → Payment async webhook -->
+              <text class="t-ord" x="780" y="1186">⑫</text>
+              <path class="edge async msg" d="M955,1195 L745,1195"/>
+              <text class="t-msg" x="765" y="1190">webhook: paymentCompleted</text>
+
+              <!-- M13 Payment → Order async event -->
+              <text class="t-ord" x="555" y="1231">⑬</text>
+              <path class="edge async msg" d="M735,1240 L525,1240"/>
+              <text class="t-msg" x="545" y="1235">paymentEvent(SUCCESS, txn_id)</text>
+
+              <!-- M14 Order → Gateway return -->
+              <text class="t-ord" x="335" y="1296">⑭</text>
+              <path class="edge return" d="M515,1305 L305,1305"/>
+              <text class="t-msg-ret" x="325" y="1300">return: 201 Created</text>
+
+              <!-- M15 Gateway → Client return -->
+              <text class="t-ord" x="135" y="1331">⑮</text>
+              <path class="edge return" d="M295,1340 L125,1340"/>
+              <text class="t-msg-ret" x="145" y="1335">return: 201 Created</text>
+
+              <!-- ============================================
+                   NOTE (folded corner)
+                   ============================================ -->
+              <g class="annotation" id="note-key">
+                <path class="note-box" d="M580,1300 L800,1300 L820,1320 L820,1370 L580,1370 Z"/>
+                <path class="note-fold" d="M800,1300 L820,1320 L800,1320 Z"/>
+                <text class="t-ann" x="592" y="1320">out_trade_no = idempotency_key</text>
+                <text class="t-ann" x="592" y="1336">→ Payment 侧也保存同一 key</text>
+                <text class="t-ann" x="592" y="1352">→ 重发请求只扣一次款</text>
+              </g>
+
+              <!-- ============================================
+                   DESTROY MARKER (Bank lifeline ends)
+                   ============================================ -->
+              <line class="destroy" x1="950" y1="1372" x2="970" y2="1392"/>
+              <line class="destroy" x1="970" y1="1372" x2="950" y2="1392"/>
+              <text class="t-ann" x="940" y="1410" text-anchor="end" fill="#B04A3F">⊗ connection closed</text>
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- B · UML 2.5 时序图元素图鉴 · 10 张卡 (5×2)                 -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <line class="section-divider" x1="40" y1="1450" x2="1040" y2="1450"/>
+              <text class="section-label" x="40" y="1488">B · UML 2.5 时序图元素图鉴 · 复制粘贴元素库</text>
+              <text class="section-sub"   x="40" y="1510">10 张卡 · 主图实际使用的元素挂 olive ✓ 角标 · 仅图鉴示意挂 ⊘</text>
+
+              <!-- ─── Row 1 · Card 1 + Card 2 ─── -->
+              <g class="node gallery-card-node" data-id="g-actor-system" tabindex="0">
+                <rect class="gallery-card" x="40" y="1540" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="1568">参与者三态 · External · System · User Actor</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="1554" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="1565" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="1574" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="1584" text-anchor="middle">主图 ✓ × 5</text>
+                <text class="gallery-desc" x="60" y="1598">顶部矩形 / 用户头像 stick-figure / 外部 gold 边框 — 区分系统型 / 用户型 / 外部型</text>
+                <!-- Demo -->
+                <circle cx="120" cy="1632" r="11" fill="#FFFFFF" stroke="#87867F" stroke-width="1.4"/>
+                <path d="M108,1647 L108,1651 L132,1651 L132,1647 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.4"/>
+                <rect x="60" y="1655" width="120" height="38" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.5"/>
+                <text class="t-title" x="120" y="1675" text-anchor="middle">Client App</text>
+                <text class="t-sub" x="120" y="1688" text-anchor="middle">user / actor</text>
+                <text class="state-body" x="120" y="1714" text-anchor="middle">stick-figure</text>
+                <rect x="220" y="1655" width="140" height="38" rx="4" fill="color-mix(in oklab, #6B5B95, transparent 88%)" stroke="#6B5B95" stroke-width="1.5"/>
+                <text class="t-title" x="290" y="1675" text-anchor="middle">Order Service</text>
+                <text class="t-sub" x="290" y="1688" text-anchor="middle">internal · plum</text>
+                <text class="state-body" x="290" y="1714" text-anchor="middle">system 服务</text>
+                <rect x="400" y="1655" width="120" height="38" rx="4" fill="color-mix(in oklab, #C4994E, transparent 88%)" stroke="#C4994E" stroke-width="1.5"/>
+                <text class="t-title" x="460" y="1675" text-anchor="middle">UnionPay</text>
+                <text class="t-sub" x="460" y="1688" text-anchor="middle">external · gold</text>
+                <text class="state-body" x="460" y="1714" text-anchor="middle">外部三方</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-lifeline" tabindex="0">
+                <rect class="gallery-card" x="560" y="1540" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="1568">Lifeline · 生命线竖虚线</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="1554" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="1565" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="956" y="1574" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="1584" text-anchor="middle">主图 ✓ × 5</text>
+                <text class="gallery-desc" x="580" y="1598">从参与者底部垂直向下的虚线 — 表示该 actor 在时间维度上的存在</text>
+                <!-- Demo: 3 actor boxes with lifelines -->
+                <rect x="610" y="1632" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="660" y="1652" text-anchor="middle" font-size="11">Client</text>
+                <line class="lifeline" x1="660" y1="1662" x2="660" y2="1716"/>
+                <rect x="750" y="1632" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="800" y="1652" text-anchor="middle" font-size="11">Service</text>
+                <line class="lifeline" x1="800" y1="1662" x2="800" y2="1716"/>
+                <rect x="890" y="1632" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="940" y="1652" text-anchor="middle" font-size="11">External</text>
+                <line class="lifeline" x1="940" y1="1662" x2="940" y2="1716"/>
+                <text class="state-body" x="780" y="1730" text-anchor="middle">虚线 dasharray="4 4" · 1.2px</text>
+              </g>
+
+              <!-- ─── Row 2 · Card 3 + Card 4 ─── -->
+              <g class="node gallery-card-node" data-id="g-activation" tabindex="0">
+                <rect class="gallery-card" x="40" y="1772" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="1800">Activation · 激活框 (caller ≥ callee)</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="1786" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="1797" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="1806" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="1816" text-anchor="middle">主图 ✓ × 6</text>
+                <text class="gallery-desc" x="60" y="1830">窄竖矩形 (宽 10px) 覆盖 lifeline — 调用方激活长度<tspan font-weight="600">必须 ≥</tspan> 被调用方</text>
+                <!-- Demo -->
+                <rect x="100" y="1856" width="80" height="26" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="140" y="1873" text-anchor="middle" font-size="11">Caller</text>
+                <line class="lifeline" x1="140" y1="1882" x2="140" y2="1946"/>
+                <rect x="400" y="1856" width="80" height="26" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="440" y="1873" text-anchor="middle" font-size="11">Callee</text>
+                <line class="lifeline" x1="440" y1="1882" x2="440" y2="1946"/>
+                <!-- Caller activation (longer, outer) -->
+                <rect class="activation" x="135" y="1892" width="10" height="48" rx="1"/>
+                <!-- Callee activation (shorter, inner, contained within caller's span) -->
+                <rect class="activation" x="435" y="1902" width="10" height="28" rx="1"/>
+                <!-- sync msg from caller to callee -->
+                <path class="edge sync" d="M145,1902 L435,1902"/>
+                <text class="t-msg" x="180" y="1898">call()</text>
+                <path class="edge return" d="M435,1930 L145,1930"/>
+                <text class="t-msg-ret" x="180" y="1926">return</text>
+                <text class="state-body" x="80" y="1962">caller 包住 callee · UML 强制</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-sync" tabindex="0">
+                <rect class="gallery-card" x="560" y="1772" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="1800">Sync message · 同步消息 (实线 + 实心头)</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="1786" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="1797" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="956" y="1806" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="1816" text-anchor="middle">主图 ✓ × 5</text>
+                <text class="gallery-desc" x="580" y="1830">实线 + 实心三角箭头 — 调用方阻塞等待返回 · gRPC / HTTP 同步均属此类</text>
+                <!-- Demo -->
+                <rect x="610" y="1862" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="660" y="1882" text-anchor="middle" font-size="11">Gateway</text>
+                <line class="lifeline" x1="660" y1="1892" x2="660" y2="1956"/>
+                <rect x="890" y="1862" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="940" y="1882" text-anchor="middle" font-size="11">Order Service</text>
+                <line class="lifeline" x1="940" y1="1892" x2="940" y2="1956"/>
+                <rect class="activation" x="655" y="1908" width="10" height="36" rx="1"/>
+                <rect class="activation" x="935" y="1908" width="10" height="36" rx="1"/>
+                <path class="edge sync" d="M665,1918 L935,1918"/>
+                <rect class="edge-label-bg" x="700" y="1908" width="160" height="14"/>
+                <text class="edge-label" x="710" y="1918">forwardWithKey(req, key)</text>
+                <text class="state-body" x="785" y="1972" text-anchor="middle">实线 + filled ▶ — 调用阻塞</text>
+              </g>
+
+              <!-- ─── Row 3 · Card 5 + Card 6 ─── -->
+              <g class="node gallery-card-node" data-id="g-async" tabindex="0">
+                <rect class="gallery-card" x="40" y="2004" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2032">Async message · 异步消息 (plum 虚线)</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="2018" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="2029" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="2038" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="2048" text-anchor="middle">主图 ✓ × 2</text>
+                <text class="gallery-desc" x="60" y="2062">虚线 + 实心箭头 (plum) — 发送方不阻塞 · 常用于 webhook / event 推送</text>
+                <!-- Demo -->
+                <rect x="80" y="2086" width="100" height="30" rx="4" fill="color-mix(in oklab, #C4994E, transparent 88%)" stroke="#C4994E" stroke-width="1.3"/>
+                <text class="t-title" x="130" y="2106" text-anchor="middle" font-size="11">UnionPay</text>
+                <line class="lifeline" x1="130" y1="2116" x2="130" y2="2174"/>
+                <rect x="380" y="2086" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="430" y="2106" text-anchor="middle" font-size="11">Payment</text>
+                <line class="lifeline" x1="430" y1="2116" x2="430" y2="2174"/>
+                <path class="edge async msg" d="M130,2140 L425,2140"/>
+                <rect class="edge-label-bg" x="170" y="2130" width="180" height="14"/>
+                <text class="edge-label plum" x="180" y="2140">webhook: paymentCompleted</text>
+                <text class="state-body" x="280" y="2192" text-anchor="middle">虚线 dasharray="6 3" + plum filled ▶</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-return" tabindex="0">
+                <rect class="gallery-card" x="560" y="2004" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2032">Return · 返回消息 (虚线 + 开口头)</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="2018" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="2029" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="956" y="2038" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="2048" text-anchor="middle">主图 ✓ × 7</text>
+                <text class="gallery-desc" x="580" y="2062">虚线 + 开口三角箭头 — 配对一个 sync / async 消息的响应 · 可省 method</text>
+                <!-- Demo -->
+                <rect x="610" y="2086" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="660" y="2106" text-anchor="middle" font-size="11">Caller</text>
+                <line class="lifeline" x1="660" y1="2116" x2="660" y2="2188"/>
+                <rect x="890" y="2086" width="100" height="30" rx="4" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-title" x="940" y="2106" text-anchor="middle" font-size="11">Callee</text>
+                <line class="lifeline" x1="940" y1="2116" x2="940" y2="2188"/>
+                <rect class="activation" x="655" y="2128" width="10" height="48" rx="1"/>
+                <rect class="activation" x="935" y="2128" width="10" height="32" rx="1"/>
+                <path class="edge sync" d="M665,2136 L935,2136"/>
+                <text class="t-msg" x="710" y="2132">queryStatus()</text>
+                <path class="edge return" d="M935,2156 L665,2156"/>
+                <text class="t-msg-ret" x="710" y="2152">200 OK + status: pending</text>
+                <text class="state-body" x="785" y="2186" text-anchor="middle">虚线 + open ▷ — 与 sync 配对</text>
+              </g>
+
+              <!-- ─── Row 4 · Card 7 + Card 8 ─── -->
+              <g class="node gallery-card-node" data-id="g-self-message" tabindex="0">
+                <rect class="gallery-card" x="40" y="2236" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2264">Self-message · 自调用 U 形</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="2250" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="2261" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="2270" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="2280" text-anchor="middle">主图 ✓</text>
+                <text class="gallery-desc" x="60" y="2294">同一 actor 给自己发消息 — 从激活框右边出 · 水平 · 下折 · 回到激活框</text>
+                <!-- Demo -->
+                <rect x="180" y="2322" width="120" height="32" rx="4" fill="color-mix(in oklab, #6B5B95, transparent 88%)" stroke="#6B5B95" stroke-width="1.3"/>
+                <text class="t-title" x="240" y="2342" text-anchor="middle" font-size="11">Order Service</text>
+                <line class="lifeline" x1="240" y1="2354" x2="240" y2="2418"/>
+                <rect class="activation" x="235" y="2364" width="10" height="42" rx="1"/>
+                <!-- U-shape self-message -->
+                <path d="M245,2374 L320,2374 L320,2398 L245,2398" fill="none" stroke="#141413" stroke-width="1.5" marker-end="url(#arrow-slate)"/>
+                <text class="t-msg" x="252" y="2370">SETNX idempotency_key</text>
+                <text class="t-msg-ret" x="252" y="2412">→ existing? cached_order_id</text>
+                <text class="state-body" x="290" y="2432" text-anchor="middle">U 形 · 右出 · 下折 · 左回</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-phase" tabindex="0">
+                <rect class="gallery-card" x="560" y="2236" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2264">Phase · 阶段容器 (clay 虚线 + tab)</text>
+                <rect class="gallery-tag-ex-bg" x="956" y="2250" width="70" height="16"/>
+                <text class="gallery-tag-ex-text" x="991" y="2261" text-anchor="middle">+ EX</text>
+                <rect class="ribbon-shown-bg" x="956" y="2270" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="2280" text-anchor="middle">主图 ✓ × 4</text>
+                <text class="gallery-desc" x="580" y="2294">clay 虚线大框 + 左上角 tab — 把业务阶段当章节划出 · 比 fragment 更宏观</text>
+                <!-- Demo -->
+                <rect class="phase-frame" x="600" y="2324" width="420" height="86" rx="6"/>
+                <rect class="phase-tab"   x="600" y="2310" width="180" height="20" rx="3"/>
+                <text class="t-phase"     x="610" y="2324">Phase 1 · 幂等键校验</text>
+                <!-- inside: 2 small actors + sync arrow -->
+                <line class="lifeline" x1="640" y1="2342" x2="640" y2="2400"/>
+                <line class="lifeline" x1="980" y1="2342" x2="980" y2="2400"/>
+                <text class="state-body" x="640" y="2342" text-anchor="middle" font-weight="600">Gateway</text>
+                <text class="state-body" x="980" y="2342" text-anchor="middle" font-weight="600">Order</text>
+                <path class="edge sync" d="M640,2360 L980,2360"/>
+                <text class="t-msg" x="730" y="2356">forwardWithKey()</text>
+                <path class="edge return" d="M980,2386 L640,2386"/>
+                <text class="t-msg-ret" x="730" y="2382">200 OK (cached)</text>
+              </g>
+
+              <!-- ─── Row 5 · Card 9 + Card 10 ─── -->
+              <g class="node gallery-card-node" data-id="g-fragment" tabindex="0">
+                <rect class="gallery-card" x="40" y="2468" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2496">Fragment · alt · loop · opt 组合片段</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="2482" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="2493" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="2502" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="2512" text-anchor="middle">主图 ✓ × 3</text>
+                <text class="gallery-desc" x="60" y="2526">组合片段框 — 左上角斜角标 (alt/loop/opt) + 内部 divider 分多分支 + [guard] 标条件</text>
+                <!-- Demo -->
+                <rect class="fragment" x="80" y="2552" width="440" height="98" rx="4"/>
+                <path class="fragment-tab" d="M80,2552 L120,2552 L128,2566 L128,2576 L80,2576 Z"/>
+                <text class="t-frag" x="92" y="2569">alt</text>
+                <text class="t-cond" x="142" y="2569">[ key exists · cached_order_id ]</text>
+                <text class="t-msg" x="92" y="2595">→ return cached order_id (early return)</text>
+                <line class="fragment-divider" x1="80" y1="2606" x2="520" y2="2606"/>
+                <text class="t-cond" x="92" y="2620">[ new key · continue ↓ ]</text>
+                <text class="t-msg" x="92" y="2642">→ chargeAsync(amount, out_trade_no)</text>
+              </g>
+
+              <g class="node gallery-card-node" data-id="g-note-destroy" tabindex="0">
+                <rect class="gallery-card" x="560" y="2468" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2496">Note 折角注释 + Destroy ✕ 销毁</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="2482" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="2493" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="956" y="2502" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="2512" text-anchor="middle">主图 ✓ × 2</text>
+                <text class="gallery-desc" x="580" y="2526">折角矩形 = 补充语义 (gold) · lifeline 末端 ✕ = destroy 连接关闭 (rust)</text>
+                <!-- Demo: folded note on left + destroy on right -->
+                <path class="note-box" d="M580,2552 L780,2552 L800,2572 L800,2622 L580,2622 Z"/>
+                <path class="note-fold" d="M780,2552 L800,2572 L780,2572 Z"/>
+                <text class="t-ann" x="592" y="2572">out_trade_no = idempotency_key</text>
+                <text class="t-ann" x="592" y="2588">→ Payment 侧也保存同一 key</text>
+                <text class="t-ann" x="592" y="2604">→ 重发请求只扣一次款</text>
+                <!-- destroy ✕ on lifeline at right -->
+                <rect x="900" y="2552" width="100" height="26" rx="4" fill="color-mix(in oklab, #C4994E, transparent 88%)" stroke="#C4994E" stroke-width="1.3"/>
+                <text class="t-title" x="950" y="2569" text-anchor="middle" font-size="11">UnionPay</text>
+                <line class="lifeline" x1="950" y1="2578" x2="950" y2="2618"/>
+                <line class="destroy" x1="940" y1="2614" x2="960" y2="2630"/>
+                <line class="destroy" x1="960" y1="2614" x2="940" y2="2630"/>
+                <text class="t-ann" x="950" y="2648" text-anchor="middle" fill="#B04A3F">⊗ closed</text>
+              </g>
+
+            </svg>
+          </div>
+        </div>
+        <div class="canvas-controls">
+          <button id="zoomOut">−</button>
+          <div class="zoom-readout" id="zoomReadout">100%</div>
+          <button id="zoomIn">+</button>
+          <span class="sep"></span>
+          <button id="zoomFit">FIT</button>
+          <button id="zoomReset">↺</button>
+        </div>
+        <div class="canvas-help">拖拽平移 · 滚轮缩放 · 双击参与者居中</div>
+      </div>
+
+      <div class="legend-group" aria-label="legend - 参与者与生命线">
+        <div class="legend-group-label">参与者与生命线 · ACTORS &amp; LIFELINES</div>
+        <div class="legend">
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="5" r="2.5" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/><path d="M10,9 L10,11 L16,11 L16,9 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">客户端</span><span class="sub">stick-figure actor</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="2" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">系统服务</span><span class="sub">internal / external</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="13" y1="1" x2="13" y2="15" stroke="#D1CFC5" stroke-dasharray="2 2" stroke-width="1.2"/></svg></span><span class="name">lifeline</span><span class="sub">虚线竖向</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="11" y="2" width="4" height="12" fill="#6B5B95AA" stroke="#6B5B95"/></svg></span><span class="name">activation</span><span class="sub">激活框 · caller ≥ callee</span></div>
+        </div>
+      </div>
+
+      <div class="legend-group" aria-label="legend - 消息与片段">
+        <div class="legend-group-label">消息与片段 · MESSAGES &amp; FRAGMENTS</div>
+        <div class="legend">
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#141413" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#141413"/></svg></span><span class="name">sync 消息</span><span class="sub">实线 + 实心头</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.5" stroke-dasharray="6 3"/><path d="M22,8 L19,5 L19,11 z" fill="#6B5B95"/></svg></span><span class="name">async 消息</span><span class="sub">虚线 plum + 实心头</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#87867F" stroke-dasharray="4 3" stroke-width="1.2"/><path d="M22,8 L19,5 L22,8 L19,11" fill="none" stroke="#87867F" stroke-width="1.2"/></svg></span><span class="name">return</span><span class="sub">虚线 + 开口头</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M3,4 L11,4 L11,11 L4,11" fill="none" stroke="#141413" stroke-width="1.2"/><path d="M4,11 L7,9 L7,13 z" fill="#141413"/></svg></span><span class="name">self-message</span><span class="sub">自调用 U 形</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#D97757" stroke-width="1.1"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#D97757" font-weight="700">1</text></svg></span><span class="name">order ① ② ③</span><span class="sub">消息序号 · clay</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#D97757" stroke-dasharray="3 2" stroke-width="1.2"/><path d="M2,3 L8,3 L10,5 L10,7 L2,7 z" fill="#D9775733" stroke="#D97757"/></svg></span><span class="name">phase 阶段</span><span class="sub">clay 容器 + tab</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#788C5D" stroke-dasharray="3 2" stroke-width="1.2"/><path d="M2,3 L9,3 L11,6 L11,8 L2,8 z" fill="#788C5D33" stroke="#788C5D"/></svg></span><span class="name">fragment</span><span class="sub">alt / loop / opt</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-dasharray="5 4" stroke-width="1"/></svg></span><span class="name">fragment divider</span><span class="sub">分支分隔虚线</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#3D3D3A" font-style="italic">[ guard ]</text></svg></span><span class="name">guard</span><span class="sub">[条件] 斜体</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="20" height="10" fill="#C4994E22" stroke="#C4994E" stroke-width="1.1"/><path d="M18,3 L22,3 L22,7 Z" fill="#C4994E66" stroke="#C4994E"/></svg></span><span class="name">note</span><span class="sub">折角注释</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="6" y1="3" x2="20" y2="13" stroke="#B04A3F" stroke-width="2.5"/><line x1="20" y1="3" x2="6" y2="13" stroke="#B04A3F" stroke-width="2.5"/></svg></span><span class="name">destroy</span><span class="sub">销毁标记 ✕</span></div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="panel detail" id="detailPanel">
+        <div class="hint">点击参与者 / 阶段 / 片段查看细节</div>
+        <h3 id="d-title">订单结算时序 · 总览</h3>
+        <div class="meta" id="d-meta"><span>5 参与者</span><span class="dot">·</span><span>4 阶段</span><span class="dot">·</span><span>15 消息</span><span class="dot">·</span><span>3 fragment</span></div>
+        <div id="d-body">
+          <p>一笔订单从用户提交到银行扣款的完整时序。四个阶段串行：<b>幂等校验</b> → <b>发起支付</b> → <b>状态轮询</b> → <b>异步完成</b>。</p>
+          <p>关键不变量：同一 <code>idempotency_key</code> 重复请求永远返回同一 <code>order_id</code>；<code>out_trade_no</code> 在 Payment 侧也保证不会重复扣款。</p>
+          <p><b>骨架规则</b>：每根激活框宽 10px 居中于 lifeline；消息从一根激活框右/左边缘出发，到另一根激活框对应边缘结束 —— <b>不画</b>到 lifeline 中心；调用方激活长度 ≥ 被调用方。</p>
+        </div>
+        <div class="tags" id="d-tags">
+          <span class="tag t-actor">5 actors</span><span class="tag t-process">15 msg</span><span class="tag t-decision">3 fragment</span>
+        </div>
+      </div>
+
+      <div class="panel howto">
+        <div class="eyebrow">How to draw · 骨</div>
+        <h2>时序图的七步骨架</h2>
+        <ol>
+          <li><b>列出参与者</b>：左到右按发起顺序排 — User → Edge → Internal → External。每个 actor 顶部一矩形 + 下方一根虚线 lifeline。</li>
+          <li><b>切阶段（phase）</b>：用大虚线框把每个业务阶段框起来，左上角标 <code>PHASE n · 名称</code>。阶段是<b>时序图的章节</b>。</li>
+          <li><b>画激活框</b>：每个 actor 在它"正在处理"期间画一根窄竖矩形（宽 10px）覆盖 lifeline。<b>调用方激活长度 ≥ 被调用方</b> — 调用方必须先激活、后取消激活。</li>
+          <li><b>消息线落在边缘</b>：sync = 实线 + 实心箭头；async = 虚线 + 实心箭头；return = 虚线 + 开口箭头。<b>从一根激活框的边出发，到另一根激活框对应边结束</b>。</li>
+          <li><b>self-message 走 U 形</b>：从激活框右边出 → 横走 → 下折 → 横回到激活框右边。</li>
+          <li><b>组合片段 fragment</b>：alt（互斥分支）/ loop（重复）/ opt（条件）— 左上角小斜角标 + 内部虚线 divider 分隔多分支，guard 写在方括号里。</li>
+          <li><b>补语义</b>：折角矩形 = note 注释；lifeline 末端的 ✕ = destroy（连接关闭）；圆圈序号 ① ② … = 强调时间顺序。</li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+
+  <div class="footer-note">
+    <span>Engineering Diagram Library · 02 / 10 · 时序图</span>
+    <span><a href="index.html">← 返回图谱总览</a></span>
+  </div>
+</div>
+
+<script>
+window.DIAGRAM_CONFIG = {
+  viewBox: { w: 1080, h: 2680 },
+  exportName: '02-sequence-order-idempotency',
+  nodeData: {
+    'client': {
+      type: 'actor', tagClass: 't-actor',
+      title: 'Client App · 用户端',
+      meta: ['actor', 'iOS · Android · Web', 'P95 < 800ms'],
+      body: `<p>用户在 App 端发起结算。携带本地生成的 <code>Idempotency-Key</code>（UUID v7），保证网络抖动重试时不会产生两笔订单。</p><pre>Headers
+Idempotency-Key: 0190a8f2-...-v7
+Content-Type: application/json
+
+Body
+{ items: [...], amount: 19900, currency: "CNY" }</pre><p><b>激活框</b> y=200→1335 — 跨整个 RPC 等待期，调用方必须最长。</p>`,
+      tags: ['actor', 'client']
+    },
+    'gateway': {
+      type: 'actor-system', tagClass: 't-actor',
+      title: 'API Gateway · 边缘网关',
+      meta: ['edge', 'authn · authz · rate-limit', '< 5ms 自身耗时'],
+      body: `<p>统一鉴权与限流入口。校验 JWT、按用户维度限流（10 RPS）、记录 access log。<code>Idempotency-Key</code> 原样透传到 Order Service。</p><p><b>激活框</b> y=230→1310，包含 Order 的整段激活；Gateway 是 Client → Order 之间的 thin shim。</p>`,
+      tags: ['gateway', 'edge']
+    },
+    'order': {
+      type: 'actor-system', tagClass: 't-actor',
+      title: 'Order Service · 订单编排',
+      meta: ['orchestrator', 'Go · gRPC', 'P95 < 200ms (cached)'],
+      body: `<p>订单状态机的 owner，负责：</p><pre>① SETNX idempotency_key on Redis (TTL 24h)
+② 调用 Payment 异步发起支付
+③ 轮询 Payment 状态（指数退避）
+④ 接收 webhook 推送的 paymentEvent
+⑤ 维护 order 状态机 (draft → pending → paid)</pre><p><b>激活框</b> y=260→1290 — 整个事务期间持续激活；自调用 ③ 表示对 Redis 的 SETNX。</p>`,
+      tags: ['orchestrator', 'state-machine']
+    },
+    'payment': {
+      type: 'actor-system', tagClass: 't-actor',
+      title: 'Payment Service · 支付服务',
+      meta: ['async-gateway', 'outbound webhook', 'P99 < 300ms 受理'],
+      body: `<p>对接外部银行/银联。<code>chargeAsync</code> 立即返回受理回执（202），真正扣款结果通过 webhook 异步推送回 Order。</p><p><b>out_trade_no</b> = idempotency_key — Payment 侧也保存这把幂等键，即使我们重发也只扣一次款。</p><p><b>激活框</b> y=530→1255 — 从受理 charge 到 webhook 完成的全程都在线。</p>`,
+      tags: ['payment', 'async']
+    },
+    'bank': {
+      type: 'actor-external', tagClass: 't-actor',
+      title: 'Bank / UnionPay · 外部',
+      meta: ['external', 'unreliable', 'connection ephemeral'],
+      body: `<p>外部银行支付通道。SLA 99.9%，偶发超时 / 延迟回调。Payment Service 通过 ack 机制 + 主动查询补单兜底。</p><p><b>激活框</b>有两段：⑦→⑧（受理 settle）与 ⑫（推送 webhook）。结算完成后 connection 关闭 — lifeline 末端的 ✕ 标记 destroy。</p>`,
+      tags: ['external', '银行']
+    },
+    'frag-alt': {
+      type: 'decision', tagClass: 't-decision',
+      title: 'ALT FRAGMENT · 幂等分支',
+      meta: ['combined fragment', 'alt', '~ 2% 命中缓存'],
+      body: `<p>UML <b>alt</b>（alternative）= 互斥分支。两条 guard：</p><pre>[ key exists · cached_order_id ]  → 早返回缓存响应
+[ new key · continue ↓ ]            → 进入完整下单流程</pre><p>用虚线 divider 把两条分支隔开；任一执行后片段结束。本图里 ④⑤ 属于 hit 分支，其余 ⑥–⑮ 属于 miss 分支。</p>`,
+      tags: ['fragment · alt', '幂等']
+    },
+    'frag-loop': {
+      type: 'decision', tagClass: 't-decision',
+      title: 'LOOP FRAGMENT · 状态轮询',
+      meta: ['combined fragment', 'loop', '指数退避 1s / 2s / 4s'],
+      body: `<p>UML <b>loop</b> = 重复执行。guard 是 <code>[retry ≤ 3 · backoff]</code>，最多 3 次。</p><p>退避避免压垮 Payment；3 次后还是 pending 就交给定时补单兜底。</p><p>在图里只画一轮（⑩⑪）+ 一行 hint「重复至 status ≠ pending 或 attempt = 3」— 真实迭代不直接绘出。</p>`,
+      tags: ['fragment · loop', 'retry']
+    },
+    'frag-opt': {
+      type: 'decision', tagClass: 't-decision',
+      title: 'OPT FRAGMENT · 异步回调',
+      meta: ['combined fragment', 'opt', '~ 98% 到达 < 30s'],
+      body: `<p>UML <b>opt</b>（optional）= 条件执行：guard 成立才进入，否则跳过。</p><p>Webhook 因网络/银行端拖延可能迟到，但绝大多数 30 秒内到达。若超过 5 分钟仍无回调，定时补单任务接管（图外）。</p><p>图里 ⑫⑬ 都属于此 opt — Bank 主动推送 + Payment 转发给 Order。</p>`,
+      tags: ['fragment · opt', 'webhook']
+    },
+
+    /* ─────────────  B · UML 时序图元素图鉴  ───────────── */
+    'g-actor-system': {
+      type: 'actor', tagClass: 't-actor',
+      title: 'B-01 · 参与者三态 — External / System / User Actor',
+      meta: ['element', 'UML 2.5 · classifier role', '主图 ✓ × 5'],
+      body: `<p>三种参与者视觉编码：</p><pre>· user actor   头像圈 + 矩形 + paper 底
+                  → "外部最终用户" (Client App)
+· system box   单纯矩形 + plum 底 (88% 透明度)
+                  → "受控的内部服务" (Order/Payment)
+· external box 单纯矩形 + gold 底
+                  → "我们调用但不掌控的外部" (UnionPay)</pre><p><b>主图实例</b>: Client App (actor 头像) / API Gateway / Order Service / Payment Service (system) / Bank·UnionPay (external)。</p><p>颜色编码让"哪些是我们的、哪些不是"一眼可读 — 时序图<b>第一眼就该知道边界在哪</b>。</p>`,
+      tags: ['element', 'actor']
+    },
+    'g-lifeline': {
+      type: 'actor', tagClass: 't-actor',
+      title: 'B-02 · Lifeline — 生命线竖虚线',
+      meta: ['element', 'UML 2.5 · timeline', '主图 ✓ × 5'],
+      body: `<p>从每个参与者底部垂直向下的虚线 — <b>表示该 actor 在时间维度上的存在</b>。</p><pre>视觉规则:
+· dasharray="4 4"
+· stroke-width 1.2
+· color #D1CFC5 (gray-300)
+· 从 actor 底部一直延伸到该 actor "最后活动" 之后</pre><p><b>主图实例</b>: 5 根 lifeline 对应 5 个 actor — Client/Gateway/Order/Payment 4 根贯穿全图，Bank lifeline 在最后一条 webhook 之后用 ✕ 标记 destroy 截断。</p><p>不要把 lifeline 画成实线 — 实线 = 物理通信链路；时序图的 lifeline 是<b>时间维度的隐喻</b>，必须用虚线区分。</p>`,
+      tags: ['element', 'lifeline']
+    },
+    'g-activation': {
+      type: 'state', tagClass: 't-state',
+      title: 'B-03 · Activation — 激活框 (caller ≥ callee)',
+      meta: ['element', 'UML 2.5 · execution specification', '主图 ✓ × 6'],
+      body: `<p>窄竖矩形 (宽 10px) 覆盖 lifeline — 表示 actor "正在处理中"。</p><pre>UML 强制规则:
+· 调用方激活长度 ≥ 被调用方激活长度
+· 调用方必须先激活、后取消激活
+· 嵌套 RPC 时，外层激活完全包住内层激活
+· 宽度统一 10px，居中于 lifeline (cx-5 → cx+5)</pre><p><b>主图实例</b>: Client 激活 y=205→1340 (含整个 RPC 等待) ⊃ Gateway y=205→1340 ⊃ Order y=245→1305 ⊃ Payment y=525→1240 ⊃ Bank 两段 y=575→650 + 1195。</p><p>违反 caller ≥ callee 是时序图最常见的错误 — 一眼检查：<b>外层激活有没有完全包住内层激活？</b></p>`,
+      tags: ['element', 'activation']
+    },
+    'g-sync': {
+      type: 'event', tagClass: 't-event',
+      title: 'B-04 · Sync message — 同步消息',
+      meta: ['element', 'UML 2.5 · synchronous call', '主图 ✓ × 5'],
+      body: `<p><b>实线 + 实心三角箭头</b> — 调用方阻塞等待返回。</p><pre>视觉:
+· stroke: slate #141413
+· stroke-width: 1.5
+· marker-end: filled triangle (arrow-slate)
+· 从一根激活框右边出 → 到另一根激活框左边</pre><p><b>语义</b>: gRPC unary / HTTP request-response / 本地方法调用都属此类。<u>必有一根 return 配对</u> (除非显式 void)。</p><p><b>主图实例</b>: M1 POST /v1/checkout · M2 forwardWithKey · M6 chargeAsync · M7 POST /settle · M10 queryStatus — 全部 sync 消息都配了 return。</p>`,
+      tags: ['element', 'sync']
+    },
+    'g-async': {
+      type: 'event', tagClass: 't-event',
+      title: 'B-05 · Async message — 异步消息 (plum)',
+      meta: ['element', 'UML 2.5 · asynchronous signal', '主图 ✓ × 2'],
+      body: `<p><b>plum 虚线 + 实心箭头</b> — 发送方不阻塞，常用于 webhook / event 推送 / fire-and-forget。</p><pre>视觉:
+· stroke: plum #6B5B95
+· stroke-width: 1.5
+· stroke-dasharray: "6 3"
+· marker-end: filled triangle plum</pre><p><b>主图实例</b>: M12 webhook paymentCompleted (Bank → Payment) · M13 paymentEvent SUCCESS (Payment → Order)。两条都在 Phase 4 的 <code>opt</code> 片段内，因为它们是<b>异步到达，不保证立即响应</b>。</p><p>区分技巧：sync 是<b>阻塞调用</b>; async 是<b>消息投递</b>。看箭头方向，async 经常反向（外部主动推到内部）。</p>`,
+      tags: ['element', 'async']
+    },
+    'g-return': {
+      type: 'event', tagClass: 't-event',
+      title: 'B-06 · Return — 返回消息 (虚线 + 开口头)',
+      meta: ['element', 'UML 2.5 · reply', '主图 ✓ × 7'],
+      body: `<p><b>虚线 + 开口三角箭头</b> — 配对一个 sync / async 消息的响应。</p><pre>视觉:
+· stroke: gray-500 #87867F
+· stroke-dasharray: "4 3"
+· marker-end: open triangle (arrow-open)</pre><p><b>主图实例</b>: M4 200 OK cached · M5 200 OK 幂等命中 · M8 202 Accepted · M9 status: pending · M11 status: pending · M14 201 Created · M15 201 Created。</p><p><b>规则</b>: 一根 return 必须配对一根更早出现的 sync / async 消息 — 不能凭空出现。返回箭头从<u>被调用方激活框</u>出发，回到<u>调用方激活框</u>的同一高度。</p>`,
+      tags: ['element', 'return']
+    },
+    'g-self-message': {
+      type: 'event', tagClass: 't-event',
+      title: 'B-07 · Self-message — 自调用 U 形',
+      meta: ['element', 'UML 2.5 · self-call', '主图 ✓'],
+      body: `<p>同一 actor 给自己发消息 — <b>U 形路径</b>：从激活框右边出 · 水平 · 下折 · 回到激活框右边。</p><pre>视觉:
+· 路径 d="M cx,y1 L cx+70,y1 L cx+70,y2 L cx,y2"
+· marker-end: filled triangle slate
+· 消息文本贴在上方水平段</pre><p><b>主图实例</b>: M3 SETNX idempotency_key (Order 自调用 Redis 缓存)。常用语义：调用本地方法 / 写本地状态 / 内部 helper 调用 — <u>不希望另起一根 lifeline</u> 时用 self-message。</p><p>不要把 self-message 画成"返回到同一激活框上方"——U 形必须<b>下移</b>表示时间推进。</p>`,
+      tags: ['element', 'self']
+    },
+    'g-phase': {
+      type: 'decision', tagClass: 't-decision',
+      title: 'B-08 · Phase — 阶段容器 (clay 虚线 + tab)',
+      meta: ['ex extension', '非 UML 标准 · 工程常用', '主图 ✓ × 4'],
+      body: `<p>clay 虚线大框 + 左上角 tab — 把一组逻辑相关的消息划成<b>业务阶段</b>。</p><pre>视觉:
+· phase-frame: clay dashed border, stroke-dasharray="8 4"
+· phase-tab: clay solid background at top-left
+· tab text: mono 11px UPPERCASE letter-spacing</pre><p><b>主图 4 个 Phase</b>: 幂等键校验 · 发起支付 · 状态轮询 · 异步完成 — 比 fragment 更宏观，是<b>时序图的章节</b>。</p><p>注意：phase 是工程实践扩展，UML 2.5 标准里没有这个元素 (用 sd reference 或 ref fragment 代替)。但用 phase 命名阶段比用纯 sd ref 更易读。</p>`,
+      tags: ['ex', 'phase']
+    },
+    'g-fragment': {
+      type: 'decision', tagClass: 't-decision',
+      title: 'B-09 · Fragment — alt / loop / opt 组合片段',
+      meta: ['element', 'UML 2.5 · combined fragment', '主图 ✓ × 3'],
+      body: `<p>组合片段 — <b>用控制结构组织多个消息</b>。</p><pre>三种最常用:
+· alt   互斥分支 (if-else) · 内部 divider 分多 guard
+· opt   条件执行 (单分支 if) · guard 不成立则跳过
+· loop  重复执行 · guard = [retry ≤ 3] / [while …]
+其他: par 并发 · critical 关键区 · neg 禁止</pre><p><b>主图实例</b>: alt 幂等分支 (Phase 1) · loop 状态轮询 (Phase 3) · opt 异步回调 (Phase 4)。</p><p><b>视觉</b>: olive 虚线 + 左上小斜角 tab + guard 用方括号包裹的斜体 + 分支之间的 divider 虚线。</p>`,
+      tags: ['element', 'fragment']
+    },
+    'g-note-destroy': {
+      type: 'subprocess', tagClass: 't-subprocess',
+      title: 'B-10 · Note 折角注释 + Destroy ✕ 销毁',
+      meta: ['element', 'UML 2.5 · note + stop', '主图 ✓ × 2'],
+      body: `<p>两个补充语义合一卡：</p><pre>· Note (gold)
+     折角矩形 = 任意位置的注释 / 不变量 / 副作用说明
+     视觉: 顶部右边折角 (path L w-20,0 L w,20)
+     主图实例: out_trade_no = idempotency_key 注释
+
+· Destroy ✕ (rust)
+     lifeline 末端的两条交叉粗线 = 该 actor 连接关闭
+     视觉: stroke-width 2.8 · color rust #B04A3F
+     主图实例: Bank lifeline 在 webhook 完成后 ✕ 关闭</pre><p>Note 用于<b>补充隐含语义</b>而不是叙述消息流；Destroy 标记<b>临时 / 短生命周期 actor 的终结</b> — 外部银行连接、WebSocket、SSE 等。</p>`,
+      tags: ['element', 'note', 'destroy']
+    }
+  }
+};
+</script>
+<script>
+/* ─── Shared interactivity for Engineering Diagram Library
+       Expects window.DIAGRAM_CONFIG = {
+         nodeData: { [id]: { type, tagClass, title, meta, body, tags } },
+         viewBox: { w, h },         // SVG natural size
+         exportName: 'NN-slug',     // file basename (no extension)
+         svgStyle: '...'            // (optional) inline CSS string injected into export svg
+       } ─── */
+(function(){
+  const cfg = window.DIAGRAM_CONFIG || {};
+  const NODE_DATA = cfg.nodeData || {};
+  const VBW = (cfg.viewBox && cfg.viewBox.w) || 1080;
+  const VBH = (cfg.viewBox && cfg.viewBox.h) || 1500;
+  const EXPORT_NAME = cfg.exportName || 'diagram';
+  const SVG_EXPORT_STYLE = cfg.svgStyle || '';
+
+  /* ── Detail panel ── */
+  const detailEl = {
+    title: document.getElementById('d-title'),
+    meta:  document.getElementById('d-meta'),
+    body:  document.getElementById('d-body'),
+    tags:  document.getElementById('d-tags'),
+  };
+  function showDetail(id) {
+    const data = NODE_DATA[id];
+    if (!data || !detailEl.title) return;
+    detailEl.title.textContent = data.title;
+    detailEl.meta.innerHTML = (data.meta || []).map((m, i, arr) =>
+      `<span>${m}</span>${i < arr.length - 1 ? '<span class="dot">·</span>' : ''}`
+    ).join('');
+    detailEl.body.innerHTML = data.body || '';
+    detailEl.tags.innerHTML = (data.tags || []).map(t =>
+      `<span class="tag ${data.tagClass || ''}">${t}</span>`
+    ).join('');
+    document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+    const node = document.querySelector(`.node[data-id="${id}"]`);
+    if (node) node.classList.add('active');
+  }
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('click', () => showDetail(node.dataset.id));
+    node.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDetail(node.dataset.id); }
+    });
+  });
+
+  /* ── Pan & Zoom ── */
+  const stage = document.getElementById('stage');
+  const inner = document.getElementById('canvasInner');
+  const zoomReadout = document.getElementById('zoomReadout');
+  if (!stage || !inner) return;
+
+  let scale = 0.5, tx = 0, ty = 0;
+  const MIN_SCALE = 0.2, MAX_SCALE = 4;
+
+  function applyTransform() {
+    inner.style.transform = `translate(calc(-50% + ${tx}px), ${ty}px) scale(${scale})`;
+    if (zoomReadout) zoomReadout.textContent = Math.round(scale * 100) + '%';
+  }
+  function fitToFrame() {
+    const rect = stage.getBoundingClientRect();
+    const padX = 40, padY = 60;
+    const sX = (rect.width - padX * 2) / VBW;
+    const sY = (rect.height - padY * 2) / VBH;
+    scale = Math.min(sX, sY, 1);
+    tx = 0; ty = 0;
+    applyTransform();
+  }
+  function resetView() { scale = 0.5; tx = 0; ty = 0; applyTransform(); }
+
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    const delta = -e.deltaY * 0.0015;
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * (1 + delta)));
+    const k = newScale / scale;
+    const stageCx = rect.width / 2;
+    const dx = cx - stageCx - tx;
+    const dy = cy - 24 - ty;
+    tx -= dx * (k - 1);
+    ty -= dy * (k - 1);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  let dragging = false, dragStart = { x: 0, y: 0, tx: 0, ty: 0 };
+  stage.addEventListener('mousedown', e => {
+    if (e.target.closest('.node')) return;
+    dragging = true;
+    stage.classList.add('dragging');
+    dragStart = { x: e.clientX, y: e.clientY, tx, ty };
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx = dragStart.tx + (e.clientX - dragStart.x);
+    ty = dragStart.ty + (e.clientY - dragStart.y);
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    dragging = false;
+    stage.classList.remove('dragging');
+  });
+
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      try {
+        const bbox = node.getBBox();
+        const cx = bbox.x + bbox.width / 2;
+        const cy = bbox.y + bbox.height / 2;
+        const rect = stage.getBoundingClientRect();
+        scale = 1.4;
+        tx = -(cx - VBW / 2) * scale;
+        ty = -cy * scale + (rect.height / 2 - 24);
+        applyTransform();
+      } catch (err) {}
+    });
+  });
+
+  const elIn  = document.getElementById('zoomIn');
+  const elOut = document.getElementById('zoomOut');
+  const elFit = document.getElementById('zoomFit');
+  const elRes = document.getElementById('zoomReset');
+  if (elIn)  elIn.addEventListener('click', () => { scale = Math.min(MAX_SCALE, scale * 1.2); applyTransform(); });
+  if (elOut) elOut.addEventListener('click', () => { scale = Math.max(MIN_SCALE, scale / 1.2); applyTransform(); });
+  if (elFit) elFit.addEventListener('click', fitToFrame);
+  if (elRes) elRes.addEventListener('click', resetView);
+
+  window.addEventListener('load', fitToFrame);
+  window.addEventListener('resize', fitToFrame);
+
+  /* ── Theme ── */
+  const sunIcon  = document.getElementById('themeIconSun');
+  const moonIcon = document.getElementById('themeIconMoon');
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    if (sunIcon)  sunIcon.style.display  = t === 'dark' ? 'none' : '';
+    if (moonIcon) moonIcon.style.display = t === 'dark' ? '' : 'none';
+  }
+  const savedTheme = localStorage.getItem('diagram-theme') || 'light';
+  applyTheme(savedTheme);
+  const tt = document.getElementById('themeToggle');
+  if (tt) tt.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('diagram-theme', next);
+  });
+
+  /* ── Export ── */
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function paletteFor(theme) {
+    return theme === 'dark' ? {
+      paper: '#211F1C', slate: '#F5F3EC', clay: '#E08E6F', olive: '#93A872',
+      rust: '#C46559', plum: '#8E81B5', teal: '#5DA0A0', gold: '#D4AB66',
+      gray150: '#26241F', gray300: '#3D3A33', gray500: '#87867F', gray700: '#B8B6AA', bg: '#1A1917'
+    } : {
+      paper: '#FFFFFF', slate: '#141413', clay: '#D97757', olive: '#788C5D',
+      rust: '#B04A3F', plum: '#6B5B95', teal: '#4A8585', gold: '#C4994E',
+      gray150: '#F0EEE6', gray300: '#D1CFC5', gray500: '#87867F', gray700: '#3D3D3A', bg: '#FAF9F5'
+    };
+  }
+  function inlineStyleBlock(p) {
+    return `
+      text { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: ${p.slate}; }
+      text.t-title { font-family: system-ui, sans-serif; font-weight: 500; font-size: 13px; fill: ${p.slate}; }
+      text.t-sub { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl-yes { fill: ${p.olive}; }
+      text.t-lbl-no { fill: ${p.rust}; }
+      text.t-connector { font-family: Georgia, serif; font-weight: 500; font-size: 14px; fill: ${p.clay}; }
+      text.t-ann { font-size: 10.5px; fill: ${p.gray700}; }
+      text.t-lane { font-family: Georgia, serif; font-size: 16px; fill: ${p.slate}; font-weight: 500; }
+      text.t-big  { font-family: Georgia, serif; font-size: 18px; fill: ${p.slate}; font-weight: 500; }
+      text.t-stage { font-size: 10px; letter-spacing: 0.1em; fill: ${p.gray500}; text-transform: uppercase; }
+      .node .shape { fill: ${p.paper}; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node .shape-inner { fill: none; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node.term .shape { fill: ${p.gray150}; }
+      .node.io .shape, .node.io .shape-inner { stroke: ${p.plum}; }
+      .node.io .shape { fill: ${p.plum}22; }
+      .node.db .shape, .node.db .shape-inner { stroke: ${p.clay}; }
+      .node.db .shape { fill: ${p.clay}22; }
+      .node.subprocess .shape, .node.subprocess .shape-inner { stroke: ${p.olive}; }
+      .node.subprocess .shape { fill: ${p.olive}22; }
+      .node.document .shape { fill: ${p.rust}22; stroke: ${p.rust}; }
+      .node.connector .shape { stroke: ${p.clay}; }
+      .node.success .shape { fill: ${p.olive}33; stroke: ${p.olive}; }
+      .node.fail .shape { fill: ${p.rust}33; stroke: ${p.rust}; }
+      .node.actor .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.actor-system .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.actor-external .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.state .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.state-initial .shape { fill: ${p.slate}; stroke: ${p.slate}; }
+      .node.state-final .shape { fill: ${p.paper}; stroke: ${p.slate}; }
+      .node.state-final .shape-inner { fill: ${p.slate}; }
+      .node.state-composite .shape { fill: ${p.olive}11; stroke: ${p.olive}; }
+      .node.entity .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute-key .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.relationship .shape { fill: ${p.clay}22; stroke: ${p.clay}; }
+      .node.gateway .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.event .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.event-end .shape { fill: ${p.paper}; stroke: ${p.rust}; stroke-width: 2.5; }
+      .node.event-msg .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.tier .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 5 3; }
+      .node.cache .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.queue .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.gateway-api .shape { fill: ${p.clay}33; stroke: ${p.clay}; stroke-width: 2; }
+      .node.commit .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.commit-main .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.commit-develop .shape { fill: ${p.paper}; stroke: ${p.plum}; }
+      .node.commit-feature .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.commit-release .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.commit-hotfix .shape { fill: ${p.paper}; stroke: ${p.rust}; }
+      .node.tag .shape { fill: ${p.gold}33; stroke: ${p.gold}; }
+      .node.zone .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 6 3; }
+      .node.zone-dmz .shape { fill: ${p.gold}11; stroke: ${p.gold}; stroke-dasharray: 6 3; }
+      .node.zone-internal .shape { fill: ${p.plum}11; stroke: ${p.plum}; stroke-dasharray: 6 3; }
+      .node.firewall .shape { fill: ${p.rust}22; stroke: ${p.rust}; stroke-width: 2; }
+      .node.router .shape { fill: ${p.teal}22; stroke: ${p.teal}; }
+      .node.switch-net .shape { fill: ${p.paper}; stroke: ${p.gray700}; }
+      .node.server .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .edge { stroke: ${p.gray500}; stroke-width: 1.5; fill: none; }
+      .edge.yes { stroke: ${p.olive}; }
+      .edge.no { stroke: ${p.rust}; stroke-dasharray: 5 4; }
+      .edge.db { stroke: ${p.clay}; stroke-dasharray: 3 3; }
+      .edge.async { stroke-dasharray: 6 3; }
+      .edge.return { stroke: ${p.gray500}; stroke-dasharray: 4 3; }
+      .edge.sync { stroke: ${p.slate}; }
+      .edge.msg { stroke: ${p.plum}; }
+      .edge.relation { stroke: ${p.clay}; }
+      .edge.lane { stroke: ${p.gray300}; stroke-width: 1; }
+      .annotation .bracket { fill: none; stroke: ${p.gray500}; stroke-width: 1.2; stroke-dasharray: 3 3; }
+      .annotation .leader { stroke: ${p.gray500}; stroke-width: 1; stroke-dasharray: 2 3; }
+      .annotation .note { fill: ${p.gold}22; stroke: ${p.gold}; stroke-width: 1.2; }
+      .annotation .note-text { font-size: 10.5px; fill: ${p.gray700}; }
+      ${SVG_EXPORT_STYLE}
+    `;
+  }
+  function buildExportableSvg() {
+    const svg = document.getElementById('diagram').cloneNode(true);
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const p = paletteFor(theme);
+    svg.setAttribute('data-theme', theme);
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    const allDocStyles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    style.textContent = allDocStyles + '\n' + inlineStyleBlock(p);
+    svg.insertBefore(style, svg.firstChild);
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('x', '0'); bg.setAttribute('y', '0');
+    bg.setAttribute('width', VBW); bg.setAttribute('height', VBH);
+    bg.setAttribute('fill', p.bg);
+    svg.insertBefore(bg, svg.firstChild.nextSibling);
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    return new XMLSerializer().serializeToString(svg);
+  }
+  function exportSvg() {
+    const blob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    downloadBlob(blob, `${EXPORT_NAME}-${theme}.svg`);
+  }
+  function exportPng() {
+    const svgBlob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const dpr = 3;
+      const canvas = document.createElement('canvas');
+      canvas.width = VBW * dpr; canvas.height = VBH * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(img, 0, 0, VBW, VBH);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+        downloadBlob(blob, `${EXPORT_NAME}-${theme}.png`);
+      }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); alert('PNG 导出失败 — 请改用 SVG。'); };
+    img.src = url;
+  }
+  const sv = document.getElementById('exportSvg');
+  const pn = document.getElementById('exportPng');
+  if (sv) sv.addEventListener('click', exportSvg);
+  if (pn) pn.addEventListener('click', exportPng);
+
+  /* ── Copy HTML source ── */
+  const ch = document.getElementById('copyHtml');
+  if (ch) ch.addEventListener('click', async () => {
+    const src = '<!doctype html>\n' + document.documentElement.outerHTML;
+    const orig = ch.innerHTML;
+    try {
+      await navigator.clipboard.writeText(src);
+      ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制';
+    } catch (err) {
+      const ta = document.createElement('textarea');
+      ta.value = src; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制'; }
+      catch (e) { ch.innerHTML = '复制失败'; }
+      ta.remove();
+    }
+    setTimeout(() => { ch.innerHTML = orig; }, 1800);
+  });
+})();
+
+</script>
+</body>
+</html>

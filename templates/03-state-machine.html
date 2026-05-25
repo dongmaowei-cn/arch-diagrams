@@ -1,0 +1,1702 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>状态机 · 订单生命周期 — Engineering Diagram Library</title>
+<style>
+/* ─── Shared design tokens + chrome for Engineering Diagram Library
+       v1 · paired with diagram-shared.js
+       Each diagram page only needs to layer its own SVG content. ─── */
+:root {
+  --ivory:   #FAF9F5;
+  --paper:   #FFFFFF;
+  --slate:   #141413;
+  --clay:    #D97757;
+  --oat:     #E3DACC;
+  --olive:   #788C5D;
+  --rust:    #B04A3F;
+  --plum:    #6B5B95;
+  --teal:    #4A8585;
+  --gold:    #C4994E;
+  --gray-150:#F0EEE6;
+  --gray-300:#D1CFC5;
+  --gray-500:#87867F;
+  --gray-700:#3D3D3A;
+  --shadow: 0 1px 2px rgba(20,20,19,0.04), 0 8px 24px rgba(20,20,19,0.06);
+
+  --serif: ui-serif, Georgia, "Times New Roman", serif;
+  --sans:  system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  --ivory:   #1A1917;
+  --paper:   #211F1C;
+  --slate:   #F5F3EC;
+  --clay:    #E08E6F;
+  --oat:     #3A342B;
+  --olive:   #93A872;
+  --rust:    #C46559;
+  --plum:    #8E81B5;
+  --teal:    #5DA0A0;
+  --gold:    #D4AB66;
+  --gray-150:#26241F;
+  --gray-300:#3D3A33;
+  --gray-500:#87867F;
+  --gray-700:#B8B6AA;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Dark-mode override: map inline SVG hex (fill/stroke presentation attrs)
+       to dark equivalents via attribute selectors. Lower specificity than
+       any class-based rule, higher than presentation attrs. ── */
+:root[data-theme="dark"] svg [fill="#FFFFFF"], :root[data-theme="dark"] svg [fill="#ffffff"], :root[data-theme="dark"] svg [fill="#fff"] { fill: #211F1C; }
+:root[data-theme="dark"] svg [stroke="#FFFFFF"], :root[data-theme="dark"] svg [stroke="#ffffff"], :root[data-theme="dark"] svg [stroke="#fff"] { stroke: #211F1C; }
+:root[data-theme="dark"] svg [fill="#FAF9F5"] { fill: #1A1917; }
+:root[data-theme="dark"] svg [stroke="#FAF9F5"] { stroke: #1A1917; }
+:root[data-theme="dark"] svg [fill="#141413"] { fill: #F5F3EC; }
+:root[data-theme="dark"] svg [stroke="#141413"] { stroke: #F5F3EC; }
+:root[data-theme="dark"] svg [fill="#D97757"] { fill: #E08E6F; }
+:root[data-theme="dark"] svg [stroke="#D97757"] { stroke: #E08E6F; }
+:root[data-theme="dark"] svg [fill="#788C5D"] { fill: #93A872; }
+:root[data-theme="dark"] svg [stroke="#788C5D"] { stroke: #93A872; }
+:root[data-theme="dark"] svg [fill="#B04A3F"] { fill: #C46559; }
+:root[data-theme="dark"] svg [stroke="#B04A3F"] { stroke: #C46559; }
+:root[data-theme="dark"] svg [fill="#6B5B95"] { fill: #8E81B5; }
+:root[data-theme="dark"] svg [stroke="#6B5B95"] { stroke: #8E81B5; }
+:root[data-theme="dark"] svg [fill="#4A8585"] { fill: #5DA0A0; }
+:root[data-theme="dark"] svg [stroke="#4A8585"] { stroke: #5DA0A0; }
+:root[data-theme="dark"] svg [fill="#C4994E"] { fill: #D4AB66; }
+:root[data-theme="dark"] svg [stroke="#C4994E"] { stroke: #D4AB66; }
+:root[data-theme="dark"] svg [fill="#F0EEE6"] { fill: #26241F; }
+:root[data-theme="dark"] svg [stroke="#F0EEE6"] { stroke: #26241F; }
+:root[data-theme="dark"] svg [fill="#D1CFC5"] { fill: #3D3A33; }
+:root[data-theme="dark"] svg [stroke="#D1CFC5"] { stroke: #3D3A33; }
+:root[data-theme="dark"] svg [fill="#3D3D3A"] { fill: #B8B6AA; }
+:root[data-theme="dark"] svg [stroke="#3D3D3A"] { stroke: #B8B6AA; }
+:root[data-theme="dark"] svg [fill="#E3DACC"] { fill: #3A342B; }
+:root[data-theme="dark"] svg [stroke="#E3DACC"] { stroke: #3A342B; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--ivory); color: var(--slate); font-family: var(--sans); -webkit-font-smoothing: antialiased; line-height: 1.55; transition: background 200ms ease, color 200ms ease; }
+
+/* ── Topbar ── */
+.topbar { position: sticky; top: 0; z-index: 50; background: color-mix(in oklab, var(--ivory), transparent 8%); backdrop-filter: blur(8px); border-bottom: 1px solid var(--gray-300); }
+.topbar-inner { max-width: 1480px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.crumb { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--gray-500); }
+.crumb a { color: var(--gray-500); text-decoration: none; }
+.crumb a:hover { color: var(--slate); }
+.crumb .sep { opacity: 0.5; }
+.crumb .here { color: var(--slate); }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 50%; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; }
+.icon-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 1px solid var(--gray-300); color: var(--slate); border-radius: 17px; cursor: pointer; transition: all 150ms ease; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; }
+.pill-btn:hover { border-color: var(--clay); color: var(--clay); }
+.pill-btn svg { width: 12px; height: 12px; }
+
+/* ── Header ── */
+.sheet { max-width: 1480px; margin: 0 auto; padding: 36px 28px 28px; }
+.title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+.title-block { max-width: 760px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); margin-bottom: 12px; }
+h1 { font-family: var(--serif); font-weight: 500; font-size: 40px; letter-spacing: -0.014em; line-height: 1.15; margin-bottom: 14px; }
+h1 em { font-style: italic; color: var(--gray-500); font-weight: 400; }
+.lead { font-size: 14.5px; line-height: 1.65; color: var(--gray-700); max-width: 660px; }
+.lead b { color: var(--slate); font-weight: 600; }
+.lead code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 6px; border-radius: 4px; }
+.stat-row { display: flex; gap: 28px; align-items: baseline; font-family: var(--mono); font-size: 11px; color: var(--gray-500); }
+.stat-row .v { color: var(--slate); font-size: 24px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.1; margin-bottom: 2px; }
+
+/* ── Layout ── */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-top: 28px; align-items: start; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── Canvas ── */
+.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; box-shadow: var(--shadow); }
+.canvas-stage { position: absolute; inset: 0; cursor: grab; user-select: none; touch-action: none; }
+.canvas-stage.dragging { cursor: grabbing; }
+.canvas-grid { position: absolute; inset: -2000px; background-image: radial-gradient(circle, var(--gray-300) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+.canvas-inner { position: absolute; left: 50%; top: 24px; transform-origin: center top; transition: transform 60ms ease; }
+svg.diagram { display: block; }
+.diagram text { font-family: var(--mono); font-size: 12px; fill: var(--slate); pointer-events: none; }
+.diagram text.t-title { font-family: var(--sans); font-weight: 500; font-size: 13px; }
+.diagram text.t-sub { font-size: 10px; fill: var(--gray-500); }
+.diagram text.t-lbl { font-size: 10px; fill: var(--gray-500); font-family: var(--mono); }
+.diagram text.t-lbl-no { fill: var(--rust); }
+.diagram text.t-lbl-yes { fill: var(--olive); }
+.diagram text.t-connector { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--clay); }
+.diagram text.t-ann { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+.diagram text.t-lane { font-family: var(--serif); font-size: 16px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-big { font-family: var(--serif); font-size: 18px; fill: var(--slate); font-weight: 500; }
+.diagram text.t-stage { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; fill: var(--gray-500); text-transform: uppercase; }
+
+/* ── Generic node shapes (per-diagram pages add specifics) ── */
+.node { cursor: pointer; transition: opacity 150ms ease; }
+.node .shape { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
+.node .shape-inner { fill: none; stroke: var(--gray-500); stroke-width: 1.5; }
+.node.term .shape { fill: var(--gray-150); }
+.node.process .shape { fill: var(--paper); }
+.node.decision .shape { fill: var(--paper); }
+.node.io .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.io .shape-inner { stroke: var(--plum); }
+.node.io text { fill: var(--slate); }
+.node.db .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.db .shape-inner { stroke: var(--clay); }
+.node.subprocess .shape { fill: color-mix(in oklab, var(--olive), transparent 92%); stroke: var(--olive); }
+.node.subprocess .shape-inner { stroke: var(--olive); }
+.node.document .shape { fill: color-mix(in oklab, var(--rust), transparent 92%); stroke: var(--rust); }
+.node.document .shape-inner { stroke: var(--rust); }
+.node.connector .shape { fill: var(--paper); stroke: var(--clay); stroke-width: 1.5; }
+.node.success .shape { fill: color-mix(in oklab, var(--olive), transparent 85%); stroke: var(--olive); }
+.node.fail .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); }
+.node.actor .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.actor-system .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.actor-external .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.state .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.state-initial .shape { fill: var(--slate); stroke: var(--slate); }
+.node.state-final .shape { fill: var(--paper); stroke: var(--slate); }
+.node.state-final .shape-inner { fill: var(--slate); }
+.node.state-composite .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); }
+.node.entity .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.entity-weak .shape { fill: var(--paper); stroke: var(--gray-500); stroke-dasharray: none; }
+.node.attribute .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.attribute-key .shape { fill: var(--paper); stroke: var(--clay); }
+.node.relationship .shape { fill: color-mix(in oklab, var(--clay), transparent 92%); stroke: var(--clay); }
+.node.gateway .shape { fill: var(--paper); stroke: var(--gold); }
+.node.event .shape { fill: var(--paper); stroke: var(--olive); }
+.node.event-end .shape { fill: var(--paper); stroke: var(--rust); stroke-width: 2.5; }
+.node.event-msg .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node.tier .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 5 3; }
+.node.cache .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
+.node.queue .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.gateway-api .shape { fill: color-mix(in oklab, var(--clay), transparent 85%); stroke: var(--clay); stroke-width: 2; }
+.node.commit .shape { fill: var(--paper); stroke: var(--gray-500); }
+.node.commit-main .shape { fill: var(--paper); stroke: var(--clay); }
+.node.commit-develop .shape { fill: var(--paper); stroke: var(--plum); }
+.node.commit-feature .shape { fill: var(--paper); stroke: var(--olive); }
+.node.commit-release .shape { fill: var(--paper); stroke: var(--gold); }
+.node.commit-hotfix .shape { fill: var(--paper); stroke: var(--rust); }
+.node.tag .shape { fill: color-mix(in oklab, var(--gold), transparent 80%); stroke: var(--gold); }
+.node.zone .shape { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-dasharray: 6 3; }
+.node.zone-dmz .shape { fill: color-mix(in oklab, var(--gold), transparent 95%); stroke: var(--gold); stroke-dasharray: 6 3; }
+.node.zone-internal .shape { fill: color-mix(in oklab, var(--plum), transparent 95%); stroke: var(--plum); stroke-dasharray: 6 3; }
+.node.firewall .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); stroke-width: 2; }
+.node.router .shape { fill: color-mix(in oklab, var(--teal), transparent 85%); stroke: var(--teal); }
+.node.switch-net .shape { fill: var(--paper); stroke: var(--gray-700); }
+.node.server .shape { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); }
+.node:hover .shape { stroke-width: 2; }
+.node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.node.active:not(.gallery-card-node) .shape { stroke: var(--clay); stroke-width: 2.6; }
+.node.active:not(.gallery-card-node) .shape-inner { stroke: var(--clay); }
+
+/* ── Edges ── */
+.edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#arrow); }
+.edge.yes { stroke: var(--olive); marker-end: url(#arrow-olive); }
+.edge.no { stroke: var(--rust); stroke-dasharray: 5 4; marker-end: url(#arrow-rust); }
+.edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#arrow-clay); }
+.edge.async { stroke-dasharray: 6 3; }
+.edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#arrow-open); }
+.edge.sync { stroke: var(--slate); marker-end: url(#arrow-slate); }
+.edge.msg { stroke: var(--plum); marker-end: url(#arrow-plum); }
+.edge.thick { stroke-width: 2.2; }
+.edge.bidir { marker-start: url(#arrow-rev); marker-end: url(#arrow); }
+.edge.no-arrow { marker-end: none; }
+.edge.relation { stroke: var(--clay); stroke-width: 1.5; }
+.edge.attr-link { stroke: var(--gray-500); stroke-width: 1.2; }
+.edge.lane { stroke: var(--gray-300); stroke-width: 1; }
+
+/* ── Annotation ── */
+.annotation .bracket { fill: none; stroke: var(--gray-500); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.annotation .leader { stroke: var(--gray-500); stroke-width: 1; stroke-dasharray: 2 3; }
+.annotation .note { fill: color-mix(in oklab, var(--gold), transparent 92%); stroke: var(--gold); stroke-width: 1.2; }
+.annotation .note-text { font-size: 10.5px; fill: var(--gray-700); font-family: var(--mono); }
+
+/* ── Floating canvas controls ── */
+.canvas-controls { position: absolute; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 4px; background: var(--paper); border: 1px solid var(--gray-300); border-radius: 20px; padding: 4px; box-shadow: var(--shadow); }
+.canvas-controls button { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--slate); border-radius: 50%; cursor: pointer; font-family: var(--mono); font-size: 14px; transition: background 150ms ease; }
+.canvas-controls button:hover { background: var(--gray-150); color: var(--clay); }
+.canvas-controls .zoom-readout { width: 46px; text-align: center; font-family: var(--mono); font-size: 10px; color: var(--gray-700); padding: 0 2px; letter-spacing: 0.02em; }
+.canvas-controls .sep { width: 1px; height: 18px; background: var(--gray-300); }
+.canvas-help { position: absolute; left: 16px; bottom: 16px; font-family: var(--mono); font-size: 10px; color: var(--gray-500); letter-spacing: 0.04em; background: color-mix(in oklab, var(--paper), transparent 20%); padding: 6px 10px; border-radius: 12px; border: 1px solid var(--gray-300); }
+
+/* ── Aside ── */
+aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 110px); }
+.panel { border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+.detail { padding: 22px 22px 22px; max-height: 50vh; overflow-y: auto; }
+.detail .hint { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.04em; }
+.detail .hint::before { content: "→"; color: var(--clay); font-size: 13px; }
+.detail h3 { font-family: var(--serif); font-weight: 500; font-size: 21px; margin-bottom: 4px; letter-spacing: -0.008em; line-height: 1.2; }
+.detail .meta { font-family: var(--mono); font-size: 11px; color: var(--gray-500); margin-bottom: 16px; letter-spacing: 0.03em; }
+.detail .meta .dot { color: var(--clay); margin: 0 7px; }
+.detail p { font-size: 13.5px; line-height: 1.6; color: var(--gray-700); margin-bottom: 12px; }
+.detail p code { font-family: var(--mono); font-size: 12px; background: var(--gray-150); padding: 1px 5px; border-radius: 3px; color: var(--slate); }
+.detail pre { font-family: var(--mono); font-size: 11.5px; line-height: 1.55; background: var(--gray-150); border: 1px solid var(--gray-300); border-radius: 8px; padding: 11px 13px; white-space: pre-wrap; color: var(--slate); overflow-x: auto; margin-bottom: 12px; }
+.detail .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.detail .tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border: 1px solid var(--gray-300); border-radius: 11px; color: var(--gray-700); letter-spacing: 0.04em; }
+.detail .tag.t-term { color: var(--gray-500); }
+.detail .tag.t-process { color: var(--slate); }
+.detail .tag.t-decision { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-io { color: var(--plum); border-color: var(--plum); }
+.detail .tag.t-db { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-subprocess { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-document { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-connector { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-success { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-fail { color: var(--rust); border-color: var(--rust); }
+.detail .tag.t-actor { color: var(--slate); }
+.detail .tag.t-state { color: var(--slate); }
+.detail .tag.t-entity { color: var(--slate); }
+.detail .tag.t-rel { color: var(--clay); border-color: var(--clay); }
+.detail .tag.t-gate { color: var(--gold); border-color: var(--gold); }
+.detail .tag.t-event { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-zone { color: var(--olive); border-color: var(--olive); }
+.detail .tag.t-firewall { color: var(--rust); border-color: var(--rust); }
+
+.howto { padding: 22px; max-height: 40vh; overflow-y: auto; }
+.howto .eyebrow { color: var(--clay); margin-bottom: 8px; }
+.howto h2 { font-family: var(--serif); font-weight: 500; font-size: 18px; margin-bottom: 14px; letter-spacing: -0.005em; }
+.howto ol { list-style: none; counter-reset: step; }
+.howto ol li { counter-increment: step; padding: 9px 0 9px 30px; position: relative; font-size: 12.5px; color: var(--gray-700); line-height: 1.55; border-top: 1px dashed var(--gray-300); }
+.howto ol li:first-child { border-top: none; }
+.howto ol li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 10px; font-family: var(--mono); font-size: 10px; color: var(--clay); letter-spacing: 0; }
+.howto ol li b { font-weight: 600; color: var(--slate); }
+
+/* ── Gallery card (B 区元素图鉴 · 与 03 范本对齐) ── */
+.diagram text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+.diagram text.section-sub   { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+.diagram .section-divider   { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+.diagram .gallery-card      { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; transition: stroke 150ms ease, stroke-width 150ms ease; }
+.diagram .gallery-card-node { cursor: pointer; }
+.diagram .gallery-card-node:hover .gallery-card { stroke: var(--clay); stroke-width: 1.8; }
+.diagram .gallery-card-node.active { filter: drop-shadow(0 4px 14px rgba(217,119,87,0.30)); }
+.diagram .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+.diagram text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+.diagram text.gallery-desc  { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+.diagram .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+.diagram text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+.diagram .ribbon-shown-bg   { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+.diagram .ribbon-ref-bg     { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+.diagram text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+/* ── Legend ── */
+.legend-group { margin-top: 18px; }
+.legend-group + .legend-group { margin-top: 14px; }
+.legend-group-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; padding: 0 6px 8px; }
+.legend-group .legend { margin-top: 0; }
+.legend { margin-top: 18px; padding: 18px 22px; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 22px; }
+.legend-item { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--gray-700); }
+.legend-item .name { color: var(--slate); }
+.legend-item .sub { color: var(--gray-500); margin-left: 4px; }
+.chip { width: 26px; height: 16px; flex-shrink: 0; }
+.chip svg { width: 100%; height: 100%; overflow: visible; }
+
+/* ── Footer ── */
+.footer-note { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 11px; color: var(--gray-500); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.footer-note a { color: var(--gray-700); text-decoration: none; border-bottom: 1px dotted var(--gray-500); }
+
+</style>
+<style>
+  /* ── State machine — local visual rules ── */
+  .diagram .state-rect { rx: 12; ry: 12; }
+  .diagram .composite-bg { fill: color-mix(in oklab, var(--olive), transparent 95%); stroke: var(--olive); stroke-width: 1.5; stroke-dasharray: 6 4; rx: 16; ry: 16; }
+  .diagram .composite-tag { fill: var(--olive); stroke: var(--olive); stroke-width: 1.5; }
+  .diagram text.composite-title-tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; fill: var(--paper); text-transform: uppercase; font-weight: 600; }
+  .diagram .fork-bar { fill: var(--slate); stroke: var(--slate); }
+  .diagram .state-body { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); }
+  .diagram .state-body.do { fill: var(--olive); }
+  .diagram .state-body.defer { fill: var(--plum); }
+  .diagram .state-body.internal { fill: var(--teal); }
+  .diagram .state-divider { stroke: var(--gray-300); stroke-width: 1; }
+  .diagram text.t-trigger { font-family: var(--mono); font-size: 10.5px; fill: var(--slate); }
+  .diagram text.t-guard { font-family: var(--mono); font-size: 10px; fill: var(--olive); font-style: italic; }
+  .diagram text.t-action { font-family: var(--mono); font-size: 10px; fill: var(--clay); }
+  .diagram .history-circle { fill: var(--paper); stroke: var(--clay); }
+  .diagram text.t-history { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--clay); }
+  /* state color overrides — beat shared CSS specificity */
+  .diagram .node.state.success .shape { fill: color-mix(in oklab, var(--olive), transparent 85%); stroke: var(--olive); }
+  .diagram .node.state.fail .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); }
+  .diagram .node.state-final.success .shape { stroke: var(--olive); }
+  .diagram .node.state-final.success .shape-inner { fill: var(--olive); }
+  .diagram .node.state-final.fail .shape { stroke: var(--rust); }
+  .diagram .node.state-final.fail .shape-inner { fill: var(--rust); }
+
+  /* ── Pseudo-state extensions (UML 2.5 full set) ── */
+  .diagram .junction-circle { fill: var(--slate); stroke: var(--slate); }
+  .diagram .entry-point { fill: var(--paper); stroke: var(--slate); stroke-width: 1.5; }
+  .diagram .exit-point { fill: var(--paper); stroke: var(--slate); stroke-width: 1.5; }
+  .diagram .exit-point-cross { stroke: var(--slate); stroke-width: 1.5; }
+  .diagram .terminate-line { stroke: var(--rust); stroke-width: 2.5; }
+  .diagram .submachine-icon { fill: none; stroke: var(--gray-700); stroke-width: 1.2; }
+  .diagram .orth-divider { stroke: var(--olive); stroke-width: 1.2; stroke-dasharray: 4 3; }
+
+  /* ── Diagram title row (04-style centered) ── */
+  .diagram text.diagram-title { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.012em; }
+  .diagram text.diagram-sub { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+  /* ── Spine (主路径 olive bold) — learned from 04 ── */
+  .diagram .edge.spine { stroke: var(--olive); stroke-width: 2.6; fill: none; marker-end: url(#arrow-olive-bold); }
+
+  /* ── Edge label badges (white bg behind transition labels) — learned from 04 ── */
+  .diagram .edge-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
+  .diagram text.edge-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+  .diagram text.edge-label.trigger { fill: var(--slate); }
+  .diagram text.edge-label.guard { fill: var(--olive); font-style: italic; }
+  .diagram text.edge-label.action { fill: var(--clay); }
+
+  /* ── EX badge (non-UML extensions tag) ── */
+  .diagram .ex-badge-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 1; rx: 3; ry: 3; }
+  .diagram text.ex-badge-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); font-weight: 600; letter-spacing: 0.06em; }
+
+  /* ── Gallery card (catalog area) ── */
+  .diagram .catalog-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.5; stroke-dasharray: 8 4; rx: 12; ry: 12; }
+  .diagram .gallery-card { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.2; rx: 10; ry: 10; }
+  .diagram .gallery-card:hover { stroke: var(--clay); stroke-width: 1.8; }
+  .diagram .gallery-card-node.active .gallery-card { stroke: var(--clay); stroke-width: 2; }
+  .diagram text.gallery-title { font-family: var(--serif); font-weight: 500; font-size: 14px; fill: var(--slate); }
+  .diagram text.gallery-desc { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
+  .diagram .gallery-tag-uml-bg { fill: color-mix(in oklab, var(--plum), transparent 80%); stroke: var(--plum); stroke-width: 0.8; rx: 8; ry: 8; }
+  .diagram text.gallery-tag-uml-text { font-family: var(--mono); font-size: 9px; fill: var(--plum); letter-spacing: 0.06em; font-weight: 600; }
+  .diagram .gallery-tag-ex-bg { fill: color-mix(in oklab, var(--gold), transparent 75%); stroke: var(--gold); stroke-width: 0.8; rx: 8; ry: 8; }
+  .diagram text.gallery-tag-ex-text { font-family: var(--mono); font-size: 9px; fill: var(--gold); letter-spacing: 0.06em; font-weight: 600; }
+  /* ── 「shown in body」 + 「reference」 small ribbons on each card ── */
+  .diagram .ribbon-shown-bg { fill: color-mix(in oklab, var(--olive), transparent 80%); stroke: var(--olive); stroke-width: 0.7; rx: 2; ry: 2; }
+  .diagram text.ribbon-shown-text { font-family: var(--mono); font-size: 8.5px; fill: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
+  .diagram .ribbon-ref-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.7; rx: 2; ry: 2; }
+  .diagram text.ribbon-ref-text { font-family: var(--mono); font-size: 8.5px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+  .diagram text.section-label { font-family: var(--serif); font-weight: 500; font-size: 22px; fill: var(--slate); letter-spacing: -0.01em; }
+  .diagram text.section-sub { font-family: var(--mono); font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+  .diagram .section-divider { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 6; }
+
+  /* ── Bottom legend group (split-by-group · learned from 04) ── */
+  .legend-group { margin-top: 18px; }
+  .legend-group + .legend-group { margin-top: 14px; }
+  .legend-group-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--clay); text-transform: uppercase; padding: 0 6px 8px; }
+  .legend-group .legend { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="crumb"><a href="index.html">Engineering Diagram Library</a><span class="sep">/</span><span class="here">03 · 状态机</span></div>
+    <div class="topbar-actions">
+      <button class="pill-btn" id="exportSvg"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>SVG</button>
+      <button class="pill-btn" id="exportPng"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>PNG</button>
+      <button class="pill-btn" id="copyHtml" title="复制 HTML 源码"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V3a1 1 0 011-1h7"/></svg>HTML</button>
+      <button class="icon-btn" id="themeToggle"><svg id="themeIconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg><svg id="themeIconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="display:none"><path d="M13 9.5A6 6 0 116.5 3a5 5 0 006.5 6.5z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet">
+  <header>
+    <div class="title-row">
+      <div class="title-block">
+        <div class="eyebrow">Diagram type 03 · 状态机 · UML Statechart</div>
+        <h1>订单生命周期 <em>— order state machine</em></h1>
+        <p class="lead">完整覆盖 <b>UML 2.5 状态机的全部 14 个标准元素</b>：上半区是订单业务图（含 initial、final、composite、choice、fork/join、history、self/external/completion/after()/internal transitions、entry/do/exit 三段式行为、defer 事件），下半区是元素图鉴（含 orthogonal、submachine、junction、deep history、entry/exit points、terminate、when 事件 7 个补充元素，外加一个 <b>[ex] 扩展示例</b>）。可拖拽缩放，所有节点可点击查看详情。</p>
+      </div>
+      <div class="stat-row">
+        <div><span class="v">14</span>UML 标准</div>
+        <div><span class="v">+1</span>扩展[ex]</div>
+        <div><span class="v">18</span>状态节点</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <div class="canvas-frame">
+        <div class="canvas-stage" id="stage">
+          <div class="canvas-grid"></div>
+          <div class="canvas-inner" id="canvasInner">
+            <svg class="diagram" id="diagram" width="1080" height="2660" viewBox="0 0 1080 2660" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
+                <marker id="arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+                <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="arrow-olive-bold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+                <marker id="arrow-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
+                <marker id="arrow-plum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
+                <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A8585"/></marker>
+                <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+              </defs>
+
+              <!-- ─── Diagram title row (centered, 04-style) ─── -->
+              <text class="diagram-title" x="540" y="32" text-anchor="middle">订单生命周期 · 状态机 (Order State Machine)</text>
+              <text class="diagram-sub"   x="540" y="52" text-anchor="middle">UML 2.5 · 18 状态节点 · 11 标准元素 · 全部 5 类内部行为 + 5 类 transition</text>
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- 区 A · 订单业务状态机                                    -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <text class="section-label" x="40" y="92">A · 订单业务示意主图</text>
+              <text class="section-sub"   x="40" y="114">电商场景 · 主路径橄榄加粗 = happy path · 涵盖 composite / fork-join / choice / history / defer / after() / internal / completion</text>
+
+              <!-- Composite state PENDING_PAYMENT container — expanded left 20px so sub-states no longer share the border -->
+              <rect class="composite-bg" x="320" y="290" width="420" height="320"/>
+              <path class="composite-tag" d="M320,312 L320,306 Q320,290 336,290 L552,290 L552,312 Z"/>
+              <text class="composite-title-tag" x="330" y="307">composite · pending_payment</text>
+
+              <!-- ─── Edges (drawn first; states overlay) ─── -->
+              <!-- initial → CREATED (spine main path) -->
+              <path class="edge spine" d="M520,140 L520,160"/>
+
+              <!-- CREATED → composite (spine) -->
+              <path class="edge spine" d="M520,230 L520,290"/>
+              <rect class="edge-label-bg" x="528" y="248" width="56" height="13"/>
+              <text class="edge-label trigger" x="532" y="258">submit()</text>
+              <rect class="edge-label-bg" x="528" y="266" width="100" height="13"/>
+              <text class="edge-label action" x="532" y="276">/ lockInventory()</text>
+
+              <!-- composite-initial → Awaiting (moved to left to give room for retry self-loop on top) -->
+              <path class="edge" d="M350,356 L350,380"/>
+
+              <!-- Awaiting self-loop (retry) — top arc, clean UML self-transition -->
+              <path class="edge" d="M 420,380 A 22,18 0 0 0 380,380"/>
+              <rect class="edge-label-bg" x="377" y="343" width="46" height="13"/>
+              <text class="edge-label trigger" x="400" y="353" text-anchor="middle">retry [n&lt;3]</text>
+
+              <!-- Awaiting → sub-Paid (success branch) -->
+              <path class="edge yes" d="M460,410 L580,410"/>
+              <rect class="edge-label-bg" x="468" y="392" width="110" height="13"/>
+              <text class="edge-label trigger" x="472" y="402">payment.succeeded</text>
+              <rect class="edge-label-bg" x="468" y="418" width="80" height="13"/>
+              <text class="edge-label action" x="472" y="428">/ markPaid()</text>
+
+              <!-- Awaiting → sub-Failed (after() time event) -->
+              <path class="edge no" d="M400,470 L400,520"/>
+              <rect class="edge-label-bg" x="408" y="487" width="64" height="13"/>
+              <text class="edge-label trigger" x="412" y="497">after(15min)</text>
+
+              <!-- sub-Paid → PAID (completion transition — NO LABEL, UML 2.5 standard) -->
+              <path class="edge spine" d="M700,410 L740,410 L740,465 L800,465"/>
+
+              <!-- sub-Failed → CANCELLED -->
+              <path class="edge no" d="M340,545 L150,545 L150,702"/>
+              <rect class="edge-label-bg" x="160" y="528" width="92" height="13"/>
+              <text class="edge-label trigger" x="164" y="538">payment.failed</text>
+              <rect class="edge-label-bg" x="160" y="546" width="84" height="13"/>
+              <text class="edge-label action" x="164" y="556">/ releaseStock</text>
+
+              <!-- PAID → PACKING (spine main success path) -->
+              <path class="edge spine" d="M860,510 L860,620"/>
+              <rect class="edge-label-bg" x="868" y="540" width="100" height="13"/>
+              <text class="edge-label trigger" x="872" y="550">paid.confirmed</text>
+              <rect class="edge-label-bg" x="868" y="558" width="124" height="13"/>
+              <text class="edge-label action" x="872" y="568">/ allocateWarehouse</text>
+
+              <!-- PAID → choice (refund branch) -->
+              <path class="edge" d="M800,465 L640,465 L640,580"/>
+              <rect class="edge-label-bg" x="688" y="453" width="92" height="13"/>
+              <text class="edge-label trigger" x="692" y="463">refund.request</text>
+
+              <!-- choice → REFUNDING (enters REFUNDING from top — leaves choice via bottom tip, clean orthogonal route) -->
+              <path class="edge no" d="M640,620 L640,650 L520,650 L520,880"/>
+              <rect class="edge-label-bg" x="540" y="636" width="92" height="13"/>
+              <text class="edge-label guard" x="544" y="646">[refund.eligible]</text>
+
+              <!-- PACKING → fork bar (spine) -->
+              <path class="edge spine" d="M860,740 L860,760"/>
+
+              <!-- fork → SHIPPED + NOTIFY (parallel, spine olive) -->
+              <path class="edge spine" d="M790,766 L790,830"/>
+              <path class="edge spine" d="M930,766 L930,830"/>
+
+              <!-- SHIPPED → join (spine) -->
+              <path class="edge spine" d="M790,910 L790,950"/>
+              <rect class="edge-label-bg" x="710" y="922" width="98" height="13"/>
+              <text class="edge-label trigger" x="714" y="932">carrier.confirmed</text>
+
+              <!-- NOTIFY → join (spine) -->
+              <path class="edge spine" d="M930,910 L930,950"/>
+
+              <!-- join → DELIVERED (spine) -->
+              <path class="edge spine" d="M860,956 L860,1000"/>
+
+              <!-- DELIVERED → COMPLETED (spine final segment) -->
+              <path class="edge spine" d="M860,1080 L860,1138"/>
+              <rect class="edge-label-bg" x="868" y="1100" width="90" height="13"/>
+              <text class="edge-label trigger" x="872" y="1110">user.received</text>
+              <rect class="edge-label-bg" x="868" y="1118" width="96" height="13"/>
+              <text class="edge-label guard" x="872" y="1128">[&gt;7 days auto]</text>
+
+              <!-- DELIVERED → REFUNDING (enters REFUNDING from right side — left from DELIVERED, up, then west into right-mid) -->
+              <path class="edge no" d="M800,1040 L660,1040 L660,920 L580,920"/>
+              <rect class="edge-label-bg" x="680" y="1023" width="106" height="13"/>
+              <text class="edge-label trigger" x="684" y="1033">return.requested</text>
+
+              <!-- REFUNDING → REFUNDED -->
+              <path class="edge" d="M520,960 L520,1138"/>
+              <rect class="edge-label-bg" x="528" y="1010" width="118" height="13"/>
+              <text class="edge-label trigger" x="532" y="1020">refund.completed</text>
+              <rect class="edge-label-bg" x="528" y="1028" width="100" height="13"/>
+              <text class="edge-label action" x="532" y="1038">/ creditWallet</text>
+
+              <!-- History pseudostate (inside composite top-right, away from sub-Paid) -->
+              <circle class="history-circle" cx="708" cy="332" r="10"/>
+              <text class="t-history" x="708" y="337" text-anchor="middle">H</text>
+              <text class="state-body" x="708" y="355" text-anchor="middle" fill="#D97757">history</text>
+
+              <!-- ───── States (overlay edges) ───── -->
+              <!-- ① Initial pseudostate -->
+              <g class="node state-initial" data-id="initial" tabindex="0">
+                <circle class="shape" cx="520" cy="130" r="10"/>
+              </g>
+
+              <!-- ② CREATED — simple state -->
+              <g class="node state" data-id="created" tabindex="0">
+                <rect class="shape state-rect" x="430" y="160" width="180" height="70"/>
+                <text class="t-big" x="520" y="188" text-anchor="middle">CREATED</text>
+                <line class="state-divider" x1="446" y1="198" x2="594" y2="198"/>
+                <text class="state-body" x="520" y="216" text-anchor="middle">entry / reserveCart()</text>
+              </g>
+
+              <!-- ③ Initial inside composite (moved left from x=400 to x=350 to give retry self-loop space at top of Awaiting) -->
+              <g class="node state-initial" data-id="composite-initial" tabindex="0">
+                <circle class="shape" cx="350" cy="350" r="6"/>
+              </g>
+
+              <!-- ④ Awaiting (sub) — entry + do + exit (UML internal behaviors complete) -->
+              <g class="node state" data-id="awaiting" tabindex="0">
+                <rect class="shape state-rect" x="340" y="380" width="120" height="90"/>
+                <text class="t-title" x="400" y="402" text-anchor="middle">Awaiting</text>
+                <line class="state-divider" x1="350" y1="410" x2="450" y2="410"/>
+                <text class="state-body" x="400" y="425" text-anchor="middle">entry / startTimer</text>
+                <text class="state-body do" x="400" y="440" text-anchor="middle">do / pollStatus</text>
+                <text class="state-body" x="400" y="455" text-anchor="middle">exit / cancelTimer</text>
+              </g>
+
+              <!-- ⑤ Paid (sub-state · success) -->
+              <g class="node state success" data-id="sub-paid" tabindex="0">
+                <rect class="shape state-rect" x="580" y="380" width="120" height="60"/>
+                <text class="t-title" x="640" y="405" text-anchor="middle">Paid</text>
+                <line class="state-divider" x1="590" y1="414" x2="690" y2="414"/>
+                <text class="state-body" x="640" y="428" text-anchor="middle">exit / stopTimer</text>
+              </g>
+
+              <!-- ⑥ Failed (sub-state · fail) -->
+              <g class="node state fail" data-id="sub-failed" tabindex="0">
+                <rect class="shape state-rect" x="340" y="520" width="120" height="50"/>
+                <text class="t-title" x="400" y="540" text-anchor="middle">Failed</text>
+                <line class="state-divider" x1="350" y1="548" x2="450" y2="548"/>
+                <text class="state-body" x="400" y="562" text-anchor="middle">exit / releaseStock</text>
+              </g>
+
+              <!-- ⑦ PAID — main success state -->
+              <g class="node state success" data-id="paid" tabindex="0">
+                <rect class="shape state-rect" x="800" y="420" width="120" height="90"/>
+                <text class="t-big" x="860" y="448" text-anchor="middle">PAID</text>
+                <line class="state-divider" x1="816" y1="458" x2="904" y2="458"/>
+                <text class="state-body" x="860" y="476" text-anchor="middle">entry / sendReceipt</text>
+                <text class="state-body" x="860" y="490" text-anchor="middle">exit  / lockAccount</text>
+              </g>
+
+              <!-- ⑧ Choice junction (dynamic branch) — small hollow diamond -->
+              <g class="node decision" data-id="choice-refund" tabindex="0">
+                <path class="shape" d="M640,580 L660,600 L640,620 L620,600 Z"/>
+              </g>
+
+              <!-- ⑨ CANCELLED final (fail) -->
+              <g class="node state-final fail" data-id="cancelled" tabindex="0">
+                <circle class="shape" cx="150" cy="720" r="18"/>
+                <circle class="shape-inner" cx="150" cy="720" r="10"/>
+                <text class="t-title" x="150" y="770" text-anchor="middle">CANCELLED</text>
+              </g>
+
+              <!-- ⑩ PACKING — entry + do + defer (UML defer event) -->
+              <g class="node state success" data-id="packing" tabindex="0">
+                <rect class="shape state-rect" x="800" y="620" width="120" height="120"/>
+                <text class="t-big" x="860" y="648" text-anchor="middle">PACKING</text>
+                <line class="state-divider" x1="816" y1="658" x2="904" y2="658"/>
+                <text class="state-body" x="860" y="676" text-anchor="middle">entry / printLabel</text>
+                <text class="state-body do" x="860" y="692" text-anchor="middle">do / scanItems</text>
+                <text class="state-body" x="860" y="708" text-anchor="middle">exit / sealBox</text>
+                <text class="state-body defer" x="860" y="728" text-anchor="middle">defer / cancel.request</text>
+              </g>
+
+              <!-- ⑪ Fork bar (parallel split) -->
+              <g class="node" data-id="fork-bar" tabindex="0">
+                <rect class="fork-bar shape" x="730" y="760" width="260" height="6"/>
+              </g>
+
+              <!-- ⑫ SHIPPED (parallel region) -->
+              <g class="node state success" data-id="shipped" tabindex="0">
+                <rect class="shape state-rect" x="730" y="830" width="120" height="80"/>
+                <text class="t-big" x="790" y="856" text-anchor="middle">SHIPPED</text>
+                <line class="state-divider" x1="740" y1="866" x2="840" y2="866"/>
+                <text class="state-body" x="790" y="883" text-anchor="middle">entry / dispatch</text>
+                <text class="state-body do" x="790" y="898" text-anchor="middle">do / track(carrier)</text>
+              </g>
+
+              <!-- ⑬ NOTIFY (parallel region) -->
+              <g class="node state success" data-id="notify" tabindex="0">
+                <rect class="shape state-rect" x="870" y="830" width="120" height="80"/>
+                <text class="t-big" x="930" y="856" text-anchor="middle">NOTIFY</text>
+                <line class="state-divider" x1="880" y1="866" x2="980" y2="866"/>
+                <text class="state-body" x="930" y="883" text-anchor="middle">entry / sendPush</text>
+                <text class="state-body do" x="930" y="898" text-anchor="middle">do / pollDelivered</text>
+              </g>
+
+              <!-- ⑭ Join bar (parallel merge) -->
+              <g class="node" data-id="join-bar" tabindex="0">
+                <rect class="fork-bar shape" x="730" y="950" width="260" height="6"/>
+              </g>
+
+              <!-- ⑮ DELIVERED — entry + internal transition (UML internal) -->
+              <g class="node state success" data-id="delivered" tabindex="0">
+                <rect class="shape state-rect" x="800" y="1000" width="120" height="80"/>
+                <text class="t-big" x="860" y="1026" text-anchor="middle">DELIVERED</text>
+                <line class="state-divider" x1="810" y1="1036" x2="910" y2="1036"/>
+                <text class="state-body" x="860" y="1053" text-anchor="middle">entry / awaitConfirm</text>
+                <text class="state-body internal" x="860" y="1068" text-anchor="middle">refreshUI / [internal]</text>
+              </g>
+
+              <!-- ⑯ COMPLETED final (success) -->
+              <g class="node state-final success" data-id="completed" tabindex="0">
+                <circle class="shape" cx="860" cy="1160" r="22"/>
+                <circle class="shape-inner" cx="860" cy="1160" r="12"/>
+                <text class="t-title" x="860" y="1208" text-anchor="middle">COMPLETED</text>
+              </g>
+
+              <!-- ⑰ REFUNDING — entry + do (poll bank channel) -->
+              <g class="node state" data-id="refunding" tabindex="0">
+                <rect class="shape state-rect" x="460" y="880" width="120" height="80"/>
+                <text class="t-big" x="520" y="906" text-anchor="middle">REFUNDING</text>
+                <line class="state-divider" x1="470" y1="916" x2="570" y2="916"/>
+                <text class="state-body" x="520" y="933" text-anchor="middle">entry / initiateRefund</text>
+                <text class="state-body do" x="520" y="948" text-anchor="middle">do / pollChannel</text>
+              </g>
+
+              <!-- ⑱ REFUNDED final (neutral) -->
+              <g class="node state-final" data-id="refunded" tabindex="0">
+                <circle class="shape" cx="520" cy="1160" r="22"/>
+                <circle class="shape-inner" cx="520" cy="1160" r="12"/>
+                <text class="t-title" x="520" y="1208" text-anchor="middle">REFUNDED</text>
+              </g>
+
+              <!-- Note (annotation, UML standard) — pushed down + widened -->
+              <g class="annotation" data-id="note-a">
+                <rect class="note" x="40" y="1248" width="360" height="92" rx="2"/>
+                <path class="note" d="M390,1248 L400,1258 L390,1258 Z"/>
+                <text class="note-text" x="52" y="1270">UML 2.5 transition 三段式语法：</text>
+                <text class="note-text" x="52" y="1286">  <tspan fill="#141413">trigger</tspan>  <tspan fill="#788C5D" font-style="italic">[ guard ]</tspan>  <tspan fill="#D97757">/ action</tspan></text>
+                <text class="note-text" x="52" y="1308">状态内部行为：entry · do · exit · defer · internal</text>
+                <text class="note-text" x="52" y="1324">五类 transition：external · self · completion · after() · internal</text>
+              </g>
+
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <!-- 区 B · UML 元素图鉴 · 10 标准/常用扩展元素                -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <line class="section-divider" x1="40" y1="1390" x2="1040" y2="1390"/>
+              <text class="section-label" x="40" y="1428">B · UML 2.5 元素图鉴 · 复制粘贴元素库</text>
+              <text class="section-sub"   x="40" y="1450">10 张卡 · 9 标准 + 1 [ex] 常用扩展 · 主图实际使用的元素挂 olive ✓ 角标</text>
+
+              <!-- ───── Row 1 · Card 1 + Card 2 ───── -->
+              <!-- ─── Card 1 · 起止三种 · Initial / Final / Terminate ─── -->
+              <g class="node gallery-card-node" data-id="g-init-final-term" tabindex="0">
+                <rect class="gallery-card" x="40" y="1480" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="1508">起止三种 · Initial / Final / Terminate</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="1494" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="1505" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="1514" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="1524" text-anchor="middle">主图 ✓ × 4</text>
+                <text class="gallery-desc" x="60" y="1538">三种伪状态：实心圆 = 入口 / 同心圆 = 正常出口 / × = 异常崩溃终止</text>
+                <!-- Demo row -->
+                <g transform="translate(0,0)">
+                  <!-- Initial -->
+                  <circle cx="135" cy="1610" r="11" fill="#141413"/>
+                  <text class="state-body" x="135" y="1644" text-anchor="middle" font-weight="600">initial</text>
+                  <text class="state-body" x="135" y="1660" text-anchor="middle">实心圆 · 入口</text>
+                  <!-- arrow1 -->
+                  <path class="edge" d="M158,1610 L208,1610"/>
+                  <rect x="220" y="1592" width="80" height="36" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                  <text class="t-big" x="260" y="1614" text-anchor="middle" font-size="13">Running</text>
+                  <!-- arrow2 -->
+                  <path class="edge" d="M302,1610 L352,1610"/>
+                  <!-- Final (success-style double circle) -->
+                  <circle cx="378" cy="1610" r="16" fill="#FFFFFF" stroke="#788C5D" stroke-width="1.4"/>
+                  <circle cx="378" cy="1610" r="9" fill="#788C5D"/>
+                  <text class="state-body" x="378" y="1644" text-anchor="middle" font-weight="600">final</text>
+                  <text class="state-body" x="378" y="1660" text-anchor="middle">同心圆 · 正常</text>
+                  <!-- Terminate (gold ✕ — alternative terminal) -->
+                  <line class="terminate-line" x1="466" y1="1596" x2="498" y2="1626"/>
+                  <line class="terminate-line" x1="466" y1="1626" x2="498" y2="1596"/>
+                  <text class="state-body" x="482" y="1644" text-anchor="middle" font-weight="600">terminate</text>
+                  <text class="state-body" x="482" y="1660" text-anchor="middle">× · 异常崩溃</text>
+                </g>
+              </g>
+
+              <!-- ─── Card 2 · Composite + name-tag (NEW) ─── -->
+              <g class="node gallery-card-node" data-id="g-composite" tabindex="0">
+                <rect class="gallery-card" x="560" y="1480" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="1508">Composite + name-tag · 复合状态</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="1494" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="1505" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="956" y="1514" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="1524" text-anchor="middle">主图 ✓</text>
+                <text class="gallery-desc" x="580" y="1538">虚线大框 + 左上角实心 name-tag — 包裹一组子状态形成嵌套状态机</text>
+                <!-- Demo: composite frame with name-tag + 2 substates -->
+                <rect x="600" y="1582" width="400" height="86" rx="12" fill="color-mix(in oklab, #788C5D, transparent 95%)" stroke="#788C5D" stroke-width="1.4" stroke-dasharray="5 3"/>
+                <!-- name-tag at top-left -->
+                <path fill="#788C5D" d="M600,1604 L600,1598 Q600,1582 616,1582 L760,1582 L760,1604 Z"/>
+                <text x="610" y="1599" font-family="ui-monospace" font-size="10" letter-spacing="0.08em" fill="#FFFFFF" font-weight="600">composite · session</text>
+                <!-- substates -->
+                <circle cx="630" cy="1640" r="5" fill="#141413"/>
+                <path class="edge" d="M638,1640 L668,1640"/>
+                <rect x="668" y="1622" width="90" height="32" rx="8" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-big" x="713" y="1643" text-anchor="middle" font-size="12">Active</text>
+                <path class="edge" d="M758,1640 L800,1640"/>
+                <rect x="800" y="1622" width="90" height="32" rx="8" fill="color-mix(in oklab, #788C5D, transparent 85%)" stroke="#788C5D" stroke-width="1.3"/>
+                <text class="t-big" x="845" y="1643" text-anchor="middle" font-size="12">Idle</text>
+                <!-- annotation -->
+                <path d="M770,1582 L770,1574 L890,1574" fill="none" stroke="#C4994E" stroke-width="1" stroke-dasharray="2 2"/>
+                <text class="state-body" x="894" y="1577" font-size="9" fill="#C4994E">↖ name-tag</text>
+              </g>
+
+              <!-- ───── Row 2 · Card 3 + Card 4 ───── -->
+              <!-- ─── Card 3 · Orthogonal state ─── -->
+              <g class="node gallery-card-node" data-id="g-orthogonal" tabindex="0">
+                <rect class="gallery-card" x="40" y="1712" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="1740">Orthogonal state · 正交并发状态</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="1726" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="1737" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-ref-bg" x="458" y="1746" width="70" height="14"/>
+                <text class="ribbon-ref-text" x="493" y="1756" text-anchor="middle">主图 ⊘ · 仅图鉴</text>
+                <text class="gallery-desc" x="60" y="1770">composite 内用<tspan font-style="italic">虚线竖线</tspan>分多个 region — 每个 region 独立并发</text>
+                <!-- Demo: orthogonal composite with 2 regions -->
+                <rect x="60" y="1808" width="460" height="84" rx="10" fill="color-mix(in oklab, #788C5D, transparent 95%)" stroke="#788C5D" stroke-width="1.4" stroke-dasharray="5 3"/>
+                <line class="orth-divider" x1="290" y1="1808" x2="290" y2="1892"/>
+                <text class="state-body" x="175" y="1828" text-anchor="middle" font-weight="600">Region 1 · Playback</text>
+                <text class="state-body" x="175" y="1850" text-anchor="middle">▶ playing</text>
+                <text class="state-body" x="175" y="1866" text-anchor="middle">⏸ paused</text>
+                <text class="state-body" x="175" y="1882" text-anchor="middle">⏹ stopped</text>
+                <text class="state-body" x="405" y="1828" text-anchor="middle" font-weight="600">Region 2 · Volume</text>
+                <text class="state-body" x="405" y="1850" text-anchor="middle">🔊 muted</text>
+                <text class="state-body" x="405" y="1866" text-anchor="middle">🔉 normal</text>
+                <text class="state-body" x="405" y="1882" text-anchor="middle">📢 boost</text>
+              </g>
+
+              <!-- ─── Card 4 · Submachine state ─── -->
+              <g class="node gallery-card-node" data-id="g-submachine" tabindex="0">
+                <rect class="gallery-card" x="560" y="1712" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="1740">Submachine state · 子机引用</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="1726" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="1737" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-ref-bg" x="956" y="1746" width="70" height="14"/>
+                <text class="ribbon-ref-text" x="991" y="1756" text-anchor="middle">主图 ⊘ · 仅图鉴</text>
+                <text class="gallery-desc" x="580" y="1770">复用一个外部状态机定义 — 右下角 ⊞ 三竖线小图标，节省图面</text>
+                <!-- Demo: state with submachine reference + Z-symbol -->
+                <rect x="620" y="1808" width="280" height="64" rx="12" fill="#FFFFFF" stroke="#87867F" stroke-width="1.4"/>
+                <text class="t-big" x="760" y="1834" text-anchor="middle" font-size="14">Authentication</text>
+                <text class="state-body" x="760" y="1856" text-anchor="middle">: AuthMachine</text>
+                <g transform="translate(872,1854)">
+                  <rect class="submachine-icon" x="0" y="0" width="16" height="12"/>
+                  <line class="submachine-icon" x1="4" y1="0" x2="4" y2="12"/>
+                  <line class="submachine-icon" x1="12" y1="0" x2="12" y2="12"/>
+                </g>
+                <path d="M900,1872 L920,1882 L924,1874" fill="none" stroke="#C4994E" stroke-width="1" stroke-dasharray="2 2"/>
+                <text class="state-body" x="894" y="1898" font-size="9" fill="#C4994E">⊞ = submachine 引用</text>
+              </g>
+
+              <!-- ───── Row 3 · Card 5 + Card 6 ───── -->
+              <!-- ─── Card 5 · History H · Deep H* ─── -->
+              <g class="node gallery-card-node" data-id="g-history" tabindex="0">
+                <rect class="gallery-card" x="40" y="1944" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="1972">History · 浅 H · 深 H* 历史伪状态</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="1958" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="1969" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="1978" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="1988" text-anchor="middle">主图 ✓ H</text>
+                <text class="gallery-desc" x="60" y="2002">H 仅回当前 composite 层；H* 递归回到最深叶子状态 — 嵌套 ≥ 2 层用 H*</text>
+                <!-- Demo: shallow H vs deep H* side by side -->
+                <text class="state-body" x="170" y="2050" text-anchor="middle" font-weight="600">shallow · H</text>
+                <circle cx="170" cy="2080" r="16" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
+                <text class="t-history" x="170" y="2086" text-anchor="middle" font-size="16">H</text>
+                <text class="state-body" x="170" y="2120" text-anchor="middle">回当前层 sub-state</text>
+                <!-- divider -->
+                <line x1="280" y1="2030" x2="280" y2="2130" stroke="#D1CFC5" stroke-dasharray="3 4"/>
+                <text class="state-body" x="390" y="2050" text-anchor="middle" font-weight="600">deep · H*</text>
+                <circle cx="390" cy="2080" r="16" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
+                <text class="t-history" x="390" y="2086" text-anchor="middle" font-size="14">H*</text>
+                <text class="state-body" x="390" y="2120" text-anchor="middle">递归回最深叶子</text>
+              </g>
+
+              <!-- ─── Card 6 · Choice ◇ vs Junction ● ─── -->
+              <g class="node gallery-card-node" data-id="g-choice-junction" tabindex="0">
+                <rect class="gallery-card" x="560" y="1944" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="1972">Choice ◇ vs Junction ● · 动/静态判断</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="1958" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="1969" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="956" y="1978" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="1988" text-anchor="middle">主图 ✓ choice</text>
+                <text class="gallery-desc" x="580" y="2002">空心菱形 = 运行时动态分流；实心小圆 = 建模期静态合流。形状有别，不要混。</text>
+                <!-- Junction example (top half) -->
+                <text class="state-body" x="600" y="2050" font-weight="600">junction (静态合流 ●)</text>
+                <rect x="600" y="2058" width="46" height="20" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="state-body" x="623" y="2072" text-anchor="middle">A</text>
+                <path class="edge" d="M646,2068 L688,2068"/>
+                <circle cx="700" cy="2068" r="6" fill="#141413"/>
+                <path class="edge" d="M712,2068 L754,2068"/>
+                <rect x="754" y="2058" width="46" height="20" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="state-body" x="777" y="2072" text-anchor="middle">B</text>
+                <text class="state-body" x="813" y="2072">→ 编译期定</text>
+                <!-- Choice example (bottom half) -->
+                <text class="state-body" x="600" y="2100" font-weight="600">choice (动态分流 ◇)</text>
+                <rect x="600" y="2108" width="46" height="20" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="state-body" x="623" y="2122" text-anchor="middle">A</text>
+                <path class="edge" d="M646,2118 L688,2118"/>
+                <path d="M712,2108 L724,2118 L712,2128 L700,2118 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <path class="edge" d="M724,2118 L754,2118"/>
+                <rect x="754" y="2108" width="46" height="20" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="state-body" x="777" y="2122" text-anchor="middle">B</text>
+                <text class="state-body" x="813" y="2122">→ 运行时 guard</text>
+              </g>
+
+              <!-- ───── Row 4 · Card 7 + Card 8 ───── -->
+              <!-- ─── Card 7 · Entry point ○ · Exit point ⊗ ─── -->
+              <g class="node gallery-card-node" data-id="g-entry-exit" tabindex="0">
+                <rect class="gallery-card" x="40" y="2176" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2204">Entry point ○ · Exit point ⊗ · 命名通道</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="2190" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="2201" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-ref-bg" x="458" y="2210" width="70" height="14"/>
+                <text class="ribbon-ref-text" x="493" y="2220" text-anchor="middle">主图 ⊘ · 仅图鉴</text>
+                <text class="gallery-desc" x="60" y="2234">composite 边界上的命名进入/退出点 — 区别多种入口/退出语义（替代默认 initial / final）</text>
+                <!-- Demo: composite with named entry + exit points -->
+                <text class="state-body" x="100" y="2278" text-anchor="middle">oauth</text>
+                <text class="state-body" x="100" y="2294" text-anchor="middle">login</text>
+                <path class="edge" d="M120,2310 L160,2310"/>
+                <rect x="160" y="2280" width="320" height="68" rx="10" fill="color-mix(in oklab, #788C5D, transparent 95%)" stroke="#788C5D" stroke-width="1.4" stroke-dasharray="5 3"/>
+                <text class="state-body" x="320" y="2306" text-anchor="middle" font-weight="600">AuthComposite</text>
+                <text class="state-body" x="320" y="2326" text-anchor="middle">含 OTP · 双因子 · 邮箱密码</text>
+                <!-- entry point (hollow ring) on left border -->
+                <circle class="entry-point" cx="160" cy="2310" r="6"/>
+                <!-- exit point (cross circle) on right border -->
+                <circle class="exit-point" cx="480" cy="2310" r="6"/>
+                <line class="exit-point-cross" x1="476" y1="2306" x2="484" y2="2314"/>
+                <line class="exit-point-cross" x1="476" y1="2314" x2="484" y2="2306"/>
+                <path class="edge" d="M488,2310 L516,2310"/>
+                <text class="state-body" x="520" y="2304">→ logout</text>
+                <text class="state-body" x="520" y="2320">  exit</text>
+              </g>
+
+              <!-- ─── Card 8 · Transition 三段式（NEW · 重点） ─── -->
+              <g class="node gallery-card-node" data-id="g-trigger-syntax" tabindex="0">
+                <rect class="gallery-card" x="560" y="2176" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2204">Transition 三段式 · trigger [guard] / action</text>
+                <rect class="gallery-tag-uml-bg" x="956" y="2190" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="991" y="2201" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="956" y="2210" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="2220" text-anchor="middle">主图 ✓ 全用</text>
+                <text class="gallery-desc" x="580" y="2234">三段式语法 — <tspan fill="#141413" font-weight="600">trigger</tspan> 必填，<tspan fill="#788C5D" font-style="italic">[guard]</tspan> 和 <tspan fill="#D97757">/ action</tspan> 可选</text>
+                <!-- Demo: clean A → B transition with 3-color label -->
+                <rect x="600" y="2280" width="100" height="46" rx="10" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-big" x="650" y="2308" text-anchor="middle" font-size="13">Awaiting</text>
+                <path class="edge" d="M700,2304 L900,2304"/>
+                <rect x="710" y="2272" width="180" height="36" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="0.6" rx="3"/>
+                <text font-family="ui-monospace" font-size="11" x="720" y="2287" fill="#141413"><tspan font-weight="600">payment.succeeded</tspan></text>
+                <text font-family="ui-monospace" font-size="10" x="720" y="2302" fill="#788C5D" font-style="italic">[amount &gt; 0]</text>
+                <rect x="900" y="2280" width="100" height="46" rx="10" fill="color-mix(in oklab, #788C5D, transparent 85%)" stroke="#788C5D" stroke-width="1.3"/>
+                <text class="t-big" x="950" y="2308" text-anchor="middle" font-size="13">Paid</text>
+                <text font-family="ui-monospace" font-size="10" x="710" y="2336" fill="#D97757">/ markPaid() · notify()</text>
+                <text class="state-body" x="600" y="2358">— trigger 黑 · guard olive 斜体 · action clay —</text>
+              </g>
+
+              <!-- ───── Row 5 · Card 9 + Card 10 ───── -->
+              <!-- ─── Card 9 · Self · Internal · Completion 三种 transition 对比（NEW） ─── -->
+              <g class="node gallery-card-node" data-id="g-transition-types" tabindex="0">
+                <rect class="gallery-card" x="40" y="2408" width="500" height="200"/>
+                <text class="gallery-title" x="60" y="2436">Self · Internal · Completion · 三种迁移对比</text>
+                <rect class="gallery-tag-uml-bg" x="458" y="2422" width="70" height="16"/>
+                <text class="gallery-tag-uml-text" x="493" y="2433" text-anchor="middle">UML 2.5</text>
+                <rect class="ribbon-shown-bg" x="458" y="2442" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="493" y="2452" text-anchor="middle">主图 ✓ 全用</text>
+                <text class="gallery-desc" x="60" y="2466">三种 transition 区别全在「触不触发 exit / entry」 — UML 实战最易混的点</text>
+                <!-- Self transition -->
+                <rect x="60" y="2486" width="80" height="34" rx="8" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-big" x="100" y="2507" text-anchor="middle" font-size="11">S</text>
+                <path class="edge" d="M 115,2486 A 16,12 0 0 0 85,2486"/>
+                <text class="state-body" x="100" y="2477" text-anchor="middle">retry</text>
+                <text class="state-body" x="100" y="2536" text-anchor="middle" font-weight="600">① self</text>
+                <text class="state-body" x="100" y="2552" text-anchor="middle">触发 exit + entry</text>
+                <text class="state-body" x="100" y="2566" text-anchor="middle">外部跳回自身</text>
+                <text class="state-body" x="100" y="2580" text-anchor="middle" fill="#D97757">主图: Awaiting retry</text>
+                <!-- Internal transition -->
+                <rect x="210" y="2486" width="100" height="44" rx="8" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-big" x="260" y="2503" text-anchor="middle" font-size="11">S</text>
+                <line class="state-divider" x1="220" y1="2510" x2="300" y2="2510"/>
+                <text class="state-body internal" x="260" y="2524" text-anchor="middle">refresh / [int]</text>
+                <text class="state-body" x="260" y="2546" text-anchor="middle" font-weight="600">② internal</text>
+                <text class="state-body" x="260" y="2562" text-anchor="middle">不触发 exit / entry</text>
+                <text class="state-body" x="260" y="2576" text-anchor="middle">在状态内部触发</text>
+                <text class="state-body" x="260" y="2590" text-anchor="middle" fill="#4A8585">主图: DELIVERED refresh</text>
+                <!-- Completion transition (no label) -->
+                <rect x="380" y="2486" width="70" height="34" rx="8" fill="color-mix(in oklab, #788C5D, transparent 85%)" stroke="#788C5D" stroke-width="1.3"/>
+                <text class="t-big" x="415" y="2507" text-anchor="middle" font-size="11">A</text>
+                <path class="edge" d="M450,2503 L490,2503"/>
+                <rect x="490" y="2486" width="40" height="34" rx="8" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/>
+                <text class="t-big" x="510" y="2507" text-anchor="middle" font-size="11">B</text>
+                <text class="state-body" x="470" y="2478" text-anchor="middle">(无标签)</text>
+                <text class="state-body" x="455" y="2536" text-anchor="middle" font-weight="600">③ completion</text>
+                <text class="state-body" x="455" y="2552" text-anchor="middle">无 trigger 自动迁</text>
+                <text class="state-body" x="455" y="2566" text-anchor="middle">do/ 完成后自走</text>
+                <text class="state-body" x="455" y="2580" text-anchor="middle" fill="#788C5D">主图: Paid→PAID</text>
+              </g>
+
+              <!-- ─── Card 10 · Event 全家桶 (after / when / defer) + [ex] 角标（NEW · 合一） ─── -->
+              <g class="node gallery-card-node" data-id="g-events" tabindex="0">
+                <rect class="gallery-card" x="560" y="2408" width="480" height="200"/>
+                <text class="gallery-title" x="580" y="2436">事件全家桶 · after / when / defer + [ex]</text>
+                <rect class="gallery-tag-uml-bg" x="912" y="2422" width="50" height="16"/>
+                <text class="gallery-tag-uml-text" x="937" y="2433" text-anchor="middle">UML</text>
+                <rect class="gallery-tag-ex-bg" x="968" y="2422" width="58" height="16"/>
+                <text class="gallery-tag-ex-text" x="997" y="2433" text-anchor="middle">+ EX</text>
+                <rect class="ribbon-shown-bg" x="956" y="2442" width="70" height="14"/>
+                <text class="ribbon-shown-text" x="991" y="2452" text-anchor="middle">主图 ✓ after/defer</text>
+                <text class="gallery-desc" x="580" y="2466">三类 trigger 事件 + 一类业务扩展 [ex] 角标</text>
+                <!-- after(d) -->
+                <text class="state-body" x="600" y="2492" font-weight="600">after(d)</text>
+                <text class="state-body" x="600" y="2506">时间事件 · 进入状态后超时触发</text>
+                <text font-family="ui-monospace" font-size="10" x="600" y="2522" fill="#141413">  Awaiting → Failed [after(15min)]</text>
+                <!-- when(c) -->
+                <text class="state-body" x="600" y="2543" font-weight="600">when(c)</text>
+                <text class="state-body" x="600" y="2557">变化事件 · 条件持续监测，false → true 触发</text>
+                <text font-family="ui-monospace" font-size="10" x="600" y="2573" fill="#141413">  InStock → OutOfStock [when(stock=0)]</text>
+                <!-- defer -->
+                <text class="state-body defer" x="600" y="2594" font-weight="600">defer / event</text>
+                <text class="state-body" x="690" y="2594">— 状态内延迟事件（不立刻处理）</text>
+                <!-- [ex] mini-demo on right -->
+                <rect x="930" y="2480" width="98" height="56" rx="10" fill="color-mix(in oklab, #788C5D, transparent 85%)" stroke="#788C5D" stroke-width="1.3"/>
+                <text class="t-big" x="979" y="2502" text-anchor="middle" font-size="11">PAID</text>
+                <line class="state-divider" x1="938" y1="2509" x2="1020" y2="2509"/>
+                <text class="state-body" x="979" y="2522" text-anchor="middle" font-size="9">entry / receipt</text>
+                <text class="state-body" x="979" y="2533" text-anchor="middle" font-size="9" fill="#C4994E" font-weight="600">P95 &lt; 2h</text>
+                <rect class="ex-badge-bg" x="1006" y="2484" width="20" height="13"/>
+                <text class="ex-badge-text" x="1016" y="2493" text-anchor="middle">ex</text>
+                <text class="state-body" x="979" y="2554" text-anchor="middle" fill="#C4994E">[ex] · 业务扩展</text>
+                <text class="state-body" x="979" y="2568" text-anchor="middle" fill="#C4994E">SLA / 优先级 / retry</text>
+                <text class="state-body" x="979" y="2582" text-anchor="middle">挂金色 ex 角标</text>
+              </g>
+
+              <!-- ─── Footer hint ─── -->
+              <text class="t-stage" x="540" y="2640" text-anchor="middle">CLICK ANY ELEMENT  ·  RIGHT PANEL OPENS  ·  UML STANDARD = PLUM TAG  ·  CUSTOM = GOLD [EX]</text>
+            </svg>
+          </div>
+        </div>
+        <div class="canvas-controls">
+          <button id="zoomOut">−</button>
+          <div class="zoom-readout" id="zoomReadout">100%</div>
+          <button id="zoomIn">+</button>
+          <span class="sep"></span>
+          <button id="zoomFit">FIT</button>
+          <button id="zoomReset">↺</button>
+        </div>
+        <div class="canvas-help">拖拽平移 · 滚轮缩放 · 双击元素居中</div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="panel detail" id="detailPanel">
+        <div class="hint">点击任一元素查看 UML 含义和实现</div>
+        <h3 id="d-title">订单状态机 · UML 2.5 完整覆盖</h3>
+        <div class="meta" id="d-meta"><span>10 元素图鉴</span><span class="dot">·</span><span>9 UML 标准 + 1 [ex]</span><span class="dot">·</span><span>18 业务状态</span></div>
+        <div id="d-body">
+          <p><b>A 区 · 订单业务示意主图</b> — 完整覆盖 UML 状态机最常用的元素：起止（initial × 2 + final × 3）/ composite + name-tag / history H / choice 动态分流 / fork+join 并行 / 全部 5 类内部行为（<code>entry · do · exit · defer · internal</code>）/ 全部 5 类 transition（external · self · completion · after() · internal）。主路径用<u>橄榄加粗边</u>串起来 — happy path 一眼可见。</p>
+          <p><b>B 区 · 元素图鉴</b> — 10 张卡片覆盖 UML 2.5 状态机的全部标准元素 + 1 张 [ex] 扩展示例。每张卡右上角挂角标：<b>UML 2.5</b> = 标准元素；<b>主图 ✓</b> = 主图实际使用；<b>主图 ⊘</b> = 仅图鉴示意。</p>
+          <p>本图唯一非 UML 的 <b>[ex] 角标</b>是本图谱约定的视觉标记 — 给业务专属字段（SLA / retry-counter / priority）挂金色 ex 小角标，让阅读者一眼分清"标准 UML"vs"我们自己加的"。</p>
+        </div>
+        <div class="tags" id="d-tags">
+          <span class="tag t-state">state</span><span class="tag t-decision">choice</span><span class="tag t-event">junction</span><span class="tag t-success">success</span><span class="tag t-fail">fail</span>
+        </div>
+      </div>
+
+      <div class="panel howto">
+        <div class="eyebrow">How to draw</div>
+        <h2>状态机的八步骨架</h2>
+        <ol>
+          <li><b>定义起止</b>：每张图有一个 <b>initial</b>（实心圆），可以有多个 <b>final</b>（同心圆）。异常退出用 <b>terminate ×</b>。</li>
+          <li><b>抽出主干状态</b>：每个状态用 <code>名词</code> 命名（PAID, SHIPPED），不是动词。简单 → simple state；含子状态 → composite + name-tag。</li>
+          <li><b>title + 横线 + actions</b>：状态框分两段 — 标题（名词）与横线之下的 <code>entry</code> / <code>do</code> / <code>exit</code> / <code>defer</code> / 内部 transition。</li>
+          <li><b>三段式 transition</b>：<code>trigger [guard] / action</code>。trigger 必填；guard 与 action 可选。<b>completion transition</b> 是无标签的（子状态自动退出）。</li>
+          <li><b>时间与变化事件</b>：用 <code>after(d)</code> 表示超时（不要写 timeout）；用 <code>when(c)</code> 表示条件变化触发。</li>
+          <li><b>组合状态 + history</b>：用虚线大框 + 左上 <b>name-tag</b> 标记 composite；内嵌 <b>H</b>（回当前层）或 <b>H*</b>（递归回最深层）。</li>
+          <li><b>判断分流</b>：<b>junction</b>（实心小圆 · 编译期静态分流）vs <b>choice</b>（空心小菱形 · 运行时动态分流）；二者形状不同。</li>
+          <li><b>非 UML 扩展打 [ex]</b>：业务专属字段（SLA、retry-counter、priority）属于扩展，挂金色 [ex] 小角标标注 — 让阅读者一眼分清"标准 UML"还是"我们自己加的"。</li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ── Bottom legend · 全宽 · 学 04 版式 · 分两组 ── -->
+  <div class="legend-group" aria-label="legend - 节点元素">
+    <div class="legend-group-label">节点元素 · NODE SHAPES</div>
+    <div class="legend">
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="#141413"/></svg></span><span class="name">initial</span><span class="sub">实心圆</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">simple state</span><span class="sub">圆角矩形</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#788C5D11" stroke="#788C5D" stroke-dasharray="3 2"/><rect x="2" y="3" width="10" height="3" fill="#788C5D"/></svg></span><span class="name">composite</span><span class="sub">虚线框+name-tag</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#788C5D11" stroke="#788C5D" stroke-dasharray="3 2"/><line x1="13" y1="3" x2="13" y2="13" stroke="#788C5D" stroke-dasharray="2 1.5"/></svg></span><span class="name">orthogonal</span><span class="sub">并发 region</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/><rect x="18" y="10" width="6" height="4" fill="none" stroke="#3D3D3A"/><line x1="20" y1="10" x2="20" y2="14" stroke="#3D3D3A"/><line x1="22" y1="10" x2="22" y2="14" stroke="#3D3D3A"/></svg></span><span class="name">submachine</span><span class="sub">右下 ⊞</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#788C5D"/><circle cx="13" cy="8" r="3" fill="#788C5D"/></svg></span><span class="name">final</span><span class="sub">同心圆 · 正常</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="5" y1="4" x2="21" y2="12" stroke="#B04A3F" stroke-width="2.5"/><line x1="5" y1="12" x2="21" y2="4" stroke="#B04A3F" stroke-width="2.5"/></svg></span><span class="name">terminate</span><span class="sub">× 异常终止</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="#141413"/></svg></span><span class="name">junction ●</span><span class="sub">静态合流</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M13,2 L20,8 L13,14 L6,8 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">choice ◇</span><span class="sub">动态分流</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="7" width="22" height="3" fill="#141413"/></svg></span><span class="name">fork / join</span><span class="sub">并行粗横线</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#D97757"/><text x="13" y="11.5" text-anchor="middle" font-family="Georgia" font-size="9" fill="#D97757" font-weight="700">H</text></svg></span><span class="name">history H · H*</span><span class="sub">回当前 / 最深</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="9" cy="8" r="4" fill="#FFFFFF" stroke="#141413"/><circle cx="19" cy="8" r="4" fill="#FFFFFF" stroke="#141413"/><line x1="16" y1="5" x2="22" y2="11" stroke="#141413"/><line x1="16" y1="11" x2="22" y2="5" stroke="#141413"/></svg></span><span class="name">entry ○ · exit ⊗</span><span class="sub">命名通道</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="20" height="10" fill="#C4994E22" stroke="#C4994E" stroke-width="1.1"/><path d="M18,3 L22,3 L22,7 Z" fill="#C4994E22" stroke="#C4994E"/></svg></span><span class="name">note</span><span class="sub">折角注释</span></div>
+    </div>
+  </div>
+
+  <div class="legend-group" aria-label="legend - transition 与行为">
+    <div class="legend-group-label">迁移与行为 · TRANSITIONS &amp; INTERNAL BEHAVIORS</div>
+    <div class="legend">
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#87867F"/></svg></span><span class="name">external 迁移</span><span class="sub">触发 exit + entry</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.6"/><path d="M22,8 L18,4.5 L18,11.5 z" fill="#788C5D"/></svg></span><span class="name">spine 主路径</span><span class="sub">happy path 加粗</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M 18,4 A 6,5 0 0 0 8,4" fill="none" stroke="#87867F" stroke-width="1.5"/><path d="M8,4 L10.5,2 L10.5,7 z" fill="#87867F" transform="translate(-1 -1)"/></svg></span><span class="name">self-transition</span><span class="sub">自环 · 触发 exit+entry</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#4A8585">[internal]</text></svg></span><span class="name">internal</span><span class="sub">不触发 exit/entry</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#87867F"/><text x="6" y="6" font-family="ui-monospace" font-size="4" fill="#87867F">(无标签)</text></svg></span><span class="name">completion</span><span class="sub">无 trigger · do/ 完成自走</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#141413">trigger</text></svg></span><span class="name">trigger</span><span class="sub">事件名 · 必填</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#788C5D" font-style="italic">[guard]</text></svg></span><span class="name">guard</span><span class="sub">守卫 · 可选 olive 斜体</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#D97757">/ action</text></svg></span><span class="name">action</span><span class="sub">动作 · 可选 clay</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#788C5D">do / …</text></svg></span><span class="name">do activity</span><span class="sub">状态内持续活动</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#6B5B95">defer</text></svg></span><span class="name">defer event</span><span class="sub">延迟到离开</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="2" y="11" font-family="ui-monospace" font-size="7" fill="#141413">after(15m)</text></svg></span><span class="name">after(d) · when(c)</span><span class="sub">时间 / 变化事件</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="20" height="8" rx="2" fill="#C4994E33" stroke="#C4994E"/><text x="12" y="10.5" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#C4994E" font-weight="700">ex</text></svg></span><span class="name">[ex] 扩展</span><span class="sub">非 UML 业务字段</span></div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span>Engineering Diagram Library · 03 / 07 · 状态机 · UML 2.5 全覆盖 · 10 元素图鉴</span>
+    <span><a href="index.html">← 返回图谱总览</a></span>
+  </div>
+</div>
+
+<script>
+window.DIAGRAM_CONFIG = {
+  viewBox: { w: 1080, h: 2660 },
+  exportName: '03-state-machine-uml-complete',
+  nodeData: {
+    'initial': {
+      type: 'state-initial', tagClass: 't-state',
+      title: '① INITIAL · 起始伪状态',
+      meta: ['pseudo-state', '实心圆', '每图仅一个'],
+      body: `<p>每张状态图<b>有且仅有一个</b>顶层 initial。它不是真正的状态，没有 entry/exit 行为，只表示 "从这里开始"。</p><p>箭头只能从它出发，不能指向它。</p>`,
+      tags: ['pseudo-state', 'initial']
+    },
+    'created': {
+      type: 'state', tagClass: 't-state',
+      title: '② CREATED · 已创建',
+      meta: ['simple state', 'duration ~ 2s', '~ 100% pass-through'],
+      body: `<p>订单刚生成、未提交支付的瞬态。</p><pre>entry / reserveCart()
+exit  / —
+transitions:
+  submit()  → PENDING_PAYMENT</pre>`,
+      tags: ['simple state']
+    },
+    'composite-initial': {
+      type: 'state-initial', tagClass: 't-state',
+      title: '③ INITIAL (composite 内) · 嵌套起点',
+      meta: ['nested pseudo-state', '局部', '配合 history'],
+      body: `<p>每个 composite 状态<b>可以</b>有自己的 initial。进入 composite 时，若没有 history 或 history 未设置，从这里开始。</p>`,
+      tags: ['pseudo-state', 'nested']
+    },
+    'awaiting': {
+      type: 'state', tagClass: 't-state',
+      title: '④ Awaiting · 等待支付（子状态）',
+      meta: ['sub-state', 'inside composite', 'TTL 15min'],
+      body: `<p>等待用户完成支付。完整覆盖 UML 内部行为三段式：</p><pre>entry / startTimer(15min)
+do    / pollPaymentStatus  // 持续轮询直到状态变化
+exit  / cancelTimer
+
+transitions:
+  payment.succeeded → Paid
+  after(15min)      → Failed
+  retry [n < 3]     → Awaiting (self · 触发 exit+entry)</pre><p><b>注意</b>：UML 标准用 <code>after(d)</code> 表示超时，不要写 <code>timeout(d)</code>。</p>`,
+      tags: ['sub-state', 'do activity', 'after()']
+    },
+    'sub-paid': {
+      type: 'state', tagClass: 't-success',
+      title: '⑤ Paid · 已支付（completion transition）',
+      meta: ['sub-state', 'success', 'completion → 无标签'],
+      body: `<p>子状态 Paid 仅做最后清理，通过 <b>completion transition</b>（<u>无标签</u>的箭头）自动退出复合状态 PENDING_PAYMENT，进入外层 PAID。</p><p>UML 2.5 标准：completion transition 表示 "状态完成自身的 do/ 活动后自动迁移"，不需要 trigger。</p>`,
+      tags: ['sub-state', 'completion']
+    },
+    'sub-failed': {
+      type: 'state', tagClass: 't-fail',
+      title: '⑥ Failed · 支付失败（子状态 · fail）',
+      meta: ['sub-state', 'terminal of composite'],
+      body: `<p>支付彻底失败（超时未支付 / after(15min) 触发，或银行拒付）。从子状态跃出，进入终态 CANCELLED。</p><pre>exit  / releaseStock()</pre>`,
+      tags: ['sub-state', 'fail']
+    },
+    'paid': {
+      type: 'state', tagClass: 't-success',
+      title: '⑦ PAID · 主路径起点',
+      meta: ['top-level state', 'duration ~ 5min–24h', '99% 流量'],
+      body: `<p>核心已付款状态 — happy path 第一个 olive 染色状态。</p><pre>entry / sendReceipt(email)
+exit  / lockAccount()
+
+transitions:
+  paid.confirmed   → PACKING
+  refund.request   → choice → REFUNDING</pre>`,
+      tags: ['state', 'success']
+    },
+    'choice-refund': {
+      type: 'decision', tagClass: 't-decision',
+      title: '⑧ CHOICE · 退款动态分支',
+      meta: ['dynamic branch', '空心小菱形', 'runtime decision'],
+      body: `<p>UML <b>choice junction</b>（动态选择）— 与 junction（实心圆 · 静态）区别在<u>分流时机</u>：</p><pre>choice    → 运行时根据当前状态变量分流
+junction  → 编译/建模期静态合流（多个进入 + 多个出去）</pre><p>注意小菱形 (choice) ≠ 大菱形 (流程图判断)。前者是 UML 伪状态。</p>`,
+      tags: ['choice', 'pseudo-state']
+    },
+    'cancelled': {
+      type: 'state-final', tagClass: 't-fail',
+      title: '⑨ CANCELLED · 失败终态',
+      meta: ['final state', 'fail · rust', '~ 6% 流量'],
+      body: `<p>订单未支付即终止。状态机不可再退出此节点。</p><pre>side-effects:
+· 释放库存
+· 退还优惠券
+· 触发 event: order.cancelled</pre>`,
+      tags: ['final', 'fail']
+    },
+    'packing': {
+      type: 'state', tagClass: 't-success',
+      title: '⑩ PACKING · 完整内部行为',
+      meta: ['state', 'all 4 internal actions', 'duration ~ 4-24h'],
+      body: `<p>仓库收到订单后开始拣货。覆盖 UML 全部 4 类内部行为：</p><pre>entry  / printLabel(carrier)
+do     / scanItems  // 持续扫描直到全部入箱
+exit   / sealBox
+
+defer  / cancel.request
+  ↑ UML defer 事件：在 PACKING 期间收到的 cancel.request
+    不立刻处理，延迟到离开 PACKING 后处理</pre><p><b>defer</b> 是 UML 解决"打包途中用户点取消"的标准方式。</p>`,
+      tags: ['state', 'do', 'defer']
+    },
+    'fork-bar': {
+      type: 'event', tagClass: 't-event',
+      title: '⑪ FORK · 并行分裂',
+      meta: ['fork pseudo-state', '粗横线', '一进多出'],
+      body: `<p>UML fork — 从一个状态<b>并行进入</b>多个状态。PACKING 之后 SHIPPED（运输中）与 NOTIFY（通知用户）同时进行，互不阻塞。</p><p>必须配对 join 使用，否则状态机会"漂"。</p>`,
+      tags: ['fork', 'pseudo-state']
+    },
+    'shipped': {
+      type: 'state', tagClass: 't-success',
+      title: '⑫ SHIPPED · 运输中（并行 region）',
+      meta: ['state', 'parallel region', 'duration ~ 1-3 day'],
+      body: `<p>包裹在运输途中。</p><pre>entry / dispatch
+do    / track(carrier)  // 持续监听 carrier 网点回传</pre><p>当 carrier 标记 "派送成功" 触发 transition → join，但还需等 NOTIFY 也完成才能 join。</p>`,
+      tags: ['state', 'parallel', 'do']
+    },
+    'notify': {
+      type: 'state', tagClass: 't-success',
+      title: '⑬ NOTIFY · 通知（并行 region）',
+      meta: ['state', 'parallel region', 'duration ~ minutes'],
+      body: `<p>并行向用户发 push / sms / email。</p><pre>entry / sendPush
+do    / pollDelivered  // 持续监测确认回执</pre>`,
+      tags: ['state', 'parallel', 'do']
+    },
+    'join-bar': {
+      type: 'event', tagClass: 't-event',
+      title: '⑭ JOIN · 并行汇合',
+      meta: ['join pseudo-state', '粗横线', '多进一出'],
+      body: `<p>UML join — 多个并行状态<b>全部完成</b>后汇合进入下一个状态。</p><p><b>实战陷阱</b>：若其中一条永远不完成（通知全失败），订单会卡在 join — 工程上每条并行支路都要加超时兜底。</p>`,
+      tags: ['join', 'pseudo-state']
+    },
+    'delivered': {
+      type: 'state', tagClass: 't-success',
+      title: '⑮ DELIVERED · 含 internal transition',
+      meta: ['state', 'duration ≤ 7 day', 'internal trans demo'],
+      body: `<p>包裹已送达，等待用户确认。本状态演示了 UML <b>internal transition</b>：</p><pre>entry    / awaitConfirm
+refreshUI / [internal]
+  ↑ 重要：internal trans 不触发 exit/entry
+   （区别于 self-transition）
+
+transitions:
+  user.received     → COMPLETED
+  > 7 days auto     → COMPLETED  [guard]
+  return.requested  → REFUNDING</pre>`,
+      tags: ['state', 'internal']
+    },
+    'completed': {
+      type: 'state-final', tagClass: 't-success',
+      title: '⑯ COMPLETED · 成功终态',
+      meta: ['final state', 'success · olive', '~ 90% 流量'],
+      body: `<p>订单完整生命周期成功结束。</p><pre>side-effects:
+· 释放预占库存
+· 结算商家分账
+· 触发 event: order.completed
+· 解锁评价权限</pre>`,
+      tags: ['final', 'success']
+    },
+    'refunding': {
+      type: 'state', tagClass: 't-state',
+      title: '⑰ REFUNDING · 退款中（中性）',
+      meta: ['state', 'async', 'duration ~ 3-7 day'],
+      body: `<p>退款已发起，等待支付通道异步确认。</p><pre>entry / initiateRefund(channel)
+do    / pollChannel  // 持续轮询银行回执
+
+transitions:
+  refund.completed → REFUNDED</pre>`,
+      tags: ['state', 'async', 'do']
+    },
+    'refunded': {
+      type: 'state-final', tagClass: 't-state',
+      title: '⑱ REFUNDED · 中性终态',
+      meta: ['final state', 'neutral', '~ 4% 流量'],
+      body: `<p>资金已退回用户。中性终态 — 不在 olive 主路径上也不是 rust 兜底，是合理的另一种结束。</p>`,
+      tags: ['final', 'neutral']
+    },
+    'note-a': {
+      type: 'event', tagClass: 't-event',
+      title: 'Note · 折角注释',
+      meta: ['UML annotation', 'standard'],
+      body: `<p>UML 标准注释 — 折角矩形 + 引线指向被注释元素。本图把 trigger 三段式语法和所有内部行为/迁移类型作为图例注释放在左下。</p>`,
+      tags: ['annotation']
+    },
+    'g-init-final-term': {
+      type: 'state-final', tagClass: 't-state',
+      title: '起止三种 · Initial / Final / Terminate',
+      meta: ['UML 2.5', '入口·正常出口·异常终止', '主图 ✓ × 4'],
+      body: `<p>状态机的三种伪状态：</p><pre><b>● initial</b>      — 实心圆 · 每图<u>恰好</u>一个顶层 initial
+<b>◉ final</b>        — 同心圆 · 正常结束，触发 exit 动作
+<b>✕ terminate</b>    — 大叉号 · 异常崩溃，<u>不触发</u>任何清理</pre><p><b>final vs terminate 的区别</b>：</p><pre>final     → 路径正常走完，所有 exit 都跑
+terminate → 立刻停，跳过 exit / 清理（用于熔断/欺诈/安全锁机）</pre><p><b>主图中实际位置</b>：顶层 initial + composite-initial（共 2 个），CANCELLED / COMPLETED / REFUNDED（共 3 个 final · success/fail/neutral 三色）。terminate 主图未用，这里图鉴示意。</p>`,
+      tags: ['initial', 'final', 'terminate']
+    },
+    'g-composite': {
+      type: 'state-composite', tagClass: 't-state',
+      title: 'Composite + name-tag · 复合状态',
+      meta: ['UML 2.5', '虚线大框 + 实心 name-tag', '主图 ✓ pending_payment'],
+      body: `<p>UML 表达<b>嵌套状态机</b>的方式 — 在一个状态里再放一组子状态。</p><pre>视觉规约：
+· 大框    → 虚线（dashed）边
+· name-tag → 左上角实心小标签（mono 字体 · 全大写）
+· 子状态  → 大框内部，独立 initial / final / history</pre><p><b>实战场景</b>：长生命周期里的某一阶段（如订单的"支付窗口期"）天然包含多个子状态（等待 / 失败 / 成功），用 composite 包起来比扁平展开清晰得多。</p><p><b>主图中实际位置</b>：<code>pending_payment</code> composite — 包含 Awaiting / Paid / Failed 三个子状态 + 自己的 initial。</p>`,
+      tags: ['composite', 'name-tag', 'nested']
+    },
+    'g-orthogonal': {
+      type: 'state-composite', tagClass: 't-state',
+      title: 'Orthogonal state · 正交并发状态',
+      meta: ['UML 2.5', 'composite + regions', '主图 ⊘ · 仅图鉴'],
+      body: `<p>表达"<b>同一状态内并发持有多个独立子状态</b>"。在 composite 内部用<u>虚线竖线</u>把空间切成 ≥ 2 个 region，每个 region 各自跑一套小状态机。</p><pre>示例：媒体播放器
+Region 1 · Playback   (playing / paused / stopped)
+Region 2 · Volume     (muted / normal / boost)
+→ 同一时刻同时持有两个 region 的"当前状态"</pre><p><b>区别于 fork/join</b>：fork/join 是顺序流程里的并行段，结束后汇合；orthogonal 是状态本身的并发<u>属性</u>，没有"汇合"概念。</p>`,
+      tags: ['orthogonal', 'composite', 'concurrent']
+    },
+    'g-submachine': {
+      type: 'state', tagClass: 't-state',
+      title: 'Submachine state · 子机引用',
+      meta: ['UML 2.5', '右下角 ⊞ 图标', '主图 ⊘ · 仅图鉴'],
+      body: `<p>UML 提供的<b>状态机复用机制</b>。一个 simple state 引用另一个完整定义的状态机，节省图面 + 提高复用。</p><p>视觉规约：右下角加 <b>⊞</b> 三竖线小图标。语法：<code>StateName : MachineName</code>。</p><pre>实战场景：
+登录子机（含 OTP / 重试 / 锁账）
+  ← 被 Web / iOS / Android 三个主状态机共同引用
+  → 只画一份，三处复用</pre>`,
+      tags: ['submachine', 'reuse']
+    },
+    'g-history': {
+      type: 'state', tagClass: 't-state',
+      title: 'History · 浅 H · 深 H* 历史伪状态',
+      meta: ['UML 2.5', 'shallow vs deep', '主图 ✓ composite 内 H'],
+      body: `<p>history 是 composite 的"<b>记忆点</b>"— 重新进入时，可选回到上次离开时停留的子状态。</p><pre><b>H</b>  shallow history → 只记录当前 composite 这一层的子状态
+<b>H*</b> deep history    → 递归回到所有嵌套层的最深叶子状态</pre><p><b>实战例</b>：手机"音乐 → 专辑 → 歌曲"3 层嵌套。用户切走 → 回来：</p><pre>H  → 只回到"专辑"层（不记得具体那首歌）
+H* → 回到具体那首歌的播放位置</pre><p><b>主图中实际位置</b>：<code>pending_payment</code> composite 内部右上角的 H — 表示"从外部再次进入时，可选恢复到 Awaiting/Paid/Failed 中上次离开的那个"。</p>`,
+      tags: ['history', 'memory']
+    },
+    'g-choice-junction': {
+      type: 'decision', tagClass: 't-decision',
+      title: 'Choice ◇ vs Junction · 动态/静态判断',
+      meta: ['UML 2.5', '空心菱形 vs 实心圆', '主图 ✓ choice'],
+      body: `<p>UML 两种判断节点，<b>形状有别 — 不要混</b>：</p><pre><b>choice ◇</b>（空心菱形）= 动态分流
+  · 1 进 N 出
+  · 运行时根据 guard 选路径
+  · 用于"根据当前数据决定走哪条"
+
+<b>junction ●</b>（实心小圆）= 静态合流
+  · M 进 N 出
+  · 建模期就决定路径
+  · 用于"多个状态共用一段守卫判断"</pre><p><b>跟流程图大菱形的关系</b>：流程图判断 = 大菱形；UML choice = 小菱形（小一号 · 是伪状态）。<u>不要把流程图判断画到状态机里</u>。</p><p><b>主图中实际位置</b>：PAID → choice → REFUNDING — 拿到 refund.request 后，运行时看 <code>refund.eligible</code> guard 决定是否进入 REFUNDING。</p>`,
+      tags: ['choice', 'junction', 'pseudo-state']
+    },
+    'g-entry-exit': {
+      type: 'state', tagClass: 't-state',
+      title: 'Entry point ○ · Exit point ⊗ · 命名通道',
+      meta: ['UML 2.5', 'composite 边界上', '主图 ⊘ · 仅图鉴'],
+      body: `<p>composite 边界上的<b>命名进入/退出点</b>，替代默认 initial / final 通道。多语义入口/出口必备。</p><pre><b>entry point ○</b>（空心圆，落在 composite 边界）
+  · 外部箭头指向它
+  · → 跳过默认 initial
+  · → 直接进入内部指定子状态
+
+<b>exit point ⊗</b>（圆+叉，落在边界）
+  · 内部箭头指向它
+  · → 跳过默认 final
+  · → 从指定通道退出，外部继续</pre><p><b>实战</b>：登录 composite 有 "OAuth 三方入口" vs "邮箱密码入口" 两种语义不同的入口 — 各画一个命名 entry point。</p>`,
+      tags: ['entry-point', 'exit-point']
+    },
+    'g-trigger-syntax': {
+      type: 'event', tagClass: 't-event',
+      title: 'Transition 三段式 · trigger [guard] / action',
+      meta: ['UML 2.5', 'transition 语法', '主图 ✓ 全部迁移线'],
+      body: `<p>UML transition 的标准语法：</p><pre><b>trigger</b>           [<b>guard</b>]      <b>/ action</b>
+事件 (必填)        守卫 (可选)      动作 (可选)
+black              olive italic     clay</pre><p>三个部分用三种<b>颜色 + 字体姿态</b>区分，让阅读者一眼分清"什么事件触发"vs"满足什么条件"vs"做什么副作用"。</p><pre><b>示例</b>：
+payment.succeeded [amount &gt; 0] / markPaid() · notify()
+trigger          guard          action</pre><p><b>主图中</b>所有 transition 都按这三色规约画 — Awaiting → sub-Paid 上的 <code>payment.succeeded / markPaid()</code>、PAID → choice 上的 <code>refund.request</code>、DELIVERED → COMPLETED 上的 <code>user.received [&gt;7 days auto]</code> 都遵循此语法。</p>`,
+      tags: ['transition', 'syntax', 'trigger', 'guard', 'action']
+    },
+    'g-transition-types': {
+      type: 'event', tagClass: 't-event',
+      title: 'Self · Internal · Completion · 三种迁移对比',
+      meta: ['UML 2.5', '触/不触发 exit·entry', '主图 ✓ 全用'],
+      body: `<p>UML 实战<b>最容易混淆</b>的 3 种迁移类型 — 区别全在「<u>是否触发 exit / entry 行为</u>」：</p><pre><b>① external (普通)</b>   触发 exit → action → entry
+<b>② self        </b>     触发 exit → action → entry (跳出自身又跳回)
+<b>③ internal    </b>     <u>不触发</u> exit / entry，只跑 action
+<b>④ completion  </b>     <u>无 trigger 标签</u>，do/ 完成后自动迁移</pre><p><b>主图中各自位置</b>：</p><pre><b>self        </b>: Awaiting 顶部 retry 弧 — 重试时会重新跑 startTimer / cancelTimer
+<b>internal    </b>: DELIVERED 内部 refreshUI / [internal] — 刷新 UI 但不重置 awaitConfirm 计时
+<b>completion  </b>: sub-Paid → PAID 无标签箭头 — sub-Paid 完成 do/ 后自动退出 composite</pre><p><b>视觉提示</b>：completion transition <u>没有任何标签</u>是它的特征 — 别把它当成"忘了标 trigger"的画错。</p>`,
+      tags: ['self', 'internal', 'completion', 'transition']
+    },
+    'g-events': {
+      type: 'event', tagClass: 't-event',
+      title: '事件全家桶 · after / when / defer + [ex]',
+      meta: ['UML 2.5 + EX', 'trigger 三类 + 业务扩展角标', '主图 ✓ after/defer'],
+      body: `<p>UML 标准 trigger 事件三类 + 一类<b>本图谱约定的</b>业务扩展 [ex] 角标：</p><pre><b>after(d)</b>  时间事件 · 进入状态后开始计时，超时触发
+  主图: Awaiting → Failed [after(15min)]
+  注：UML 标准用 after(d)，<u>不要写 timeout(d)</u>
+
+<b>when(c)</b>  变化事件 · 条件持续监测，false → true 触发
+  示例: InStock → OutOfStock [when(stock=0)]
+  注：区别于 guard [stock=0]（瞬时判断）— when 是<u>持续监测</u>
+
+<b>defer / event</b>  延迟事件 · 当前状态收到这个事件不立刻处理
+  主图: PACKING 的 defer / cancel.request
+  → 打包途中收到 cancel.request 不打断，离开 PACKING 后再处理</pre><p><b>[ex] 扩展角标</b>（非 UML 标准 · 本图谱约定）：</p><pre>给业务专属字段（SLA / retry-counter / priority / 流量占比 / 锁标记 等）
+挂金色 [ex] 小角标，让阅读者一眼分清 "标准 UML" vs "我们自己加的"</pre><p><b>复制粘贴用法</b>：</p><pre>&lt;rect class="ex-badge-bg" x=".." y=".." width="22" height="14"/&gt;
+&lt;text class="ex-badge-text" x=".." y=".."&gt;ex&lt;/text&gt;</pre>`,
+      tags: ['after', 'when', 'defer', 'ex', 'extension']
+    }
+  }
+};
+</script>
+<script>
+/* ─── Shared interactivity for Engineering Diagram Library
+       Expects window.DIAGRAM_CONFIG = {
+         nodeData: { [id]: { type, tagClass, title, meta, body, tags } },
+         viewBox: { w, h },         // SVG natural size
+         exportName: 'NN-slug',     // file basename (no extension)
+         svgStyle: '...'            // (optional) inline CSS string injected into export svg
+       } ─── */
+(function(){
+  const cfg = window.DIAGRAM_CONFIG || {};
+  const NODE_DATA = cfg.nodeData || {};
+  const VBW = (cfg.viewBox && cfg.viewBox.w) || 1080;
+  const VBH = (cfg.viewBox && cfg.viewBox.h) || 1500;
+  const EXPORT_NAME = cfg.exportName || 'diagram';
+  const SVG_EXPORT_STYLE = cfg.svgStyle || '';
+
+  /* ── Detail panel ── */
+  const detailEl = {
+    title: document.getElementById('d-title'),
+    meta:  document.getElementById('d-meta'),
+    body:  document.getElementById('d-body'),
+    tags:  document.getElementById('d-tags'),
+  };
+  function showDetail(id) {
+    const data = NODE_DATA[id];
+    if (!data || !detailEl.title) return;
+    detailEl.title.textContent = data.title;
+    detailEl.meta.innerHTML = (data.meta || []).map((m, i, arr) =>
+      `<span>${m}</span>${i < arr.length - 1 ? '<span class="dot">·</span>' : ''}`
+    ).join('');
+    detailEl.body.innerHTML = data.body || '';
+    detailEl.tags.innerHTML = (data.tags || []).map(t =>
+      `<span class="tag ${data.tagClass || ''}">${t}</span>`
+    ).join('');
+    document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+    const node = document.querySelector(`.node[data-id="${id}"]`);
+    if (node) node.classList.add('active');
+  }
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('click', () => showDetail(node.dataset.id));
+    node.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDetail(node.dataset.id); }
+    });
+  });
+
+  /* ── Pan & Zoom ── */
+  const stage = document.getElementById('stage');
+  const inner = document.getElementById('canvasInner');
+  const zoomReadout = document.getElementById('zoomReadout');
+  if (!stage || !inner) return;
+
+  let scale = 0.5, tx = 0, ty = 0;
+  const MIN_SCALE = 0.2, MAX_SCALE = 4;
+
+  function applyTransform() {
+    inner.style.transform = `translate(calc(-50% + ${tx}px), ${ty}px) scale(${scale})`;
+    if (zoomReadout) zoomReadout.textContent = Math.round(scale * 100) + '%';
+  }
+  function fitToFrame() {
+    const rect = stage.getBoundingClientRect();
+    const padX = 40, padY = 60;
+    const sX = (rect.width - padX * 2) / VBW;
+    const sY = (rect.height - padY * 2) / VBH;
+    scale = Math.min(sX, sY, 1);
+    tx = 0; ty = 0;
+    applyTransform();
+  }
+  function resetView() { scale = 0.5; tx = 0; ty = 0; applyTransform(); }
+
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    const delta = -e.deltaY * 0.0015;
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * (1 + delta)));
+    const k = newScale / scale;
+    const stageCx = rect.width / 2;
+    const dx = cx - stageCx - tx;
+    const dy = cy - 24 - ty;
+    tx -= dx * (k - 1);
+    ty -= dy * (k - 1);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  let dragging = false, dragStart = { x: 0, y: 0, tx: 0, ty: 0 };
+  stage.addEventListener('mousedown', e => {
+    if (e.target.closest('.node')) return;
+    dragging = true;
+    stage.classList.add('dragging');
+    dragStart = { x: e.clientX, y: e.clientY, tx, ty };
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx = dragStart.tx + (e.clientX - dragStart.x);
+    ty = dragStart.ty + (e.clientY - dragStart.y);
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    dragging = false;
+    stage.classList.remove('dragging');
+  });
+
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      try {
+        const bbox = node.getBBox();
+        const cx = bbox.x + bbox.width / 2;
+        const cy = bbox.y + bbox.height / 2;
+        const rect = stage.getBoundingClientRect();
+        scale = 1.4;
+        tx = -(cx - VBW / 2) * scale;
+        ty = -cy * scale + (rect.height / 2 - 24);
+        applyTransform();
+      } catch (err) {}
+    });
+  });
+
+  const elIn  = document.getElementById('zoomIn');
+  const elOut = document.getElementById('zoomOut');
+  const elFit = document.getElementById('zoomFit');
+  const elRes = document.getElementById('zoomReset');
+  if (elIn)  elIn.addEventListener('click', () => { scale = Math.min(MAX_SCALE, scale * 1.2); applyTransform(); });
+  if (elOut) elOut.addEventListener('click', () => { scale = Math.max(MIN_SCALE, scale / 1.2); applyTransform(); });
+  if (elFit) elFit.addEventListener('click', fitToFrame);
+  if (elRes) elRes.addEventListener('click', resetView);
+
+  window.addEventListener('load', fitToFrame);
+  window.addEventListener('resize', fitToFrame);
+
+  /* ── Theme ── */
+  const sunIcon  = document.getElementById('themeIconSun');
+  const moonIcon = document.getElementById('themeIconMoon');
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    if (sunIcon)  sunIcon.style.display  = t === 'dark' ? 'none' : '';
+    if (moonIcon) moonIcon.style.display = t === 'dark' ? '' : 'none';
+  }
+  const savedTheme = localStorage.getItem('diagram-theme') || 'light';
+  applyTheme(savedTheme);
+  const tt = document.getElementById('themeToggle');
+  if (tt) tt.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('diagram-theme', next);
+  });
+
+  /* ── Export ── */
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function paletteFor(theme) {
+    return theme === 'dark' ? {
+      paper: '#211F1C', slate: '#F5F3EC', clay: '#E08E6F', olive: '#93A872',
+      rust: '#C46559', plum: '#8E81B5', teal: '#5DA0A0', gold: '#D4AB66',
+      gray150: '#26241F', gray300: '#3D3A33', gray500: '#87867F', gray700: '#B8B6AA', bg: '#1A1917'
+    } : {
+      paper: '#FFFFFF', slate: '#141413', clay: '#D97757', olive: '#788C5D',
+      rust: '#B04A3F', plum: '#6B5B95', teal: '#4A8585', gold: '#C4994E',
+      gray150: '#F0EEE6', gray300: '#D1CFC5', gray500: '#87867F', gray700: '#3D3D3A', bg: '#FAF9F5'
+    };
+  }
+  function inlineStyleBlock(p) {
+    return `
+      text { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; fill: ${p.slate}; }
+      text.t-title { font-family: system-ui, sans-serif; font-weight: 500; font-size: 13px; fill: ${p.slate}; }
+      text.t-sub { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl { font-size: 10px; fill: ${p.gray500}; }
+      text.t-lbl-yes { fill: ${p.olive}; }
+      text.t-lbl-no { fill: ${p.rust}; }
+      text.t-connector { font-family: Georgia, serif; font-weight: 500; font-size: 14px; fill: ${p.clay}; }
+      text.t-ann { font-size: 10.5px; fill: ${p.gray700}; }
+      text.t-lane { font-family: Georgia, serif; font-size: 16px; fill: ${p.slate}; font-weight: 500; }
+      text.t-big  { font-family: Georgia, serif; font-size: 18px; fill: ${p.slate}; font-weight: 500; }
+      text.t-stage { font-size: 10px; letter-spacing: 0.1em; fill: ${p.gray500}; text-transform: uppercase; }
+      .node .shape { fill: ${p.paper}; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node .shape-inner { fill: none; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node.term .shape { fill: ${p.gray150}; }
+      .node.io .shape, .node.io .shape-inner { stroke: ${p.plum}; }
+      .node.io .shape { fill: ${p.plum}22; }
+      .node.db .shape, .node.db .shape-inner { stroke: ${p.clay}; }
+      .node.db .shape { fill: ${p.clay}22; }
+      .node.subprocess .shape, .node.subprocess .shape-inner { stroke: ${p.olive}; }
+      .node.subprocess .shape { fill: ${p.olive}22; }
+      .node.document .shape { fill: ${p.rust}22; stroke: ${p.rust}; }
+      .node.connector .shape { stroke: ${p.clay}; }
+      .node.success .shape { fill: ${p.olive}33; stroke: ${p.olive}; }
+      .node.fail .shape { fill: ${p.rust}33; stroke: ${p.rust}; }
+      .node.actor .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.actor-system .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.actor-external .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.state .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.state-initial .shape { fill: ${p.slate}; stroke: ${p.slate}; }
+      .node.state-final .shape { fill: ${p.paper}; stroke: ${p.slate}; }
+      .node.state-final .shape-inner { fill: ${p.slate}; }
+      .node.state-composite .shape { fill: ${p.olive}11; stroke: ${p.olive}; }
+      .node.entity .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.attribute-key .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.relationship .shape { fill: ${p.clay}22; stroke: ${p.clay}; }
+      .node.gateway .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.event .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.event-end .shape { fill: ${p.paper}; stroke: ${p.rust}; stroke-width: 2.5; }
+      .node.event-msg .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.tier .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 5 3; }
+      .node.cache .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
+      .node.queue .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.gateway-api .shape { fill: ${p.clay}33; stroke: ${p.clay}; stroke-width: 2; }
+      .node.commit .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
+      .node.commit-main .shape { fill: ${p.paper}; stroke: ${p.clay}; }
+      .node.commit-develop .shape { fill: ${p.paper}; stroke: ${p.plum}; }
+      .node.commit-feature .shape { fill: ${p.paper}; stroke: ${p.olive}; }
+      .node.commit-release .shape { fill: ${p.paper}; stroke: ${p.gold}; }
+      .node.commit-hotfix .shape { fill: ${p.paper}; stroke: ${p.rust}; }
+      .node.tag .shape { fill: ${p.gold}33; stroke: ${p.gold}; }
+      .node.zone .shape { fill: ${p.olive}11; stroke: ${p.olive}; stroke-dasharray: 6 3; }
+      .node.zone-dmz .shape { fill: ${p.gold}11; stroke: ${p.gold}; stroke-dasharray: 6 3; }
+      .node.zone-internal .shape { fill: ${p.plum}11; stroke: ${p.plum}; stroke-dasharray: 6 3; }
+      .node.firewall .shape { fill: ${p.rust}22; stroke: ${p.rust}; stroke-width: 2; }
+      .node.router .shape { fill: ${p.teal}22; stroke: ${p.teal}; }
+      .node.switch-net .shape { fill: ${p.paper}; stroke: ${p.gray700}; }
+      .node.server .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .edge { stroke: ${p.gray500}; stroke-width: 1.5; fill: none; }
+      .edge.yes { stroke: ${p.olive}; }
+      .edge.no { stroke: ${p.rust}; stroke-dasharray: 5 4; }
+      .edge.db { stroke: ${p.clay}; stroke-dasharray: 3 3; }
+      .edge.async { stroke-dasharray: 6 3; }
+      .edge.return { stroke: ${p.gray500}; stroke-dasharray: 4 3; }
+      .edge.sync { stroke: ${p.slate}; }
+      .edge.msg { stroke: ${p.plum}; }
+      .edge.relation { stroke: ${p.clay}; }
+      .edge.lane { stroke: ${p.gray300}; stroke-width: 1; }
+      .annotation .bracket { fill: none; stroke: ${p.gray500}; stroke-width: 1.2; stroke-dasharray: 3 3; }
+      .annotation .leader { stroke: ${p.gray500}; stroke-width: 1; stroke-dasharray: 2 3; }
+      .annotation .note { fill: ${p.gold}22; stroke: ${p.gold}; stroke-width: 1.2; }
+      .annotation .note-text { font-size: 10.5px; fill: ${p.gray700}; }
+      ${SVG_EXPORT_STYLE}
+    `;
+  }
+  function buildExportableSvg() {
+    const svg = document.getElementById('diagram').cloneNode(true);
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const p = paletteFor(theme);
+    svg.setAttribute('data-theme', theme);
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    const allDocStyles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    style.textContent = allDocStyles + '\n' + inlineStyleBlock(p);
+    svg.insertBefore(style, svg.firstChild);
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('x', '0'); bg.setAttribute('y', '0');
+    bg.setAttribute('width', VBW); bg.setAttribute('height', VBH);
+    bg.setAttribute('fill', p.bg);
+    svg.insertBefore(bg, svg.firstChild.nextSibling);
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    return new XMLSerializer().serializeToString(svg);
+  }
+  function exportSvg() {
+    const blob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    downloadBlob(blob, `${EXPORT_NAME}-${theme}.svg`);
+  }
+  function exportPng() {
+    const svgBlob = new Blob([buildExportableSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const dpr = 3;
+      const canvas = document.createElement('canvas');
+      canvas.width = VBW * dpr; canvas.height = VBH * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(img, 0, 0, VBW, VBH);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+        downloadBlob(blob, `${EXPORT_NAME}-${theme}.png`);
+      }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); alert('PNG 导出失败 — 请改用 SVG。'); };
+    img.src = url;
+  }
+  const sv = document.getElementById('exportSvg');
+  const pn = document.getElementById('exportPng');
+  if (sv) sv.addEventListener('click', exportSvg);
+  if (pn) pn.addEventListener('click', exportPng);
+
+  /* ── Copy HTML source ── */
+  const ch = document.getElementById('copyHtml');
+  if (ch) ch.addEventListener('click', async () => {
+    const src = '<!doctype html>\n' + document.documentElement.outerHTML;
+    const orig = ch.innerHTML;
+    try {
+      await navigator.clipboard.writeText(src);
+      ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制';
+    } catch (err) {
+      const ta = document.createElement('textarea');
+      ta.value = src; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ch.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>已复制'; }
+      catch (e) { ch.innerHTML = '复制失败'; }
+      ta.remove();
+    }
+    setTimeout(() => { ch.innerHTML = orig; }, 1800);
+  });
+})();
+
+</script>
+</body>
+</html>

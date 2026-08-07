@@ -3,11 +3,36 @@
 
 from __future__ import annotations
 
+import argparse
+import os
 import re
 from pathlib import Path
 
-BACKUP_DIR = Path("/Users/dongmaowei/workspace/arch-diagrams 2/templates")
 GALLERY_DIR = Path(__file__).resolve().parent.parent / "templates" / "gallery"
+
+
+def resolve_backup_dir() -> Path:
+    """This is a one-time migration script (v2 gallery split) that reads B-zone SVG
+    out of the pre-refactor templates/ folder. There is no portable default — the
+    old hardcoded path only ever existed on one machine — so this must be passed
+    explicitly, either via --backup-dir or the ARCH_DIAGRAMS_BACKUP_DIR env var."""
+    env = os.environ.get("ARCH_DIAGRAMS_BACKUP_DIR")
+    if env:
+        return Path(env)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--backup-dir", type=Path, default=None,
+        help="Path to the pre-refactor templates/ dir to pull B-zone SVG from.",
+    )
+    args, _ = parser.parse_known_args()
+    if args.backup_dir:
+        return args.backup_dir
+    raise SystemExit(
+        "Missing backup dir. This script needs the OLD (pre-v2-split) templates/ "
+        "folder to read B-zone SVG from — pass it explicitly:\n"
+        "  python3 rebuild-index-galleries.py --backup-dir /path/to/old/templates\n"
+        "  ARCH_DIAGRAMS_BACKUP_DIR=/path/to/old/templates python3 rebuild-index-galleries.py"
+    )
 
 SECTIONS = [
     ("02-sequence.html", "sequence", "seq"),
@@ -244,11 +269,12 @@ def replace_section_css(gallery_html: str, section_id: str, css_block: str) -> s
 
 
 def main() -> None:
+    backup_dir = resolve_backup_dir()
     for filename, section_id, prefix in SECTIONS:
         gallery_path = GALLERY_DIR / filename
         gallery_html = inject_row_zebra_var(read_text(gallery_path))
 
-        html = read_text(BACKUP_DIR / filename)
+        html = read_text(backup_dir / filename)
         body = fix_svg_u_tags(extract_b_zone_svg(html))
         body = prefix_inline_markers(body, prefix)
         offset = y_offset(body)

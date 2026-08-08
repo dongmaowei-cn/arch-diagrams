@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>时序图 · 订单结算 idempotency — Engineering Diagram Library</title>
+<title>时序图 · 批量代发 Job 跨域交互 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -343,15 +343,15 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 02 · 时序图 / Sequence Diagram · v2</div>
-        <h1>订单结算的幂等时序 <em>— order settlement with idempotency</em></h1>
-        <p class="lead">一笔订单从提交到银行扣款，经过 <b>网关 → 订单服务 → 支付服务 → 银行</b> 四段接力。<code>Idempotency-Key</code> 从请求头一路贯穿到银行侧 <code>out_trade_no</code>，配合幂等校验、轮询重试、异步回执、超时补单四层保障 —— 重复提交、乱序回调、轮询超时都不会重复扣款。点击任意参与者或消息查看细节。</p>
+        <div class="eyebrow">Diagram type 02 · 时序图 / Sequence Diagram · v2 · 跨域交互</div>
+        <h1>批量代发 Job 的跨域时序 <em>— batch payroll cross-domain interaction</em></h1>
+        <p class="lead"><b>XxlJob → clearing_server → bank_ability_center → 招行薪福通</b> 四域接力，每次跨域边界都做<b>关键字段对齐</b>：<code>yurref</code>、<code>trxseq</code>、<code>ttlamt=ΣarrivalAmount</code>、<code>trsamt</code>、<code>accnbr</code> 从生成 → 落库 → 报文一路贯通。事务内建批次（TX1）、事务外调银行、回执在 <b>Phase 3 内嵌 alt 双分支</b>——受理成功等确认 Job 轮询 / 受理失败走 TX2 回滚兜底。点击任意参与者或消息查看字段细节。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">6</span>参与者</div>
+        <div><span class="v">5</span>参与者</div>
         <div><span class="v">4</span>阶段</div>
-        <div><span class="v">17</span>消息</div>
-        <div><span class="v">3</span>分支</div>
+        <div><span class="v">15</span>消息</div>
+        <div><span class="v">2</span>事务边界</div>
       </div>
     </div>
   </header>
@@ -362,7 +362,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="1520" viewBox="0 0 1080 1520" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="1240" viewBox="0 0 1080 1240" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
                 <marker id="arrow-sync" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
@@ -375,242 +375,159 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               </defs>
 
               <!-- ═══════════════════════════════════════════════════════ -->
-              <!-- A · 订单结算 idempotency 时序主图                          -->
+              <!-- A · 批量代发 Job · 跨域交互与字段对齐时序主图                 -->
               <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="24">A · 订单结算 idempotency 时序主图</text>
-              <text class="section-sub"   x="40" y="42">6 参与者 · 4 阶段 · 17 消息 · 1 失败兜底 · 幂等键贯穿全程 · 轮询重试 ≤3 · 异步回执</text>
+              <text class="section-label" x="40" y="24">A · 批量代发 Job · 跨域交互与字段对齐</text>
+              <text class="section-sub"   x="40" y="42">5 参与者 · 3 阶段 · 15 消息 · 关键字段跨域对齐 · Phase 3 内嵌 alt 受理成功/失败</text>
 
-
-              <!-- ============================================
-                   PARTICIPANT BOXES (top row, y=80→130)
-                   Lifelines at cx=120 / 290 / 460 / 630 / 800 / 970
-                   ============================================ -->
-
-              <!-- Actor 1: Client App (user, stick figure head) -->
-              <g class="node actor" data-id="client" tabindex="0">
-                <circle class="actor-head" cx="120" cy="60" r="11"/>
-                <path class="actor-head" d="M108,76 L108,80 L132,80 L132,76 Z"/>
+              <!-- PARTICIPANT BOXES (y=80→130)  Lifelines at cx=120 / 290 / 460 / 630 / 800 -->
+              <g class="node actor-system" data-id="job" tabindex="0">
                 <rect class="shape" x="60" y="80" width="120" height="50" rx="4"/>
-                <text class="t-title" x="120" y="106" text-anchor="middle">Client App</text>
-                <text class="t-sub" x="120" y="122" text-anchor="middle">iOS · Android · Web</text>
+                <text class="t-title" x="120" y="106" text-anchor="middle">XxlJob 调度</text>
+                <text class="t-sub" x="120" y="122" text-anchor="middle">cron · 15min</text>
               </g>
-              <g class="node actor-system" data-id="gateway" tabindex="0">
+              <g class="node actor-system" data-id="clearing" tabindex="0">
                 <rect class="shape" x="230" y="80" width="120" height="50" rx="4"/>
-                <text class="t-title" x="290" y="106" text-anchor="middle">API Gateway</text>
-                <text class="t-sub" x="290" y="122" text-anchor="middle">edge · authz</text>
+                <text class="t-title" x="290" y="106" text-anchor="middle">clearing_server</text>
+                <text class="t-sub" x="290" y="122" text-anchor="middle">代发 Handler</text>
               </g>
-              <g class="node actor-system" data-id="order" tabindex="0">
+              <g class="node actor-system" data-id="cldb" tabindex="0">
                 <rect class="shape" x="400" y="80" width="120" height="50" rx="4"/>
-                <text class="t-title" x="460" y="106" text-anchor="middle">Order Service</text>
-                <text class="t-sub" x="460" y="122" text-anchor="middle">orchestrator</text>
+                <text class="t-title" x="460" y="106" text-anchor="middle">清结算库</text>
+                <text class="t-sub" x="460" y="122" text-anchor="middle">bill · batch · flow</text>
               </g>
-              <g class="node actor-system" data-id="payment" tabindex="0">
+              <g class="node actor-system" data-id="bac" tabindex="0">
                 <rect class="shape" x="570" y="80" width="120" height="50" rx="4"/>
-                <text class="t-title" x="630" y="106" text-anchor="middle">Payment Svc</text>
-                <text class="t-sub" x="630" y="122" text-anchor="middle">async gateway</text>
+                <text class="t-title" x="630" y="106" text-anchor="middle">bank_ability</text>
+                <text class="t-sub" x="630" y="122" text-anchor="middle">加密签名 · 转发</text>
               </g>
-              <g class="node actor-external" data-id="bank" tabindex="0">
+              <g class="node actor-external" data-id="cmb" tabindex="0">
                 <rect class="shape" x="740" y="80" width="120" height="50" rx="4"/>
-                <text class="t-title" x="800" y="106" text-anchor="middle">Bank / UnionPay</text>
+                <text class="t-title" x="800" y="106" text-anchor="middle">招行薪福通</text>
                 <text class="t-sub" x="800" y="122" text-anchor="middle">external</text>
               </g>
-              <g class="node actor-system reconcile" data-id="reconcile" tabindex="0">
-                <rect class="shape" x="910" y="80" width="120" height="50" rx="4"/>
-                <text class="t-title" x="970" y="106" text-anchor="middle">定时补单</text>
-                <text class="t-sub" x="970" y="122" text-anchor="middle">reconcile · 5min</text>
-              </g>
 
-              <!-- ============================================
-                   LIFELINES (dashed verticals)
-                   ============================================ -->
-              <line class="lifeline" x1="120" y1="130" x2="120" y2="1450"/>
-              <line class="lifeline" x1="290" y1="130" x2="290" y2="1450"/>
-              <line class="lifeline" x1="460" y1="130" x2="460" y2="1450"/>
-              <line class="lifeline" x1="630" y1="130" x2="630" y2="1450"/>
-              <line class="lifeline" x1="800" y1="130" x2="800" y2="1380"/>
-              <line class="lifeline" x1="970" y1="130" x2="970" y2="1120"/>
+              <!-- LIFELINES (dashed verticals) -->
+              <line class="lifeline" x1="120" y1="130" x2="120" y2="260"/>
+              <line class="lifeline" x1="290" y1="130" x2="290" y2="1000"/>
+              <line class="lifeline" x1="460" y1="130" x2="460" y2="1000"/>
+              <line class="lifeline" x1="630" y1="130" x2="630" y2="850"/>
+              <line class="lifeline" x1="800" y1="130" x2="800" y2="800"/>
 
-              <!-- ============================================
-                   PHASE FRAMES (visible labeled containers)
-                   ============================================ -->
-              <!-- Phase 1 -->
-              <rect class="phase-frame" x="36" y="160" width="1008" height="290" rx="6" ry="6"/>
-              <rect class="phase-tab"   x="36" y="146" width="270" height="22" rx="3" ry="3"/>
-              <text class="t-phase"     x="48" y="161">Phase 1 · 幂等键校验</text>
+              <!-- PHASE FRAMES -->
+              <rect class="phase-frame" x="36" y="160" width="824" height="190" rx="6" ry="6"/>
+              <rect class="phase-tab" x="36" y="146" width="270" height="22" rx="3" ry="3"/>
+              <text class="t-phase" x="48" y="161">Phase 1 · 定时触发与扫描分片</text>
 
-              <!-- Phase 2 -->
-              <rect class="phase-frame" x="36" y="486" width="1008" height="276" rx="6" ry="6"/>
-              <rect class="phase-tab"   x="36" y="472" width="270" height="22" rx="3" ry="3"/>
-              <text class="t-phase"     x="48" y="487">Phase 2 · 发起支付</text>
+              <rect class="phase-frame" x="36" y="370" width="824" height="240" rx="6" ry="6"/>
+              <rect class="phase-tab" x="36" y="356" width="330" height="22" rx="3" ry="3"/>
+              <text class="t-phase" x="48" y="371">Phase 2 · TX1 建批次落库 · 维度对齐</text>
 
-              <!-- Phase 3 -->
-              <rect class="phase-frame" x="36" y="798" width="1008" height="240" rx="6" ry="6"/>
-              <rect class="phase-tab"   x="36" y="784" width="270" height="22" rx="3" ry="3"/>
-              <text class="t-phase"     x="48" y="799">Phase 3 · 状态轮询</text>
+              <rect class="phase-frame" x="36" y="630" width="824" height="372" rx="6" ry="6"/>
+              <rect class="phase-tab" x="36" y="616" width="330" height="22" rx="3" ry="3"/>
+              <text class="t-phase" x="48" y="631">Phase 3 · 调招行代发 · alt 受理成功/失败</text>
 
-              <!-- Phase 4 -->
-              <rect class="phase-frame" x="36" y="1074" width="1008" height="380" rx="6" ry="6"/>
-              <rect class="phase-tab"   x="36" y="1060" width="270" height="22" rx="3" ry="3"/>
-              <text class="t-phase"     x="48" y="1075">Phase 4 · 异步完成</text>
+              <rect class="fragment" x="52" y="770" width="792" height="224" rx="4"/>
+              <rect class="fragment-tab" x="52" y="756" width="46" height="22" rx="3" ry="3"/>
+              <text class="t-frag" x="64" y="771">alt</text>
 
-              <!-- ============================================
-                   ACTIVATION BOXES (drawn BEFORE messages)
-                   width=10, centered on lifeline (cx-5 → cx+5)
-                   Caller's activation always extends past callee's
-                   ============================================ -->
-              <!-- Activations aligned to first/last message at each lifeline.
-                   Caller's span MUST contain callee's span (UML rule).
-                   Client  205 → 1420  (M1 out … M15 in)        h=1215
-                   Gateway 205 → 1420  (M1 in  … M15 out)        h=1215   == Client
-                   Order   245 → 1385  (M2 in  … M14 out)        h=1140   ⊂ Gateway
-                   Payment 525 → 1320  (M6 in  … M13 out)        h=795    ⊂ Order
-                   Bank-1  575 →  650  (M7 in  … M8  out)        h=75     ⊂ Payment
-                   Bank-2  1275 → 1290 (M12 out)                 h=15     ⊂ Payment
-                   Reconcile 1030 → 1060 (rust in)               h=30 -->
-              <rect class="activation" x="115" y="205" width="10" height="1215" rx="1"/>
-              <rect class="activation" x="285" y="205" width="10" height="1215" rx="1"/>
-              <rect class="activation" x="455" y="245" width="10" height="1140" rx="1"/>
-              <rect class="activation" x="625" y="525" width="10" height="795" rx="1"/>
-              <rect class="activation" x="795" y="575" width="10" height="75" rx="1"/>
-              <rect class="activation" x="795" y="1275" width="10" height="15" rx="1"/>
-              <rect class="activation" x="965" y="1030" width="10" height="30" rx="1"/>
+              <!-- ACTIVATION BOXES (width=10, centered on lifeline) -->
+              <rect class="activation" x="115" y="205" width="10" height="22" rx="1"/>
+              <rect class="activation" x="285" y="205" width="10" height="782" rx="1"/>
+              <rect class="activation" x="455" y="465" width="10" height="451" rx="1"/>
+              <rect class="activation" x="625" y="670" width="10" height="146" rx="1"/>
+              <rect class="activation" x="795" y="712" width="10" height="40" rx="1"/>
 
-              <!-- ============================================
-                   PHASE 1 MESSAGES
-                   ============================================ -->
-              <!-- M1 Client → Gateway (sync) -->
+              <!-- ===== PHASE 1 · 定时触发与扫描分片 ===== -->
               <text class="t-ord" x="130" y="196">①</text>
               <path class="edge sync" d="M125,205 L285,205"/>
-              <text class="t-msg"  x="145" y="200">POST /v1/checkout</text>
-              <text class="t-msg-ret" x="145" y="217">Idempotency-Key header</text>
+              <text class="t-msg" x="145" y="200">executePersonalCpoXftWithdrawPayrollJob()</text>
+              <text class="t-msg-ret" x="145" y="217">Cron · 0 */15 * * * ?</text>
 
-              <!-- M2 Gateway → Order (sync) -->
               <text class="t-ord" x="300" y="236">②</text>
-              <path class="edge sync" d="M295,245 L455,245"/>
-              <text class="t-msg"  x="315" y="240">forwardWithKey(req)</text>
+              <path class="edge" d="M295,250 L332,250 L332,272 L295,272"/>
+              <text class="t-msg" x="320" y="245">getNeedXftWithdrawPayrollBillList()</text>
+              <text class="t-msg-ret" x="320" y="262">status=1 · pcs=0 · way=2</text>
 
-              <!-- M3 Order self-message -->
-              <text class="t-ord" x="475" y="276">③</text>
-              <path class="edge" d="M465,285 L508,285 L508,308 L465,308"/>
-              <text class="t-msg" x="495" y="280">SETNX idem_key</text>
-              <text class="t-msg-ret" x="495" y="297">→ existing? order_id</text>
+              <text class="t-ord" x="300" y="288">③</text>
+              <path class="edge" d="M295,302 L332,302 L332,324 L295,324"/>
+              <text class="t-msg" x="320" y="297">Lists.partition(list, 100)</text>
+              <text class="t-msg-ret" x="320" y="314">空即 return · 100笔/批</text>
 
-              <!-- ALT FRAGMENT (within Phase 1) -->
-              <g data-id="frag-alt" tabindex="0" class="node">
-                <rect class="shape" x="80" y="330" width="420" height="106" rx="4" ry="4" fill="transparent" stroke="transparent"/>
+              <!-- ===== PHASE 2 · TX1 建批次落库 · 维度对齐 ===== -->
+              <text class="t-ord" x="300" y="404">④</text>
+              <path class="edge" d="M295,418 L332,418 L332,440 L295,440"/>
+              <text class="t-msg" x="320" y="413">生成业务键</text>
+              <text class="t-msg-ret" x="320" y="430">yurref=batchNo · trxseq=snowflake · ttlamt=Σarrival</text>
+
+              <text class="t-ord" x="305" y="455">⑤</text>
+              <path class="edge sync" d="M295,465 L455,465"/>
+              <text class="t-msg" x="305" y="460">TX1 · INSERT batch_record</text>
+              <text class="t-msg-ret" x="305" y="477">{yurref · ttlamt · ttlcnt · status=TRADING}</text>
+
+              <text class="t-ord" x="305" y="495">⑥</text>
+              <path class="edge sync" d="M295,505 L455,505"/>
+              <text class="t-msg" x="305" y="500">BATCH INSERT trade_flow</text>
+              <text class="t-msg-ret" x="305" y="517">{trxseq · accnbr · accnam · trsamt · bill_id · batch_id}</text>
+
+              <text class="t-ord" x="305" y="535">⑦</text>
+              <path class="edge sync" d="M295,545 L455,545"/>
+              <text class="t-msg" x="305" y="540">UPDATE bills 0→1 ONGOING</text>
+
+              <text class="t-ord" x="320" y="575">⑧</text>
+              <path class="edge return" d="M455,585 L295,585"/>
+              <text class="t-msg-ret" x="315" y="580">COMMIT ✓ · batch_id 回填</text>
+
+              <!-- ===== PHASE 3 · 调招行代发 · alt 受理成功/失败 ===== -->
+              <text class="t-ord" x="305" y="656">⑨</text>
+              <path class="edge sync" d="M295,666 L625,666"/>
+              <text class="t-msg" x="305" y="661">payrollUpdateExecute(request) · SM4+SM3withSM2</text>
+              <text class="t-msg-ret" x="305" y="678">batch{yurref·payaccnbr·payaccnam·ttlamt·ttlcnt} detail[]{trxseq·accnbr·accnam·trsamt} ≤100</text>
+
+              <text class="t-ord" x="640" y="702">⑩</text>
+              <path class="edge sync" d="M635,712 L795,712"/>
+              <text class="t-msg" x="640" y="707">payrollUpload + payrollExecute</text>
+
+              <text class="t-ord" x="655" y="736">⑪</text>
+              <path class="edge return" d="M795,742 L635,742"/>
+              <text class="t-msg-ret" x="650" y="737">code=200</text>
+
+              <!-- ── alt · 分支一 · 受理成功 ── -->
+              <text class="t-cond" x="64" y="796">[ 受理成功 · code=200 ]</text>
+              <text class="t-ord" x="635" y="800">⑫</text>
+              <path class="edge return" d="M625,806 L295,806"/>
+              <text class="t-msg-ret" x="305" y="801">return {code=200} → 受理成功</text>
+              <text class="t-msg-ret" x="305" y="818">batch 保持 TRADING · 等确认Job(payrollQuery) 每22min 轮询</text>
+
+              <line class="fragment-divider" x1="52" y1="836" x2="844" y2="836"/>
+
+              <!-- ── alt · 分支二 · 受理失败 ── -->
+              <text class="t-cond" x="64" y="858">[ 受理失败 · code≠200 / 抛异常 ]</text>
+              <text class="t-ord" x="305" y="862">⑬</text>
+              <path class="edge sync" d="M295,868 L455,868"/>
+              <text class="t-msg" x="305" y="863">TX2 · batch→FAILURE · flow→FAILURE</text>
+
+              <text class="t-ord" x="305" y="904">⑭</text>
+              <path class="edge sync" d="M295,910 L455,910"/>
+              <text class="t-msg" x="305" y="905">confirmedAllBusinessFailure()</text>
+              <text class="t-msg-ret" x="305" y="922">bills→FAILURE · 退还扣款 · summary→CAN_WITHDRAW · wallet freeze-= · et=5</text>
+
+              <text class="t-ord" x="300" y="946">⑮</text>
+              <path class="edge" d="M295,960 L332,960 L332,982 L295,982"/>
+              <text class="t-msg" x="320" y="955">钉钉告警 P0</text>
+
+              <!-- ===== NOTE · 维度对齐 ===== -->
+              <g class="annotation" id="note-align">
+                <path class="note-box" d="M440,1050 L860,1050 L860,1220 L440,1220 Z"/>
+                <path class="note-fold" d="M860,1050 L860,1080 L830,1080 Z"/>
+                <text class="t-ann" x="452" y="1072">维度对齐 · 关键字段</text>
+                <text class="t-ann" x="452" y="1094">yurref : BatchNoGenerator → batch_record.yurref → batch.yurref</text>
+                <text class="t-ann" x="452" y="1116">trxseq : SnowflakeId → trade_flow.trxseq → detail[].trxseq</text>
+                <text class="t-ann" x="452" y="1138">ttlamt : Σ arrivalAmount → batch_record.ttlamt → batch.ttlamt</text>
+                <text class="t-ann" x="452" y="1160">trsamt : arrivalAmount → trade_flow.trsamt → detail[].trsamt</text>
+                <text class="t-ann" x="452" y="1182">accnbr : bill.bankCard → trade_flow.accnbr → detail[].accnbr</text>
+                <text class="t-ann" x="452" y="1204">幂等   : uk_yurref · uk_yurref_trxseq 双唯一键</text>
               </g>
-              <rect class="fragment" x="80" y="330" width="420" height="106" rx="4" ry="4"/>
-              <path class="fragment-tab" d="M80,330 L120,330 L128,344 L128,354 L80,354 Z"/>
-              <text class="t-frag" x="92" y="347">alt</text>
-              <text class="t-cond" x="142" y="347">[ key exists · cached hit ]</text>
-
-              <!-- M4 Order → Gateway return (cached) -->
-              <text class="t-ord" x="325" y="368">④</text>
-              <path class="edge return" d="M455,377 L295,377"/>
-              <text class="t-msg" x="315" y="372">200 OK + cached order</text>
-
-              <!-- M5 Gateway → Client return -->
-              <text class="t-ord" x="135" y="402">⑤</text>
-              <path class="edge return" d="M285,411 L125,411"/>
-              <text class="t-msg" x="145" y="406">200 OK ↩ 幂等命中</text>
-
-              <!-- alt divider -->
-              <line class="fragment-divider" x1="80" y1="421" x2="500" y2="421"/>
-              <text class="t-cond" x="92" y="433">[ new key · continue ↓ ]</text>
-
-              <!-- ============================================
-                   PHASE 2 MESSAGES
-                   ============================================ -->
-              <!-- M6 Order → Payment (sync) -->
-              <text class="t-ord" x="475" y="516">⑥</text>
-              <path class="edge sync" d="M465,525 L625,525"/>
-              <text class="t-msg" x="485" y="520">chargeAsync(amount)</text>
-
-              <!-- M7 Payment → Bank (sync) -->
-              <text class="t-ord" x="645" y="566">⑦</text>
-              <path class="edge sync" d="M635,575 L795,575"/>
-              <text class="t-msg" x="655" y="570">POST /settle</text>
-
-              <!-- M8 Bank → Payment return (202) -->
-              <text class="t-ord" x="665" y="641">⑧</text>
-              <path class="edge return" d="M795,650 L625,650"/>
-              <text class="t-msg-ret" x="655" y="645">return: 202 Accepted</text>
-
-              <!-- M9 Payment → Order return (pending) -->
-              <text class="t-ord" x="495" y="721">⑨</text>
-              <path class="edge return" d="M625,730 L455,730"/>
-              <text class="t-msg-ret" x="485" y="725">return: pending</text>
-
-              <!-- ============================================
-                   PHASE 3 — LOOP fragment
-                   ============================================ -->
-              <g data-id="frag-loop" tabindex="0" class="node">
-                <rect class="shape" x="430" y="830" width="280" height="180" rx="4" ry="4" fill="transparent" stroke="transparent"/>
-              </g>
-              <rect class="fragment" x="430" y="830" width="280" height="180" rx="4" ry="4"/>
-              <path class="fragment-tab" d="M430,830 L478,830 L486,844 L486,854 L430,854 Z"/>
-              <text class="t-frag" x="442" y="847">loop</text>
-              <text class="t-cond" x="500" y="847">[ retry ≤ 3 · backoff 1s / 2s / 4s ]</text>
-
-              <!-- M10 Order → Payment (poll) -->
-              <text class="t-ord" x="475" y="876">⑩</text>
-              <path class="edge sync" d="M465,885 L625,885"/>
-              <text class="t-msg" x="485" y="880">queryStatus(tradeNo)</text>
-
-              <!-- M11 Payment → Order return -->
-              <text class="t-ord" x="495" y="921">⑪</text>
-              <path class="edge return" d="M625,930 L455,930"/>
-              <text class="t-msg-ret" x="485" y="925">return: status: pending</text>
-
-              <!-- Iteration hint -->
-              <text class="t-cond" x="448" y="980">⤴ 重复至 pending 或 attempt = 3</text>
-
-              <!-- Reconcile fallback: rust edge Order → Reconcile (超时兜底) -->
-              <path class="edge no" d="M465,1030 L965,1030"/>
-              <text class="t-lbl t-lbl-no" x="475" y="1022">after(5min) 无 webhook → 补单兜底</text>
-
-              <!-- ============================================
-                   PHASE 4 — OPT fragment + finalize
-                   ============================================ -->
-              <g data-id="frag-opt" tabindex="0" class="node">
-                <rect class="shape" x="440" y="1190" width="390" height="142" rx="4" ry="4" fill="transparent" stroke="transparent"/>
-              </g>
-              <rect class="fragment" x="440" y="1190" width="390" height="142" rx="4" ry="4"/>
-              <path class="fragment-tab" d="M440,1190 L480,1190 L488,1204 L488,1214 L440,1214 Z"/>
-              <text class="t-frag" x="452" y="1207">opt</text>
-              <text class="t-cond" x="502" y="1207">[ webhook arrived · ~98% within 30s ]</text>
-
-              <!-- M12 Bank → Payment async webhook -->
-              <text class="t-ord" x="620" y="1266">⑫</text>
-              <path class="edge async msg" d="M795,1275 L625,1275"/>
-              <text class="t-msg" x="640" y="1270">webhook: completed</text>
-
-              <!-- M13 Payment → Order async event -->
-              <text class="t-ord" x="495" y="1311">⑬</text>
-              <path class="edge async msg" d="M625,1320 L455,1320"/>
-              <text class="t-msg" x="485" y="1315">paymentEvent(SUCCESS)</text>
-
-              <!-- M14 Order → Gateway return -->
-              <text class="t-ord" x="325" y="1376">⑭</text>
-              <path class="edge return" d="M455,1385 L295,1385"/>
-              <text class="t-msg-ret" x="315" y="1380">return: 201 Created</text>
-
-              <!-- M15 Gateway → Client return -->
-              <text class="t-ord" x="135" y="1411">⑮</text>
-              <path class="edge return" d="M285,1420 L125,1420"/>
-              <text class="t-msg-ret" x="145" y="1415">return: 201 Created</text>
-
-              <!-- ============================================
-                   NOTE (folded corner)
-                   ============================================ -->
-              <g class="annotation" id="note-key">
-                <path class="note-box" d="M540,1380 L760,1380 L780,1400 L780,1450 L540,1450 Z"/>
-                <path class="note-fold" d="M760,1380 L780,1400 L760,1400 Z"/>
-                <text class="t-ann" x="552" y="1400">out_trade_no = idempotency_key</text>
-                <text class="t-ann" x="552" y="1416">→ Payment 侧也保存同一 key</text>
-                <text class="t-ann" x="552" y="1432">→ 重发请求只扣一次款</text>
-              </g>
-
             </svg>
           </div>
         </div>
@@ -656,109 +573,76 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
     <aside>
       <div class="panel detail" id="detailPanel">
         <div class="hint">点击参与者 / 阶段 / 片段查看细节</div>
-        <h3 id="d-title">订单结算时序 · 总览</h3>
-        <div class="meta" id="d-meta"><span>6 参与者</span><span class="dot">·</span><span>4 阶段</span><span class="dot">·</span><span>17 消息</span><span class="dot">·</span><span>3 分支</span></div>
+        <h3 id="d-title">批量代发 Job 时序 · 总览</h3>
+        <div class="meta" id="d-meta"><span>5 参与者</span><span class="dot">·</span><span>3 阶段</span><span class="dot">·</span><span>15 消息</span><span class="dot">·</span><span>2 事务</span></div>
         <div id="d-body">
-          <p>一笔订单从用户提交到银行扣款的完整时序。四个阶段串行：<b>幂等校验</b> → <b>发起支付</b> → <b>状态轮询</b> → <b>异步完成</b>。</p>
-          <p>关键不变量：同一 <code>idempotency_key</code> 重复请求永远返回同一 <code>order_id</code>；<code>out_trade_no</code> 在 Payment 侧也保证不会重复扣款。</p>
-          <p>兜底策略：状态轮询用指数退避（1s / 2s / 4s，≤3 次）；超过 5 分钟无回调，定时补单任务接管；webhook 98% 在 30 秒内到达。</p>
+          <p><b>executePersonalCpoXftWithdrawPayrollJob</b> 每 15 分钟触发一次，把薪福通代发提现单按 100 笔分片批量发起。三阶段：<b>扫描分片</b> → <b>TX1 建批次落库</b> → <b>调招行代发</b>（内嵌 <b>alt 受理成功/失败</b>）。</p>
+          <p>跨域边界的关键字段一路对齐：<code>yurref</code> / <code>trxseq</code> / <code>ttlamt</code> / <code>trsamt</code> / <code>accnbr</code> 从生成 → 落库 → 报文使用同一语义；<code>uk_yurref</code> / <code>uk_yurref_trxseq</code> 双幂等键保证重复触发不重复出账。</p>
+          <p>事务边界：TX1 内建批次+流水+账单流转；回执在 <b>Phase 3 内嵌 alt</b>——<b>受理成功</b>（batch 保持 TRADING，等确认 Job 轮询）/ <b>受理失败</b>（独立 TX2 全链路回滚 + P0 告警）。</p>
         </div>
         <div class="tags" id="d-tags">
-          <span class="tag t-actor">6 actors</span><span class="tag t-process">17 msg</span><span class="tag t-decision">3 分支</span>
+          <span class="tag t-actor">5 actors</span><span class="tag t-process">15 msg</span><span class="tag t-decision">2 事务</span>
         </div>
       </div>
     </aside>
   </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 02 / 10 · 时序图</span>
+    <span>Engineering Diagram Library · 02 / 10 · 时序图 · 批量代发 Job</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 1520 },
-  exportName: '02-sequence-order-idempotency',
+  viewBox: { w: 1080, h: 1240 },
+  exportName: 'xft-withdraw-payroll-batch-sequence',
   nodeData: {
-    'client': {
-      type: 'actor', tagClass: 't-actor',
-      title: 'Client App · 用户端',
-      meta: ['actor', 'iOS · Android · Web', 'P95 < 800ms'],
-      body: `<p>用户在 App 端发起结算。携带本地生成的 <code>Idempotency-Key</code>（UUID v7），保证网络抖动重试时不会产生两笔订单。</p><pre>Headers
-Idempotency-Key: 0190a8f2-...-v7
-Content-Type: application/json
-
-Body
-{ items: [...], amount: 19900, currency: "CNY" }</pre><p><b>激活框</b> y=200→1335 — 跨整个 RPC 等待期，调用方必须最长。</p>`,
-      tags: ['actor', 'client']
-    },
-    'gateway': {
+    'job': {
       type: 'actor-system', tagClass: 't-actor',
-      title: 'API Gateway · 边缘网关',
-      meta: ['edge', 'authn · authz · rate-limit', '< 5ms 自身耗时'],
-      body: `<p>统一鉴权与限流入口。校验 JWT、按用户维度限流（10 RPS）、记录 access log。<code>Idempotency-Key</code> 原样透传到 Order Service。</p><p><b>激活框</b> y=230→1310，包含 Order 的整段激活；Gateway 是 Client → Order 之间的 thin shim。</p>`,
-      tags: ['gateway', 'edge']
+      title: 'XxlJob 调度 · 定时触发',
+      meta: ['定时调度', 'Cron 0 */15 * * * ?', '每 15min'],
+      body: `<p>独立定时任务 <code>executePersonalCpoXftWithdrawPayrollJob</code>，每 15 分钟扫描一次需要薪福通代发的提现单。与交易通 <code>executePersonalPayrollCreditJob</code> 完全独立、互不干扰。</p><pre>扫描条件
+status = 1 (WITHDRAWING)
+payrollCreditStatus = 0 (未开始)
+withdrawWay = 2 (薪福通)</pre><p>空列表直接 return；否则按 <code>Lists.partition(list, 100)</code> 分片（薪福通 API 上限 100 笔/批），逐批调用 Handler。</p>`,
+      tags: ['job', 'XxlJob', '定时']
     },
-    'order': {
+    'clearing': {
       type: 'actor-system', tagClass: 't-actor',
-      title: 'Order Service · 订单编排',
-      meta: ['orchestrator', 'Go · gRPC', 'P95 < 200ms (cached)'],
-      body: `<p>订单状态机的 owner，负责：</p><pre>① SETNX idempotency_key on Redis (TTL 24h)
-② 调用 Payment 异步发起支付
-③ 轮询 Payment 状态（指数退避）
-④ 接收 webhook 推送的 paymentEvent
-⑤ 维护 order 状态机 (draft → pending → paid)</pre><p><b>激活框</b> y=260→1290 — 整个事务期间持续激活；自调用 ③ 表示对 Redis 的 SETNX。</p>`,
-      tags: ['orchestrator', 'state-machine']
+      title: 'clearing_server · 代发 Handler',
+      meta: ['CmbCpoXftWithdrawPayrollServiceTradeHandler', '核心编排', 'TX1 + TX2'],
+      body: `<p>代发核心逻辑 <code>initiateBatchTrade(content)</code> 分三步：</p><pre>① 事务内建批次 + 流水 + 账单流转 (TX1)
+② 事务外调 bank_ability_center
+③ 异常 → handleBatchPayrollFailure 回滚 (TX2)</pre><p>维度对齐起点：<code>yurref=batchNoGenerator.getBatchNo()</code>、<code>trxseq=SnowflakeIdGenerator.generateId()</code>、<code>ttlamt=Σ arrivalAmount</code>、<code>trsamt=bill.arrivalAmount</code>。</p>`,
+      tags: ['clearing', 'handler', 'orchestrator']
     },
-    'payment': {
+    'cldb': {
       type: 'actor-system', tagClass: 't-actor',
-      title: 'Payment Service · 支付服务',
-      meta: ['async-gateway', 'outbound webhook', 'P99 < 300ms 受理'],
-      body: `<p>对接外部银行/银联。<code>chargeAsync</code> 立即返回受理回执（202），真正扣款结果通过 webhook 异步推送回 Order。</p><p><b>out_trade_no</b> = idempotency_key — Payment 侧也保存这把幂等键，即使我们重发也只扣一次款。</p><p><b>激活框</b> y=530→1255 — 从受理 charge 到 webhook 完成的全程都在线。</p>`,
-      tags: ['payment', 'async']
+      title: '清结算库 · 落库维度',
+      meta: ['batch_record · trade_flow · withdraw_bill', 'TX1 落库', 'TX2 回滚'],
+      body: `<p>事务内承载三张表写入：</p><pre>INSERT batch_record
+  (yurref·ttlamt·ttlcnt·status=TRADING)
+BATCH INSERT trade_flow
+  (trxseq·accnbr·accnam·trsamt·bill_id·batch_id)
+UPDATE withdraw_bill
+  payrollCreditStatus 0→1 ONGOING</pre><p><code>batch_id</code> 由批次记录生成后回填流水；双幂等键 <code>uk_yurref</code> / <code>uk_yurref_trxseq</code> 防重复出账。</p>`,
+      tags: ['db', '落库', '幂等']
     },
-    'bank': {
+    'bac': {
+      type: 'actor-system', tagClass: 't-actor',
+      title: 'bank_ability_center · 银行能力中心',
+      meta: ['CmbXftTradeAbilityRpcClient', 'SM4 加密 + SM3withSM2 签名', 'Feign 转发'],
+      body: `<p>接收清结算侧组装好的 <code>PayrollUpdateExecuteRequest</code>，做 <b>SM4 加密 + SM3withSM2 签名</b> 后转发招行薪福通。内部经 <code>BankXftWithdrawPayrollFeignClient</code> + <code>ResponseUtils.rpcApiRespResolve</code> 解包。</p><p>成功返回 <code>code=200</code>；失败抛 <code>ServerException</code>，由业务侧统一走回滚。</p>`,
+      tags: ['bank', 'ability', '加密签名']
+    },
+    'cmb': {
       type: 'actor-external', tagClass: 't-actor',
-      title: 'Bank / UnionPay · 外部',
-      meta: ['external', 'unreliable', 'connection ephemeral'],
-      body: `<p>外部银行支付通道。SLA 99.9%，偶发超时 / 延迟回调。Payment Service 通过 ack 机制 + 主动查询补单兜底。</p><p><b>激活框</b>有两段：⑦→⑧（受理 settle）与 ⑫（推送 webhook）。结算完成后连接关闭，外部 lifeline 就此结束。</p>`,
-      tags: ['external', '银行']
-    },
-    'frag-alt': {
-      type: 'decision', tagClass: 't-decision',
-      title: 'ALT FRAGMENT · 幂等分支',
-      meta: ['combined fragment', 'alt', '~ 2% 命中缓存'],
-      body: `<p>UML <b>alt</b>（alternative）= 互斥分支。两条 guard：</p><pre>[ key exists · cached_order_id ]  → 早返回缓存响应
-[ new key · continue ↓ ]            → 进入完整下单流程</pre><p>用虚线 divider 把两条分支隔开；任一执行后片段结束。本图里 ④⑤ 属于 hit 分支，其余 ⑥–⑮ 属于 miss 分支。</p>`,
-      tags: ['fragment · alt', '幂等']
-    },
-    'frag-loop': {
-      type: 'decision', tagClass: 't-decision',
-      title: 'LOOP FRAGMENT · 状态轮询',
-      meta: ['combined fragment', 'loop', '指数退避 1s / 2s / 4s'],
-      body: `<p>UML <b>loop</b> = 重复执行。guard 是 <code>[retry ≤ 3 · backoff]</code>，最多 3 次。</p><p>退避避免压垮 Payment；3 次后还是 pending 就交给定时补单兜底。</p><p>在图里只画一轮（⑩⑪）+ 一行 hint「重复至 status ≠ pending 或 attempt = 3」— 真实迭代不直接绘出。</p>`,
-      tags: ['fragment · loop', 'retry']
-    },
-    'frag-opt': {
-      type: 'decision', tagClass: 't-decision',
-      title: 'OPT FRAGMENT · 异步回调',
-      meta: ['combined fragment', 'opt', '~ 98% 到达 < 30s'],
-      body: `<p>UML <b>opt</b>（optional）= 条件执行：guard 成立才进入，否则跳过。</p><p>Webhook 因网络/银行端拖延可能迟到，但绝大多数 30 秒内到达。若超过 5 分钟仍无回调，定时补单任务接管（图外）。</p><p>图里 ⑫⑬ 都属于此 opt — Bank 主动推送 + Payment 转发给 Order。</p>`,
-      tags: ['fragment · opt', 'webhook']
-    },
-    'reconcile': {
-      type: 'actor-system', tagClass: 't-actor',
-      title: '定时补单 · 兜底服务',
-      meta: ['scheduled-job', '每 5min 对账', '超时兜底'],
-      body: `<p>当轮询 3 次后仍 <code>pending</code>、且 webhook 超过 5 分钟未到达时，<b>定时补单任务</b>接管 —— 这是整条链路的最终兜底：</p><pre>reconcile_job (每 5min) {
-  ① 扫描超过 5min 仍 pending 的订单
-  ② 主动向银行查询真实扣款状态
-  ③ 已扣款 → 补写成功态并落账
-  ④ 未扣款 → 解冻余额 + 标记超时失败
-}</pre><p>正常链路靠轮询 + webhook，兜底靠对账 —— 三者构成「双通道 + 补偿」的最终一致性。</p>`,
-      tags: ['reconcile', 'compensation', '定时任务']
-    },
+      title: '招行薪福通 · 外部银行',
+      meta: ['external', 'payrollUpload + payrollExecute', '受理 code=200'],
+      body: `<p>招行薪福通代发接口：<code>payrollUpload</code>（上传代发批次）+ <code>payrollExecute</code>（执行代发）二合一。受理成功返回 <code>code=200</code>，表示已接收，不表示最终到账。</p><p>真实结果由确认 Job（<code>payrollQuery</code> / <code>payrollQueryDetail</code>）轮询，按 <code>rtnflg</code> 三分支处理。</p>`,
+      tags: ['external', '银行', '代发']
+    }
   }
 };
 </script>

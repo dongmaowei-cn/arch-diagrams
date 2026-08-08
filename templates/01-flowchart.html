@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>业务流程图 · 用户提现审核 — Engineering Diagram Library</title>
+<title>业务流程图 · 批量代发 Job — Engineering Diagram Library</title>
 <style>
   :root {
     --ivory:   #FAF9F5;
@@ -263,14 +263,14 @@
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 01 · 业务流程图 v2 · ISO 5807 完整版</div>
-        <h1>用户提现审核流程 <em>— withdrawal approval</em></h1>
-        <p class="lead">一张图含<b>全部 10 种 ISO 5807 标准元素</b>：起止、处理、判断、I/O、数据库、子流程、文档、连接符、注释，以及成功/失败终态。所有连线严格<b>正交折线</b>（仅 90° 转角），起止点像素级落在形状边缘。点击节点查看实现细节。</p>
+        <div class="eyebrow">Diagram type 01 · 业务流程图 · 批量代发 Job 领域内流转</div>
+        <h1>批量代发 Job 的业务流转 <em>— batch payroll intra-domain flow</em></h1>
+        <p class="lead">一张图讲透 <code>executePersonalCpoXftWithdrawPayrollJob</code> 在 <b>clearing_server 领域内</b>的代码级流转：扫描待代发账单 → 空则跳过、按 <b>100 笔分片</b> → <b>TX1 事务</b>内建批次+流水+账单流转 → 组装报文调银行 → <b>受理成功</b>落 SUCCESS / <b>受理失败</b>走 <b>TX2 全链路回滚</b> + P0 告警。两个判断分支、两个事务边界、左右数据库柱承载写操作。点击节点查看 SQL 与接口细节。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">10</span>元素类型</div>
-        <div><span class="v">15</span>节点</div>
-        <div><span class="v">3</span>失败路径</div>
+        <div><span class="v">19</span>节点</div>
+        <div><span class="v">2</span>判断分支</div>
+        <div><span class="v">2</span>事务边界</div>
       </div>
     </div>
   </header>
@@ -291,152 +291,168 @@
               </defs>
 
               <!-- ═══════════════════════════════════════════════════════ -->
-              <!-- 区 A · 用户提现审核业务流程                                -->
               <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="20">A · 用户提现审核业务流程</text>
-              <text class="section-sub"   x="40" y="38">15 节点 · ISO 5807 标准 · 92% happy path · 3 类失败终态</text>
+              <!-- 区 A · 批量代发 Job 领域内业务流转                           -->
+              <!-- ═══════════════════════════════════════════════════════ -->
+              <text class="section-label" x="40" y="20">A · 批量代发 Job 领域内业务流转</text>
+              <text class="section-sub"   x="40" y="38">19 节点 · 2 判断分支 · 2 事务边界 · 100笔/批 · 失败兜底回滚</text>
 
               <!-- Edges (drawn first so nodes overlay) -->
               <path class="edge" d="M480,72 L480,120"/>
               <path class="edge" d="M480,180 L480,240"/>
-              <path class="edge db" d="M400,270 L230,270"/>
-              <path class="edge" d="M480,300 L480,360"/>
-              <path class="edge yes" d="M480,440 L480,500"/>
-              <text class="t-lbl t-lbl-yes" x="488" y="476">PASS</text>
-              <path class="edge no" d="M550,400 L606,400"/>
-              <text class="t-lbl t-lbl-no" x="558" y="392">FAIL</text>
-              <path class="edge yes" d="M550,540 L780,540 L780,640"/>
-              <text class="t-lbl t-lbl-yes" x="608" y="532">≥ ¥10,000</text>
-              <path class="edge" d="M480,580 L480,650"/>
-              <text class="t-lbl" x="488" y="616">&lt; ¥10k</text>
-              <path class="edge" d="M780,720 L780,780"/>
-              <path class="edge yes" d="M710,820 L480,820"/>
-              <text class="t-lbl t-lbl-yes" x="568" y="812">APPROVED</text>
-              <path class="edge" d="M480,710 L480,910"/>
-              <path class="edge no" d="M850,820 L890,820"/>
-              <text class="t-lbl t-lbl-no" x="852" y="812">REJECT</text>
-              <path class="edge no" d="M940,860 L940,1370 L860,1370"/>
-              <path class="edge" d="M480,970 L480,1050"/>
-              <path class="edge" d="M480,1110 L480,1180"/>
-              <path class="edge yes" d="M480,1260 L480,1348"/>
-              <text class="t-lbl t-lbl-yes" x="488" y="1304">200 OK</text>
-              <path class="edge no" d="M550,1220 L780,1220 L780,1348"/>
-              <text class="t-lbl t-lbl-no" x="608" y="1212">CALLBACK FAIL</text>
-              <path class="edge no" d="M674,1370 L700,1370"/>
+              <path class="edge no" d="M550,280 L700,280"/>
+              <text class="t-lbl t-lbl-no" x="625" y="272">NO · 空</text>
+              <path class="edge yes" d="M480,320 L480,400"/>
+              <text class="t-lbl t-lbl-yes" x="488" y="360">有</text>
+              <path class="edge" d="M480,460 L480,520"/>
+              <path class="edge" d="M480,580 L480,640"/>
+              <path class="edge db" d="M400,650 L280,650 L280,585 L250,585"/>
+              <path class="edge db" d="M400,670 L250,670"/>
+              <path class="edge db" d="M400,690 L280,690 L280,765 L250,765"/>
+              <path class="edge" d="M480,700 L480,800"/>
+              <path class="edge" d="M480,860 L480,920"/>
+              <path class="edge" d="M480,980 L480,1040"/>
+              <path class="edge yes" d="M480,1120 L480,1180"/>
+              <text class="t-lbl t-lbl-yes" x="488" y="1150">YES · 200</text>
+              <path class="edge no" d="M550,1080 L690,1080"/>
+              <text class="t-lbl t-lbl-no" x="620" y="1072">NO</text>
+              <path class="edge" d="M780,1100 L780,1140"/>
+              <path class="edge" d="M780,1220 L780,1260"/>
+              <path class="edge" d="M780,1320 L780,1350"/>
+              <path class="edge db" d="M870,1180 L890,1180"/>
 
-              <!-- Annotation -->
+              <!-- Annotation · 分片循环 -->
               <g class="annotation">
-                <path class="bracket" d="M918,648 L908,648 L908,712 L918,712"/>
-                <path class="leader" d="M908,680 L870,680"/>
-                <text class="t-ann" x="924" y="666">P95 &lt; 2h SLA</text>
-                <text class="t-ann" x="924" y="681">双人复核制</text>
-                <text class="t-ann" x="924" y="696">风控规则 R-301</text>
+                <path class="bracket" d="M598,418 L588,418 L588,472 L598,472"/>
+                <path class="leader" d="M588,445 L560,445"/>
+                <text class="t-ann" x="604" y="436">for each</text>
+                <text class="t-ann" x="604" y="451">partition ↓</text>
               </g>
 
-              <!-- Nodes -->
+              <!-- Nodes · 主流程 -->
               <g class="node term" data-id="start" tabindex="0" role="button">
                 <rect class="shape" x="400" y="28" width="160" height="44" rx="20" ry="22"/>
                 <text class="t-title" x="480" y="52" text-anchor="middle">START</text>
-                <text class="t-sub" x="480" y="65" text-anchor="middle">user.withdraw.requested</text>
+                <text class="t-sub" x="480" y="65" text-anchor="middle">XxlJob · Cron 每15min</text>
               </g>
 
-              <g class="node io" data-id="io-input" tabindex="0" role="button">
-                <path class="shape" d="M408,120 L572,120 L552,180 L388,180 Z"/>
-                <text class="t-title" x="480" y="146" text-anchor="middle">用户提交提现请求</text>
-                <text class="t-sub" x="480" y="162" text-anchor="middle">POST /v1/withdrawals</text>
+              <g class="node process" data-id="query" tabindex="0" role="button">
+                <rect class="shape" x="400" y="120" width="160" height="60"/>
+                <text class="t-title" x="480" y="146" text-anchor="middle">查询待代发账单</text>
+                <text class="t-sub" x="480" y="162" text-anchor="middle">status=1 · pcs=0 · way=2</text>
               </g>
 
-              <g class="node process" data-id="validate" tabindex="0" role="button">
-                <rect class="shape" x="400" y="240" width="160" height="60"/>
-                <text class="t-title" x="480" y="266" text-anchor="middle">校验余额 &amp; 限额</text>
-                <text class="t-sub" x="480" y="282" text-anchor="middle">SELECT … FOR UPDATE</text>
+              <g class="node decision" data-id="empty-decision" tabindex="0" role="button">
+                <path class="shape" d="M480,240 L550,280 L480,320 L410,280 Z"/>
+                <text class="t-title" x="480" y="276" text-anchor="middle">有待代发?</text>
+                <text class="t-sub" x="480" y="292" text-anchor="middle">list.isEmpty() ?</text>
               </g>
 
-              <g class="node db" data-id="wallet-db" tabindex="0" role="button">
-                <path class="shape" d="M110,250 a60,10 0 1 0 120,0 L230,290 a60,10 0 1 1 -120,0 Z"/>
-                <ellipse class="shape-inner" cx="170" cy="250" rx="60" ry="10"/>
-                <text class="t-title" x="170" y="268" text-anchor="middle">wallet</text>
-                <text class="t-sub" x="170" y="282" text-anchor="middle">user_balance</text>
+              <g class="node term" data-id="term-skip" tabindex="0" role="button">
+                <rect class="shape" x="700" y="258" width="160" height="44" rx="20" ry="22"/>
+                <text class="t-title" x="780" y="282" text-anchor="middle">SKIP</text>
+                <text class="t-sub" x="780" y="295" text-anchor="middle">空跑跳过</text>
               </g>
 
-              <g class="node decision" data-id="kyc-decision" tabindex="0" role="button">
-                <path class="shape" d="M480,360 L550,400 L480,440 L410,400 Z"/>
-                <text class="t-title" x="480" y="396" text-anchor="middle">KYC 等级</text>
-                <text class="t-sub" x="480" y="412" text-anchor="middle">≥ L2 ?</text>
+              <g class="node process" data-id="partition" tabindex="0" role="button">
+                <rect class="shape" x="400" y="400" width="160" height="60"/>
+                <text class="t-title" x="480" y="426" text-anchor="middle">按100笔分片</text>
+                <text class="t-sub" x="480" y="442" text-anchor="middle">Lists.partition(list,100)</text>
               </g>
 
-              <g class="node decision" data-id="amount-decision" tabindex="0" role="button">
-                <path class="shape" d="M480,500 L550,540 L480,580 L410,540 Z"/>
-                <text class="t-title" x="480" y="536" text-anchor="middle">金额阈值</text>
-                <text class="t-sub" x="480" y="552" text-anchor="middle">amount ≥ ¥10k ?</text>
+              <g class="node process" data-id="gen-keys" tabindex="0" role="button">
+                <rect class="shape" x="400" y="520" width="160" height="60"/>
+                <text class="t-title" x="480" y="546" text-anchor="middle">生成业务键</text>
+                <text class="t-sub" x="480" y="562" text-anchor="middle">yurref · trxseq · ttlamt</text>
               </g>
 
-              <g class="node subprocess" data-id="subprocess-review" tabindex="0" role="button">
-                <rect class="shape" x="690" y="640" width="180" height="80"/>
-                <line class="shape-inner" x1="700" y1="640" x2="700" y2="720"/>
-                <line class="shape-inner" x1="860" y1="640" x2="860" y2="720"/>
-                <text class="t-title" x="780" y="676" text-anchor="middle">人工合规审核</text>
-                <text class="t-sub" x="780" y="691" text-anchor="middle">SUBPROCESS</text>
-                <text class="t-sub" x="780" y="706" text-anchor="middle">compliance.review</text>
+              <g class="node process" data-id="tx1" tabindex="0" role="button">
+                <rect class="shape" x="400" y="640" width="160" height="60"/>
+                <text class="t-title" x="480" y="666" text-anchor="middle">TX1 事务落库</text>
+                <text class="t-sub" x="480" y="682" text-anchor="middle">batch+flow · bills 0→1</text>
               </g>
 
-              <g class="node process" data-id="auto-approve" tabindex="0" role="button">
-                <rect class="shape" x="400" y="650" width="160" height="60"/>
-                <text class="t-title" x="480" y="676" text-anchor="middle">小额自动审批</text>
-                <text class="t-sub" x="480" y="692" text-anchor="middle">auto_approve()</text>
+              <g class="node process" data-id="assemble" tabindex="0" role="button">
+                <rect class="shape" x="400" y="800" width="160" height="60"/>
+                <text class="t-title" x="480" y="826" text-anchor="middle">组装 Request</text>
+                <text class="t-sub" x="480" y="842" text-anchor="middle">batch + detail[] ≤100</text>
               </g>
 
-              <g class="node decision" data-id="review-decision" tabindex="0" role="button">
-                <path class="shape" d="M780,780 L850,820 L780,860 L710,820 Z"/>
-                <text class="t-title" x="780" y="816" text-anchor="middle">复核通过</text>
-                <text class="t-sub" x="780" y="832" text-anchor="middle">双人审批</text>
+              <g class="node io" data-id="call-bank" tabindex="0" role="button">
+                <path class="shape" d="M408,920 L572,920 L552,980 L388,980 Z"/>
+                <text class="t-title" x="480" y="946" text-anchor="middle">payrollUpdateExecute</text>
+                <text class="t-sub" x="480" y="962" text-anchor="middle">SM4 + SM3withSM2</text>
               </g>
 
-              <g class="node document" data-id="document-reject" tabindex="0" role="button">
-                <path class="shape" d="M890,780 L990,780 L990,860 Q975,872 960,860 Q945,848 930,860 Q915,872 900,860 Q894,855 890,860 Z"/>
-                <text class="t-title" x="940" y="812" text-anchor="middle">合规拒绝单</text>
-                <text class="t-sub" x="940" y="828" text-anchor="middle">PDF · 留档 7 年</text>
+              <g class="node decision" data-id="ok-decision" tabindex="0" role="button">
+                <path class="shape" d="M480,1040 L550,1080 L480,1120 L410,1080 Z"/>
+                <text class="t-title" x="480" y="1076" text-anchor="middle">受理成功?</text>
+                <text class="t-sub" x="480" y="1092" text-anchor="middle">code=200 ?</text>
               </g>
 
-              <g class="node io" data-id="io-payout" tabindex="0" role="button">
-                <path class="shape" d="M408,910 L572,910 L552,970 L388,970 Z"/>
-                <text class="t-title" x="480" y="936" text-anchor="middle">UnionPay 支付指令</text>
-                <text class="t-sub" x="480" y="952" text-anchor="middle">async / outbound</text>
+              <g class="node term success" data-id="term-success" tabindex="0" role="button">
+                <rect class="shape" x="400" y="1180" width="160" height="44" rx="20" ry="22"/>
+                <text class="t-title" x="480" y="1204" text-anchor="middle">SUCCESS</text>
+                <text class="t-sub" x="480" y="1217" text-anchor="middle">待确认Job · batch=TRADING</text>
               </g>
 
-              <g class="node io" data-id="io-callback" tabindex="0" role="button">
-                <path class="shape" d="M408,1050 L572,1050 L552,1110 L388,1110 Z"/>
-                <text class="t-title" x="480" y="1076" text-anchor="middle">UnionPay 回执</text>
-                <text class="t-sub" x="480" y="1092" text-anchor="middle">async / inbound</text>
+              <!-- Nodes · 左 DB 柱 -->
+              <g class="node db" data-id="db-batch" tabindex="0" role="button">
+                <path class="shape" d="M100,560 a75,10 0 1 0 150,0 L250,610 a75,10 0 1 1 -150,0 Z"/>
+                <ellipse class="shape-inner" cx="175" cy="560" rx="75" ry="10"/>
+                <text class="t-title" x="175" y="578" text-anchor="middle">batch_record</text>
+                <text class="t-sub" x="175" y="592" text-anchor="middle">yurref·ttlamt·ttlcnt</text>
               </g>
 
-              <g class="node decision" data-id="success-decision" tabindex="0" role="button">
-                <path class="shape" d="M480,1180 L550,1220 L480,1260 L410,1220 Z"/>
-                <text class="t-title" x="480" y="1216" text-anchor="middle">回执结果</text>
-                <text class="t-sub" x="480" y="1232" text-anchor="middle">SUCCESS ?</text>
+              <g class="node db" data-id="db-flow" tabindex="0" role="button">
+                <path class="shape" d="M100,645 a75,10 0 1 0 150,0 L250,695 a75,10 0 1 1 -150,0 Z"/>
+                <ellipse class="shape-inner" cx="175" cy="645" rx="75" ry="10"/>
+                <text class="t-title" x="175" y="663" text-anchor="middle">trade_flow</text>
+                <text class="t-sub" x="175" y="677" text-anchor="middle">trxseq·accnbr·trsamt</text>
               </g>
 
-              <g class="node term success" data-id="terminator-settled" tabindex="0" role="button">
-                <rect class="shape" x="400" y="1348" width="160" height="44" rx="20" ry="22"/>
-                <text class="t-title" x="480" y="1372" text-anchor="middle">SETTLED</text>
-                <text class="t-sub" x="480" y="1385" text-anchor="middle">withdrawal.completed</text>
+              <g class="node db" data-id="db-bill" tabindex="0" role="button">
+                <path class="shape" d="M100,740 a75,10 0 1 0 150,0 L250,790 a75,10 0 1 1 -150,0 Z"/>
+                <ellipse class="shape-inner" cx="175" cy="740" rx="75" ry="10"/>
+                <text class="t-title" x="175" y="758" text-anchor="middle">withdraw_bill</text>
+                <text class="t-sub" x="175" y="772" text-anchor="middle">payrollCreditStatus 0→1</text>
               </g>
 
-              <g class="node term fail" data-id="terminator-declined" tabindex="0" role="button">
-                <rect class="shape" x="700" y="1348" width="160" height="44" rx="20" ry="22"/>
-                <text class="t-title" x="780" y="1372" text-anchor="middle">DECLINED</text>
-                <text class="t-sub" x="780" y="1385" text-anchor="middle">withdrawal.rejected</text>
+              <!-- Nodes · 失败兜底链 -->
+              <g class="node process" data-id="tx2" tabindex="0" role="button">
+                <rect class="shape" x="690" y="1040" width="180" height="60"/>
+                <text class="t-title" x="780" y="1066" text-anchor="middle">TX2 回滚</text>
+                <text class="t-sub" x="780" y="1082" text-anchor="middle">batch→FAILURE · flow→FAILURE</text>
               </g>
 
-              <g class="node connector" data-id="connector-a-out" tabindex="0" role="button">
-                <circle class="shape" cx="620" cy="400" r="14"/>
-                <text class="t-connector" x="620" y="405" text-anchor="middle">A</text>
-              </g>
-              <g class="node connector" data-id="connector-a-in" tabindex="0" role="button">
-                <circle class="shape" cx="660" cy="1370" r="14"/>
-                <text class="t-connector" x="660" y="1375" text-anchor="middle">A</text>
+              <g class="node subprocess" data-id="rollback-biz" tabindex="0" role="button">
+                <rect class="shape" x="690" y="1140" width="180" height="80"/>
+                <line class="shape-inner" x1="700" y1="1140" x2="700" y2="1220"/>
+                <line class="shape-inner" x1="860" y1="1140" x2="860" y2="1220"/>
+                <text class="t-title" x="780" y="1176" text-anchor="middle">确认全业务失败</text>
+                <text class="t-sub" x="780" y="1191" text-anchor="middle">confirmedAllBusinessFailure</text>
+                <text class="t-sub" x="780" y="1206" text-anchor="middle">bills·退还·wallet·et=5</text>
               </g>
 
+              <g class="node process" data-id="alert" tabindex="0" role="button">
+                <rect class="shape" x="690" y="1260" width="180" height="60"/>
+                <text class="t-title" x="780" y="1286" text-anchor="middle">钉钉告警</text>
+                <text class="t-sub" x="780" y="1302" text-anchor="middle">P0 · 人工介入</text>
+              </g>
+
+              <g class="node term fail" data-id="term-fail" tabindex="0" role="button">
+                <rect class="shape" x="700" y="1350" width="160" height="44" rx="20" ry="22"/>
+                <text class="t-title" x="780" y="1374" text-anchor="middle">FAILURE</text>
+                <text class="t-sub" x="780" y="1387" text-anchor="middle">代发失败终态</text>
+              </g>
+
+              <!-- Nodes · 右钱包账务 -->
+              <g class="node db" data-id="db-wallet" tabindex="0" role="button">
+                <path class="shape" d="M890,1150 a75,10 0 1 0 150,0 L1040,1210 a75,10 0 1 1 -150,0 Z"/>
+                <ellipse class="shape-inner" cx="965" cy="1150" rx="75" ry="10"/>
+                <text class="t-title" x="965" y="1172" text-anchor="middle">wallet</text>
+                <text class="t-sub" x="965" y="1186" text-anchor="middle">freeze -= · et=5 流水</text>
+              </g>
             </svg>
           </div>
         </div>
@@ -529,16 +545,21 @@
     <aside>
       <div class="panel detail" id="detailPanel">
         <div class="hint">点击图上任一节点查看细节</div>
-        <h3 id="d-title">用户提现审核 · 全流程总览</h3>
-        <div class="meta" id="d-meta"><span>15 节点</span><span class="dot">·</span><span>10 标准元素</span><span class="dot">·</span><span>92% happy path</span></div>
+        <h3 id="d-title">批量代发 Job · 全流程总览</h3>
+        <div class="meta" id="d-meta"><span>19 节点</span><span class="dot">·</span><span>2 判断分支</span><span class="dot">·</span><span>100笔/批</span></div>
         <div id="d-body">
-          <p>这是一张完整的<b>业务流程图</b>，遵循 ISO 5807 标准。它描述一笔提现从用户提交到最终结算（或拒绝）的完整生命周期，覆盖三种失败路径：KYC 不通过、合规复核拒绝、UnionPay 回执失败。</p>
-          <p>点击任一节点查看它在系统中的实际行为 — 包括接口、SQL、SLA 与状态码。</p>
+          <p><b>executePersonalCpoXftWithdrawPayrollJob</b> 的领域内代码流转：查询 <code>status=1 · payrollCreditStatus=0 · withdrawWay=2</code> 的薪福通提现单，空则跳过；按 100 笔分片后逐批执行 <code>initiateBatchTrade</code>。</p>
+          <p>核心是<b>两个事务边界</b>：TX1 在事务内建批次 + 流水 + 账单 0→1（成功路径）；银行受理失败后 TX2 独立事务回滚批次/流水为 FAILURE，并做全业务回滚（账单 FAILURE、退还扣款、钱包释放、<code>wallet_flow et=5</code>），最后钉钉告警。</p>
+          <p>点击任一节点查看它在代码中的实际行为 — SQL、字段、接口与幂等约束。</p>
         </div>
         <div class="tags" id="d-tags">
           <span class="tag t-term">terminator</span>
           <span class="tag t-process">process</span>
           <span class="tag t-decision">decision</span>
+          <span class="tag t-io">i/o</span>
+          <span class="tag t-db">db</span>
+          <span class="tag t-subprocess">subprocess</span>
+        </div>
           <span class="tag t-io">i/o</span>
           <span class="tag t-db">db</span>
         </div>
@@ -548,7 +569,7 @@
   </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 01 / 10 · 业务流程图 v2 · ISO 5807 完整版</span>
+    <span>Engineering Diagram Library · 01 / 10 · 业务流程图 · 批量代发 Job</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
@@ -557,179 +578,192 @@
 const NODE_DATA = {
   'start': {
     type: 'terminator', tagClass: 't-term',
-    title: 'START · 流程起点',
-    meta: ['terminator', 'event-driven', 'idempotent'],
-    body: `<p>提现流程的入口事件。由用户在 App 端点击「提现」按钮，或通过开放 API <code>POST /v1/withdrawals</code> 触发。</p><p>请求附带 <code>idempotency-key</code>，重复提交不会产生重复出账。</p><pre>event: user.withdraw.requested
-source: app | open-api
-guarantee: at-least-once</pre>`,
-    tags: ['terminator', '起止']
+    title: 'START · 批量代发 Job 入口',
+    meta: ['terminator', 'XxlJob', 'Cron 0 */15 * * * ?'],
+    body: `<p>XxlJob 定时入口 <code>executePersonalCpoXftWithdrawPayrollJob()</code>，每 15 分钟触发一次，扫描薪福通代发队列。与交易通 <code>executePersonalPayrollCreditJob</code> 独立运行。</p><pre>@XxlJob("executePersonalCpoXftWithdrawPayrollJob")
+public void executePersonalCpoXftWithdrawPayrollJob() { … }</pre>`,
+    tags: ['terminator', 'job']
   },
-  'io-input': {
-    type: 'io', tagClass: 't-io',
-    title: 'I/O · 用户提现请求',
-    meta: ['parallelogram', 'POST /v1/withdrawals', '< 50ms'],
-    body: `<p>接收用户提交的提现请求。字段：<code>amount</code>、<code>currency</code>、<code>bank_account_id</code>、<code>idempotency_key</code>。</p><pre>Request {
-  amount: 1500.00,
-  currency: "CNY",
-  bank_account_id: "ba_38f…",
-  idempotency_key: "req_8f2a…"
-}</pre><p>响应包含 <code>withdrawal_id</code>，后续所有审批、回执都基于此 ID 关联。</p>`,
-    tags: ['I/O · 平行四边形', 'inbound']
-  },
-  'validate': {
+  'query': {
     type: 'process', tagClass: 't-process',
-    title: 'PROCESS · 余额校验 &amp; 限额',
-    meta: ['rectangle', 'tx-lock', '~ 12ms'],
-    body: `<p>从 <code>wallet</code> 表加锁读余额，校验：可用余额 ≥ 提现额、日累计 ≤ ¥50k、单笔 ≤ ¥20k。</p><pre>SELECT balance, daily_used
-FROM wallet
-WHERE user_id = ?
-FOR UPDATE;</pre><p>校验失败直接返回 422，不进入审批流。校验通过即冻结对应金额。</p>`,
-    tags: ['process · 矩形', 'sql · for-update']
+    title: 'PROCESS · 查询待代发账单',
+    meta: ['rectangle', 'getNeedXftWithdrawPayrollBillList', 'DB 查询'],
+    body: `<p>查询当前需要薪福通代发的申请提现账单：</p><pre>SELECT … FROM withdraw_bill
+WHERE status = 1            -- WITHDRAWING
+  AND payrollCreditStatus = 0 -- 未开始
+  AND withdrawWay = 2       -- 薪福通代发</pre><p>结果为空直接 return，不产生空批次。</p>`,
+    tags: ['process', 'query']
   },
-  'wallet-db': {
+  'empty-decision': {
+    type: 'decision', tagClass: 't-decision',
+    title: 'DECISION · 有待代发账单?',
+    meta: ['diamond · binary', 'list.isEmpty()', '空 → SKIP'],
+    body: `<pre>if (CollectionUtils.isEmpty(list)) {
+    return;   // 本轮空跑
+}</pre><p><b>有</b> → 按 100 笔分片继续；<b>无</b> → 直接跳过本轮，等待下一轮扫描。</p>`,
+    tags: ['decision', 'empty-check']
+  },
+  'term-skip': {
+    type: 'terminator', tagClass: 't-term',
+    title: 'SKIP · 空跑跳过',
+    meta: ['terminator', '无待代发账单', '等下一轮'],
+    body: `<p>查询无待代发账单，本轮 Job 空跑结束，不产生批次记录，等待下一轮 15 分钟扫描。</p>`,
+    tags: ['terminator', 'skip']
+  },
+  'partition': {
+    type: 'process', tagClass: 't-process',
+    title: 'PROCESS · 按100笔分片',
+    meta: ['Lists.partition(list, 100)', '薪福通 API 上限', '逐批发起'],
+    body: `<p>薪福通批量接口单次上限 100 笔，用 <code>Lists.partition(list, 100)</code> 分片：</p><pre>List<List<CpoWithdrawBill>> partitions =
+  Lists.partition(waitList, 100);
+for (List<CpoWithdrawBill> partition : partitions) {
+  content.setWaitList(partition);
+  handler.initiateBatchTrade(content);  // 每批
+}</pre><p>101 笔会拆成 100 + 1 两批分别发起。</p>`,
+    tags: ['process', 'partition']
+  },
+  'gen-keys': {
+    type: 'process', tagClass: 't-process',
+    title: 'PROCESS · 生成业务键',
+    meta: ['batchNoGenerator', 'SnowflakeIdGenerator', '维度对齐起点'],
+    body: `<p>为每批生成幂等业务键与金额汇总：</p><pre>yurref  = batchNoGenerator.getBatchNo()
+trxseq  = SnowflakeIdGenerator.generateId()  // 每条流水
+ttlamt  = Σ bill.arrivalAmount               // 到账额累加
+ttlcnt  = billList.size()</pre><p><code>yurref</code> 是批次唯一键（<code>uk_yurref</code>），整批上传/幂等都靠它。</p>`,
+    tags: ['process', 'id-generator']
+  },
+  'tx1': {
+    type: 'process', tagClass: 't-process',
+    title: 'PROCESS · TX1 事务落库',
+    meta: ['transactionFunc.execute', '建批次+流水', '账单 0→1'],
+    body: `<p>在 <code>transactionFunc.execute</code> 事务内完成三件写操作：</p><pre>① INSERT batch_trade_record
+     (yurref·ttlamt·ttlcnt·status=TRADING·curamt·curcnt)
+② BATCH INSERT trade_flow
+     (trxseq·accnbr·accnam·trsamt·bill_id·batch_id)
+③ UPDATE withdraw_bill
+     payrollCreditStatus 0→1 ONGOING</pre><p>批次记录保存后生成的 <code>batch_id</code> 回填流水；事务提交后账单即进入代发中状态。</p>`,
+    tags: ['process', 'transaction']
+  },
+  'assemble': {
+    type: 'process', tagClass: 't-process',
+    title: 'PROCESS · 组装 Request',
+    meta: ['PayrollUpdateExecuteRequest', 'batch + detail[]', '≤ 100 条'],
+    body: `<p>把落库数据组装成银行报文的维度对齐层：</p><pre>batch:  { yurref, payaccnbr, payaccnam,
+          ttlamt, ttlcnt, curamt, curcnt }   ← 取批次记录
+detail[]: { trxseq, accnbr, accnam, trsamt } ← 取流水记录
+          (accnbr=bill.bankCard, accnam=bill.accountName)</pre><p><code>payaccnbr/payaccnam</code> 为薪福通代发户（来源配置）。</p>`,
+    tags: ['process', 'request-assembly']
+  },
+  'call-bank': {
+    type: 'io', tagClass: 't-io',
+    title: 'I/O · 调用银行代发接口',
+    meta: ['parallelogram', 'payrollUpdateExecute', 'SM4 + SM3withSM2'],
+    body: `<p>通过 <code>CmbXftTradeAbilityRpcClient.payrollUpdateExecute(request)</code> 调用银行能力中心：</p><pre>bank_ability_center:
+  SM4 加密 + SM3withSM2 签名
+  → 招行薪福通 payrollUpload(上传)
+            + payrollExecute(执行)</pre><p>RpcClient 内部经 <code>ResponseUtils.rpcApiRespResolve</code> 解包：成功返回 data，失败抛 <code>ServerException</code>。</p>`,
+    tags: ['io', 'bank']
+  },
+  'ok-decision': {
+    type: 'decision', tagClass: 't-decision',
+    title: 'DECISION · 受理成功?',
+    meta: ['diamond · binary', 'code=200', '失败走回滚'],
+    body: `<pre>try {
+  cmbXftTradeAbilityRpcClient.payrollUpdateExecute(request);
+  // 未抛异常 = 受理成功 (code=200)
+} catch (Exception e) {
+  handleBatchPayrollFailure(content, batch, flows, e);
+}</pre><p><b>YES</b> → 本批完成，等待确认 Job 轮询真实结果；<b>NO</b> → 事务外回滚。</p>`,
+    tags: ['decision', 'bank-result']
+  },
+  'term-success': {
+    type: 'terminator', tagClass: 't-term',
+    title: 'SUCCESS · 本批受理成功',
+    meta: ['terminator-success', 'batch=TRADING', 'bill=ONGOING'],
+    body: `<p>银行受理成功（<code>code=200</code>），本批代发已上传：</p><pre>batch_record.status  = 1 (TRADING)
+trade_flow.status    = 0 (待处理)
+withdraw_bill.payrollCreditStatus = 1 (ONGOING)</pre><p>最终结果由确认 Job（<code>payrollQuery</code>）轮询，成功则结清、失败则补偿。</p>`,
+    tags: ['terminator', 'success']
+  },
+  'db-batch': {
     type: 'db', tagClass: 't-db',
-    title: 'DATABASE · wallet 表',
-    meta: ['cylinder · datastore', 'PostgreSQL · primary', 'row-level lock'],
-    body: `<p>主库 <code>wallet</code> 表存储用户钱包余额与冻结额。读用加锁读避免并发提现产生超扣。</p><pre>wallet (
-  user_id     PK,
-  balance     numeric(18,2),
-  frozen      numeric(18,2),
-  daily_used  numeric(18,2),
-  updated_at  timestamptz
-)</pre><p>结算成功后异步写入 <code>ledger</code>（双写账本），保留审计追溯能力。</p>`,
-    tags: ['database · 圆柱', 'postgres']
+    title: 'DATABASE · batch_trade_record',
+    meta: ['cylinder', 'clearing_xft_withdraw_payroll_batch_trade_record', 'uk_yurref'],
+    body: `<p>薪福通代发批次交易记录，TX1 创建、TX2 失败流转：</p><pre>batch_id   PK
+yurref     UK  ← 幂等键 (BatchNoGenerator)
+ttlamt     = Σ arrivalAmount
+ttlcnt     = 明细条数
+status     1 TRADING → 4 FAILURE
+curamt · curcnt</pre>`,
+    tags: ['db', 'batch']
   },
-  'kyc-decision': {
-    type: 'decision', tagClass: 't-decision',
-    title: 'DECISION · KYC 等级判断',
-    meta: ['diamond · binary', 'L0 / L1 / L2', '> 99.5% L2'],
-    body: `<p>读取用户实名认证等级。L0（仅注册）/L1（身份证+人脸）/L2（身份证+人脸+银行卡四要素）。</p><p>提现要求 L2。L0 / L1 通过 <b>连接符 A</b> 跳转至 DECLINED 终态，不进入后续审批。</p><pre>route:
-  PASS  → 金额阈值判断
-  FAIL  → connector A → DECLINED</pre>`,
-    tags: ['decision · 菱形', 'binary']
+  'db-flow': {
+    type: 'db', tagClass: 't-db',
+    title: 'DATABASE · trade_flow',
+    meta: ['cylinder', 'clearing_xft_withdraw_payroll_trade_flow', 'uk_yurref_trxseq'],
+    body: `<p>代发流水明细，一账单一条，TX1 BATCH INSERT：</p><pre>detail_id PK
+yurref + trxseq  UK ← 幂等
+trxseq    Snowflake
+accnbr    = bill.bankCard
+accnam    = bill.accountName
+trsamt    = bill.arrivalAmount
+bill_id · batch_id  双 FK</pre>`,
+    tags: ['db', 'flow']
   },
-  'amount-decision': {
-    type: 'decision', tagClass: 't-decision',
-    title: 'DECISION · 金额阈值',
-    meta: ['diamond · ≥¥10k', '~ 8% 走人工'],
-    body: `<p>按金额分流。<code>amount &lt; ¥10,000</code> → 自动审批；<code>amount ≥ ¥10,000</code> → 进入人工合规审核子流程。</p><p>阈值由风控团队动态配置（<code>risk.threshold.manual_review</code>），无需发版即可调整。</p>`,
-    tags: ['decision · 菱形', '风控阈值']
+  'db-bill': {
+    type: 'db', tagClass: 't-db',
+    title: 'DATABASE · withdraw_bill',
+    meta: ['cylinder', 'finance_d_t_operator_withdraw_bill', '状态流转'],
+    body: `<p>提现账单主表，本流程只改代发状态：</p><pre>payrollCreditStatus
+  0 未开始 → 1 ONGOING   (TX1 发起)
+  1 ONGOING → 3 FAILURE  (TX2 回滚)
+billStatus
+  1 WITHDRAWING → 4 FAILURE (TX2 回滚)</pre>`,
+    tags: ['db', 'bill']
   },
-  'subprocess-review': {
-    type: 'subprocess', tagClass: 't-subprocess',
-    title: 'SUBPROCESS · 人工合规审核',
-    meta: ['double-line rect', '~ 8% of流量', 'P95 < 2h'],
-    body: `<p><b>子流程</b>用双竖线矩形表示 — 这里折叠了一整套复杂逻辑，避免主图爆炸：</p><pre>compliance.review {
-  ① 工单分配（轮询 + 技能匹配）
-  ② 资料调取（KYC + 历史交易）
-  ③ 风控引擎打分（黑名单 / 关联图谱 / AML）
-  ④ 双人复核（任一拒绝即拒绝）
-  ⑤ 决策落档（不可修改）
-}</pre><p>SLA：P95 &lt; 2h；双人复核制；规则编号 <code>R-301</code>。</p>`,
-    tags: ['subprocess · 双竖线矩形', '折叠复杂度']
-  },
-  'auto-approve': {
+  'tx2': {
     type: 'process', tagClass: 't-process',
-    title: 'PROCESS · 小额自动审批',
-    meta: ['rectangle', '< 50ms', '92% 走此路径'],
-    body: `<p>小额（&lt; ¥10k）走规则引擎自动审批。命中拦截规则（黑名单 / 异常 IP / 频次异常）才会回退到人工。</p><pre>auto_approve(withdrawal) {
-  if rules.match(blacklist | aml | velocity)
-    return MANUAL_REVIEW
-  return APPROVED
-}</pre>`,
-    tags: ['process · 矩形', '规则引擎']
+    title: 'PROCESS · TX2 事务回滚',
+    meta: ['transactionFunc.execute', '批次+流水 FAILURE', '参考 acceptTradeFailureAndRiskTip'],
+    body: `<p>银行受理失败后，在独立事务内调用 <code>confirmedAllTradeFailure</code> 回滚交易侧：</p><pre>UPDATE batch_record  status → 4 FAILURE
+UPDATE trade_flow    status → FAILURE (批量)</pre><p>与确认 Job 之间靠状态已流转 + 延迟窗口避免并发扫描。</p>`,
+    tags: ['process', 'rollback']
   },
-  'review-decision': {
-    type: 'decision', tagClass: 't-decision',
-    title: 'DECISION · 复核结果',
-    meta: ['diamond', '人工双签', '~ 91% 通过'],
-    body: `<p>人工复核的最终结论。任一审核员拒绝即整体拒绝。</p><pre>route:
-  APPROVED → UnionPay 支付指令
-  REJECTED → 生成合规拒绝单 → DECLINED</pre>`,
-    tags: ['decision · 菱形', '双签']
+  'rollback-biz': {
+    type: 'subprocess', tagClass: 't-subprocess',
+    title: 'SUBPROCESS · 确认全业务失败',
+    meta: ['double-line rect', 'confirmedAllBusinessFailure', '账单+钱包+清汇单'],
+    body: `<p>子流程 <code>confirmedAllBusinessFailure</code> 封装全业务回滚：</p><pre>① withdraw_bill:
+     payrollCreditStatus 1→3 FAILURE
+     billStatus 1→4 FAILURE + 记录失败原因
+② clearing_wallet: 退还提现扣款 (changeAccountBalance)
+③ 清汇单: WITHDRAWING → CAN_WITHDRAW
+④ XFT wallet: freeze -= arrivalAmount
+⑤ INSERT wallet_flow (event_type=5 代发失败)</pre><p>全程 CAS 校验，余额/冻结不变式：<code>balance ≥ 0 · freeze ≥ 0</code>。</p>`,
+    tags: ['subprocess', 'business-rollback']
   },
-  'document-reject': {
-    type: 'document', tagClass: 't-document',
-    title: 'DOCUMENT · 合规拒绝单',
-    meta: ['wavy-bottom rect', 'PDF · 留档 7 年', '审计触达'],
-    body: `<p><b>文档元素</b>（矩形底部波浪）表示生成正式文档。合规拒绝必须输出一份带签名、可审计的拒绝单：</p><pre>compliance_rejection.pdf {
-  withdrawal_id, user_id
-  reviewer_a, reviewer_b
-  reason_code (AML-001 / KYC-203 / …)
-  evidence_refs[]
-  timestamp_signed
-}</pre><p>同步推送给用户（站内信 + 短信）；本地留档 7 年（监管要求）。</p>`,
-    tags: ['document · 波浪底矩形', '审计留档']
+  'alert': {
+    type: 'process', tagClass: 't-process',
+    title: 'PROCESS · 钉钉告警',
+    meta: ['rectangle', 'P0', '人工介入'],
+    body: `<p>受理失败属于资金操作异常，触发 <b>P0 钉钉告警</b>。</p><p>若回滚事务本身失败，数据卡在中间态（batch=TRADING、bill=ONGOING），需人工介入决定重试或回滚。</p>`,
+    tags: ['process', 'alert']
   },
-  'io-payout': {
-    type: 'io', tagClass: 't-io',
-    title: 'I/O · UnionPay 支付指令',
-    meta: ['parallelogram · outbound', 'async', 'P99 < 300ms'],
-    body: `<p>调用银联企业付款 API，下发支付指令。这是异步出账 — UnionPay 立即返回受理回执，真正的资金到账通过<b>回执</b>（下一节点）通知。</p><pre>POST https://api.unionpay.com/v3/payouts
-{
-  out_trade_no: "wd_8f2a…",
-  amount: 1500.00,
-  bank_account: { … }
-}
-→ 202 Accepted</pre>`,
-    tags: ['I/O · 平行四边形', 'outbound']
+  'term-fail': {
+    type: 'terminator', tagClass: 't-term',
+    title: 'FAILURE · 代发失败终态',
+    meta: ['terminator-failure', 'batch/flow FAILURE', '已退还+告警'],
+    body: `<p>本批代发失败终态：批次与流水流转为 FAILURE，账单回退为提现失败，钱包扣款已退还、冻结已释放，<code>wallet_flow et=5</code> 留痕，并已钉钉告警。</p>`,
+    tags: ['terminator', 'failure']
   },
-  'io-callback': {
-    type: 'io', tagClass: 't-io',
-    title: 'I/O · UnionPay 回执',
-    meta: ['parallelogram · inbound', 'webhook', '~ 30s-2min 后到达'],
-    body: `<p>UnionPay 通过 webhook 异步回调，告知最终结果。带 HMAC 签名校验。重复回调通过 <code>out_trade_no</code> 幂等。</p><pre>POST /webhooks/unionpay
-X-Signature: hmac-sha256=…
-{
-  out_trade_no: "wd_8f2a…",
-  status: "SUCCESS" | "FAILED",
-  txn_id: "up_…",
-  failure_reason?: "INSUFFICIENT_BANK"
-}</pre>`,
-    tags: ['I/O · 平行四边形', 'webhook · async']
-  },
-  'success-decision': {
-    type: 'decision', tagClass: 't-decision',
-    title: 'DECISION · 回执结果',
-    meta: ['diamond', 'SUCCESS · FAILED', '99.6% SUCCESS'],
-    body: `<p>根据 UnionPay 最终回执结果分流。SUCCESS → 结算落库；FAILED → 解冻并退回余额。</p><p>极少数 timeout 情况（无回执）由定时任务每 5 分钟扫描 <code>pending</code> 状态并主动查询补单。</p>`,
-    tags: ['decision · 菱形']
-  },
-  'terminator-settled': {
-    type: 'success', tagClass: 't-success',
-    title: 'TERMINAL · SETTLED · 提现成功',
-    meta: ['terminator-success', 'event · settled', '92% happy path'],
-    body: `<p>资金已成功结算到用户银行卡。</p><pre>side-effects:
-  · 写 ledger（账本双写）
-  · 扣减 wallet.frozen
-  · 推送结算通知（短信 + 站内信）
-  · event: withdrawal.completed</pre>`,
-    tags: ['terminator · 成功终态']
-  },
-  'terminator-declined': {
-    type: 'fail', tagClass: 't-fail',
-    title: 'TERMINAL · DECLINED · 提现拒绝',
-    meta: ['terminator-failure', 'event · rejected', '~ 8% 流量'],
-    body: `<p>三条失败路径在此汇合：</p><pre>① KYC 不达标         (via connector A)
-② 合规审核拒绝       (via document)
-③ UnionPay 回执失败  (direct)</pre><p>所有路径必须执行：解冻 wallet.frozen、退回 daily_used、event: <code>withdrawal.rejected</code>。</p>`,
-    tags: ['terminator · 失败终态']
-  },
-  'connector-a-out': {
-    type: 'connector', tagClass: 't-connector',
-    title: 'CONNECTOR A (出口)',
-    meta: ['on-page jump', '避免长距离斜线', 'paired with A in'],
-    body: `<p><b>连接符</b>用于跨区域跳转 — 当一条线如果直接画会穿过太多节点、或者必须画斜线时，用配对的小圆圈代替。</p><p>这里：KYC 不通过路径从主流程顶部跳到失败终态（垂直跨越整张图），用 A→A 配对实现，保持其他线路全部正交。</p>`,
-    tags: ['connector · 小圆圈', '跨区域配对']
-  },
-  'connector-a-in': {
-    type: 'connector', tagClass: 't-connector',
-    title: 'CONNECTOR A (入口)',
-    meta: ['on-page jump · in', 'paired with A out'],
-    body: `<p>配对 A 出口的入口端。所有 KYC 失败的流量从这里汇入 DECLINED 终态。</p><p>用法约定：同字母圆圈成对出现（A出↔A入）；多对跳转用 B、C…</p>`,
-    tags: ['connector · 小圆圈']
-  },
-
+  'db-wallet': {
+    type: 'db', tagClass: 't-db',
+    title: 'DATABASE · XFT wallet',
+    meta: ['cylinder', 'clearing_xft_withdraw_payroll_wallet', 'event_type=5'],
+    body: `<p>薪福通代发户钱包，受理失败时释放分账冻结：</p><pre>freeze_amount -= arrivalAmount   (CAS)
+INSERT wallet_flow (event_type=5, 代发失败)</pre><p>资金变更一律通过 <code>ClearingXftWithdrawPayrollWalletService.subFreezeAndWriteFlow</code>，写流水留痕。</p>`,
+    tags: ['db', 'wallet']
+  }
 };
 
 const detailEl = {

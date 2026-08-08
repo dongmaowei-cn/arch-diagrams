@@ -829,17 +829,17 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <text class="edge-label clay" x="629" y="568">refund</text>
 
                 <!-- ── Service-mesh internal RPC (rpc · gRPC) ── -->
-                <path class="edge rpc" d="M 160,797 L 160,810 L 380,810 L 380,820"/>
+                <path class="edge rpc" d="M 160,760 L 160,810 L 380,810 L 380,820"/>
                 <rect class="edge-label-bg" x="218" y="800" width="98" height="14"/>
                 <text class="edge-label clay" x="223" y="810">lockStock · mesh gRPC</text>
 
                 <path class="edge rpc" d="M 260,690 L 280,690"/>
                 <path class="edge rpc" d="M 480,690 L 500,690"/>
-                <rect class="edge-label-bg" x="384" y="676" width="98" height="14"/>
-                <text class="edge-label clay" x="389" y="686">lockFunds · gRPC</text>
+                <rect class="edge-label-bg" x="335" y="780" width="98" height="14"/>
+                <text class="edge-label clay" x="340" y="790">lockFunds · gRPC</text>
 
                 <!-- ── Service → Kafka (async-event publish · plum dashed) ── -->
-                <path class="edge async-event" d="M 160,992 L 160,1040"/>
+                <path class="edge async-event" d="M 160,955 L 160,1040"/>
                 <rect class="edge-label-bg" x="60" y="1004" width="98" height="14"/>
                 <text class="edge-label plum" x="65" y="1014">order.created</text>
 
@@ -847,7 +847,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <rect class="edge-label-bg" x="464" y="1019" width="98" height="14"/>
                 <text class="edge-label plum" x="469" y="1029">payment.done</text>
 
-                <path class="edge async-event" d="M 380,992 L 380,1040"/>
+                <path class="edge async-event" d="M 380,955 L 380,1040"/>
                 <rect class="edge-label-bg" x="280" y="1004" width="100" height="14"/>
                 <text class="edge-label plum" x="285" y="1014">product.updated</text>
 
@@ -862,8 +862,8 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <text class="edge-label clay" x="435" y="592">orders R/W</text>
 
                 <path class="edge db-edge" d="M 160,820 L 160,805 L 770,805 L 770,620 L 780,620"/>
-                <rect class="edge-label-bg" x="700" y="592" width="58" height="14"/>
-                <text class="edge-label clay" x="705" y="602">users</text>
+                <rect class="edge-label-bg" x="702" y="608" width="58" height="14"/>
+                <text class="edge-label clay" x="707" y="618">users</text>
 
                 <!-- ── Services → Redis cache (cache-edge · gold dotted) ── -->
                 <path class="edge cache-edge" d="M 260,665 L 790,665"/>
@@ -884,7 +884,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <text class="edge-label teal" x="709" y="880">settle CDC</text>
 
                 <!-- ── Config Center → Kafka (cdc · hot push up) ── -->
-                <path class="edge cdc" d="M 200,1160 L 200,1136"/>
+                <path class="edge cdc" d="M 200,1160 L 200,1120"/>
                 <rect class="edge-label-bg" x="206" y="1142" width="86" height="14"/>
                 <text class="edge-label teal" x="211" y="1152">config hot push</text>
 
@@ -894,9 +894,9 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <text class="edge-label clay" x="551" y="1154">Saga · TCC</text>
 
                 <!-- ── Prometheus scrape (scrape · teal very faint, services row B east channel) ── -->
-                <path class="edge scrape" d="M 260,975 L 790,975"/>
-                <path class="edge scrape" d="M 480,985 L 790,985"/>
-                <path class="edge scrape" d="M 700,990 L 790,990"/>
+                <path class="edge scrape" d="M 200,955 L 200,975 L 790,975"/>
+                <path class="edge scrape" d="M 330,955 L 330,985 L 790,985"/>
+                <path class="edge scrape" d="M 620,955 L 620,990 L 790,990"/>
                 <path class="edge scrape" d="M 700,1062 L 790,1062"/>
               </g>
 

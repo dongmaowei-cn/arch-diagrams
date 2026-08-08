@@ -22,11 +22,11 @@
 
 | ID | 文件 | viewBox | A 区行 | `</svg>` |
 |---|---|---|---|---|
-| 01 | `01-flowchart.html`           | 1080×1500 | 285-440 | 440 |
-| 02 | `02-sequence.html`            | 1080×1500 | 365-608 | 609 |
-| 03 | `03-state-machine.html`       | 1080×1400 | 419-692 | 693 |
+| 01 | `01-flowchart.html`           | 1080×1500 | 286-455 | 456 |
+| 02 | `02-sequence.html`            | 1080×1240 | 366-530 | 531 |
+| 03 | `03-state-machine.html`       | 1080×1660 | 432-688 | 688 |
 | 04 | `04-system-architecture.html` | 1080×1500 | 420-889 | 890 |
-| 05 | `05-er-diagram.html`          | 1080×840  | 400-610 | 611 |
+| 05 | `05-er-diagram.html`          | 1080×700  | 420-604 | 604 |
 | 06H | `06-swimlane.html`           | 1080×1300 | 446-805 | 806 |
 | 06V | `06-swimlane-vertical.html`  | 1080×1500 | 442-695 | 696 |
 | 07 | `07-microservice.html`        | 1080×1500 | 467-930 | 931 |
@@ -48,7 +48,8 @@
 04 architecture    : client / edge-net / bff /
                      svc core / svc trade / svc catalog / svc edge-domain /
                      mw / mw cache / mw search / data-store / infra
-05 ER              : node（统一类，靠 entity-weak / attribute-key 等子样式区分）
+05 ER              : table-frame / table-header / table-title / row-zebra /
+                     cell pk / cell fk / tag-pk / tag-fk / tag-uq / tag-idx / tag-nn
 06H swimlane       : node（统一类，靠所在 lane 区分语义）
 06V swimlane-v     : node（同上）
 07 microservice    : 同 04 + svc（无业务域子类）
@@ -66,7 +67,7 @@
                      edge db-edge / edge cache-edge / edge cdc /
                      edge scrape / edge spine
                      + edge-label clay/gold/olive/plum/teal
-05 ER              : 自定义关系连线（搜索 .er-rel-line / .er-rel-marker）
+05 ER              : er-edge + crowfoot（双短横=1 / 三叉=N）+ edge-label 关系标签
 06H swimlane       : edge（默认即可）
 06V swimlane-v     : edge / edge-label yes / edge-label fail
 07 microservice    : 同 04

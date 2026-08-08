@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [[ $# -ne 1 ]]; then
   echo "usage: bash selftest.sh <output.html>" >&2
   exit 2
@@ -93,9 +95,12 @@ else
   PASS=$((PASS + 1))
 fi
 
-# 6. 外壳文字已替换（不应残留模板原场景的特征词）
+# 6. 外壳文字已替换（<title> 不应与任一 canonical 模板标题逐字相同）
 #    仅在"产物模式"下生效;模板本身就该带原场景标题,自动跳过。
 #    模板判定：文件路径含 templates/ 目录 且 文件名以 0?-*.html 命名。
+#    检测用"逐字相等"而非关键词子串: 同一业务场景的多张图（泳道/状态机/ER
+#    共用"薪福通提现代发"场景）会合法地复用场景词, 子串匹配必然误报;
+#    只有 <title> 与某张模板标题一字不差才算"没改外壳"。
 BASENAME=$(basename "$FILE")
 IS_TEMPLATE=0
 if [[ "$FILE" == *templates/* && "$BASENAME" =~ ^0[0-9]?-.*\.html$ ]]; then
@@ -105,9 +110,18 @@ fi
 if [[ "$IS_TEMPLATE" -eq 1 ]]; then
   echo "  ○ 外壳文字检查 (跳过 · 模板态)"
 else
-  ORIG_KEYWORDS="提现审核|UnionPay|订单结算 idempotency|订单业务状态机|电商交易中台|订单业务 ER|电商订单跨部门|API 记录创建|电商微服务全景"
-  if /usr/bin/grep -qE "<title>.*($ORIG_KEYWORDS)" "$FILE"; then
-    fail "<title> 仍是模板原场景标题，未替换"
+  OUT_TITLE=$(/usr/bin/grep -m1 -oE '<title>[^<]+' "$FILE" | sed -E 's/<title>//' || true)
+  COLLIDED=""
+  for t in "$SCRIPT_DIR"/../templates/0?-*.html; do
+    [[ -f "$t" ]] || continue
+    t_title=$(/usr/bin/grep -m1 -oE '<title>[^<]+' "$t" | sed -E 's/<title>//' || true)
+    if [[ -n "$OUT_TITLE" && "$OUT_TITLE" == "$t_title" ]]; then
+      COLLIDED="$(basename "$t")"
+      break
+    fi
+  done
+  if [[ -n "$COLLIDED" ]]; then
+    fail "<title> 与模板 $COLLIDED 逐字相同 —— 外壳未替换"
   else
     echo "  ✓ 外壳文字已替换"
     PASS=$((PASS + 1))
@@ -122,6 +136,20 @@ if [[ "$SVG_OPEN" -eq "$SVG_CLOSE" ]]; then
   PASS=$((PASS + 1))
 else
   fail "<svg> 开闭不对称：开=$SVG_OPEN 闭=$SVG_CLOSE"
+fi
+
+# 8. 边几何校验：起点在节点边界中点/交汇点、不共享连接点、箭头够到目标
+if command -v python3 >/dev/null 2>&1; then
+  if python3 "$SCRIPT_DIR/edge-check.py" "$FILE" >/dev/null 2>&1; then
+    echo "  ✓ 边几何校验通过"
+    PASS=$((PASS + 1))
+  else
+    echo "  ✗ 边几何校验失败"
+    python3 "$SCRIPT_DIR/edge-check.py" "$FILE" | sed 's/^/      /'
+    FAIL=$((FAIL + 1))
+  fi
+else
+  echo "  ○ 边几何校验 (跳过 · python3 不可用)"
 fi
 
 echo "───────────────────────────────────────"

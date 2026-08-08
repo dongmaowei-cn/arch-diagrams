@@ -10,12 +10,13 @@
 ## 模板信息
 
 - **模板文件**：`06-swimlane-vertical.html`
-- **viewBox**：`1080 × 1500`
+- **viewBox**：`1080 × 1540`
+- **模板场景**：薪福通提现代发 · 交互全景（5 泳道 × 5 阶段，22 节点）
 - **关键行号**
   - SVG 开始：442
-  - A 区主图：460–695
-  - `</svg>`：935
-  - `window.DIAGRAM_CONFIG`：1021
+  - A 区主图：460–732
+  - `</svg>`：732
+  - `window.DIAGRAM_CONFIG`：795
 
 
 
@@ -57,12 +58,13 @@ Phase 3│          │          │          │  [任务]  │
 ## 坐标约定
 
 ```
-viewBox 1080 × 1500
-顶端 lane-header 高 60
-4 lane 时每 lane 宽 240
-phase 高 250~300
-节点矩形 180 × 50
+viewBox 1080 × 1540
+顶端 lane-header 高 ~200（lane 名 + 副标）
+5 lane 时 lane 中心 x = 212 / 396 / 580 / 764 / 948（间距 184）
+phase 高 250~330（5 个阶段）
+节点矩形 vlane-card 170 × 80（80 高时圆角胶囊，decision 76 高）
 任务 cx = lane 中心
+A 区顶 y≈205（event-start 圆），末 y≈1430（refund-credit 卡片底）
 ```
 
 ## 改造步骤（3 步）

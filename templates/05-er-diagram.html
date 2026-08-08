@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ER 图 · 订单业务数据模型 — Engineering Diagram Library</title>
+<title>ER 图 · 薪福通 · 运营商提现代发数据模型 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -379,14 +379,14 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 05 · ER 图 · IE Notation</div>
-        <h1>订单业务数据模型 <em>— storefront ER diagram</em></h1>
-        <p class="lead">电商核心域 7 张表 · 8 条关系 · 用 IE notation（crow's foot）表达基数。上半区是订单业务 ER 主图（强实体 / 弱实体 / 关联表 / 自引用），下半区是 ER 元素图鉴（10 张卡：实体三类 + 主外键 / 索引标记 + 4 种 crow's foot 端点 + 三种关系基数）。所有表均可点击查看 columns / indexes / SQL。</p>
+        <div class="eyebrow">Diagram type 05 · ER 图 · IE Notation · 薪福通提现代发</div>
+        <h1>薪福通提现代发数据模型 <em>— XFT withdraw payroll ER</em></h1>
+        <p class="lead">运营商提现代发迁移至招行薪福通：6 张表 · 5 条关系 · 用 IE notation（crow's foot）表达基数。<code>withdraw_bill</code> 是枢纽（1—1 trade_flow / 1—* wallet_flow），<code>batch_trade_record</code> 通过 <code>batch_id</code>、<code>yurref</code> 挂起流水与明细，<code>uk_yurref</code> / <code>uk_yurref_trxseq</code> 双幂等键防重。所有表均可点击查看字段 / 索引 / 关系。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">7</span>实体</div>
-        <div><span class="v">8</span>关系</div>
-        <div><span class="v">10</span>元素图鉴</div>
+        <div><span class="v">6</span>实体</div>
+        <div><span class="v">5</span>关系</div>
+        <div><span class="v">2</span>幂等键</div>
       </div>
     </div>
   </header>
@@ -397,7 +397,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="840" viewBox="0 0 1080 840" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="700" viewBox="0 0 1080 700" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow"            viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
                 <marker id="arrow-clay"       viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
@@ -411,198 +411,190 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               </defs>
 
               <!-- ── Diagram title row (centered, 04-style) ── -->
-              <text class="diagram-title" x="540" y="32" text-anchor="middle">订单业务数据模型 · ER 图 (Storefront ER Diagram)</text>
-              <text class="diagram-sub"   x="540" y="52" text-anchor="middle">IE Notation · 7 实体 · 8 关系 · crow's foot · 含强 / 弱实体 / 关联表 / 自引用</text>
+              <text class="diagram-title" x="540" y="32" text-anchor="middle">薪福通提现代发数据模型 · ER 图 (XFT Withdraw Payroll ER)</text>
+              <text class="diagram-sub"   x="540" y="52" text-anchor="middle">IE Notation · 6 实体 · 5 关系 · crow's foot · 独立表 wallet · 幂等键 uk_yurref / uk_yurref_trxseq</text>
 
               <!-- ═══════════════════════════════════════════════════════ -->
-              <!-- 区 A · 订单业务 ER 主图谱                                -->
+              <!-- 区 A · 薪福通提现代发 ER 主图谱                           -->
               <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="92">A · 订单业务 ER 主图谱</text>
-              <text class="section-sub"   x="40" y="114">7 表 · 8 关系 · users → orders → order_items ↔ products → categories(self) · payments / reviews 桥接</text>
+              <text class="section-label" x="40" y="92">A · 薪福通提现代发 ER 主图谱</text>
+              <text class="section-sub"   x="40" y="114">6 表 · 5 关系 · withdraw_bill 枢纽 · batch_id / yurref / trxseq 关联 · wallet 独立表（无外键）</text>
 
-              <!-- ── A 区主图：实体 + 关系（内部坐标取自打磨好的 960×700 版本，平移到 60,140） ── -->
+              <!-- ── A 区主图：实体表 + 关系（内部坐标平移到 60,140） ── -->
               <g transform="translate(60 140)">
 
                 <!-- ── RELATIONSHIP LINES (drawn first) ── -->
                 <g>
-                  <!-- 1. users(1) — orders(*): vertical, col 1 -->
-                  <path class="er-edge" d="M 120 190 V 270"/>
-                  <line class="crowfoot" x1="110" y1="194" x2="130" y2="194"/>
-                  <line class="crowfoot" x1="110" y1="198" x2="130" y2="198"/>
-                  <line class="crowfoot" x1="112" y1="262" x2="120" y2="270"/>
-                  <line class="crowfoot" x1="120" y1="262" x2="120" y2="270"/>
-                  <line class="crowfoot" x1="128" y1="262" x2="120" y2="270"/>
+                  <!-- 1. withdraw_bill(1) — wallet_flow(*): bill_id, vertical col 1 -->
+                  <path class="er-edge" d="M 130 234 V 330"/>
+                  <line class="crowfoot" x1="122" y1="240" x2="138" y2="240"/>
+                  <line class="crowfoot" x1="122" y1="244" x2="138" y2="244"/>
+                  <line class="crowfoot" x1="122" y1="322" x2="130" y2="330"/>
+                  <line class="crowfoot" x1="130" y1="322" x2="130" y2="330"/>
+                  <line class="crowfoot" x1="138" y1="322" x2="130" y2="330"/>
 
-                  <!-- 2. orders(1) — order_items(*): horizontal, row 2 -->
-                  <path class="er-edge" d="M 220 345 H 370"/>
-                  <line class="crowfoot" x1="224" y1="335" x2="224" y2="355"/>
-                  <line class="crowfoot" x1="228" y1="335" x2="228" y2="355"/>
-                  <line class="crowfoot" x1="362" y1="337" x2="370" y2="345"/>
-                  <line class="crowfoot" x1="362" y1="345" x2="370" y2="345"/>
-                  <line class="crowfoot" x1="362" y1="353" x2="370" y2="345"/>
+                  <!-- 2. batch_trade_record(1) — trade_flow(*): batch_id, vertical col 2 -->
+                  <path class="er-edge" d="M 430 234 V 330"/>
+                  <line class="crowfoot" x1="422" y1="240" x2="438" y2="240"/>
+                  <line class="crowfoot" x1="422" y1="244" x2="438" y2="244"/>
+                  <line class="crowfoot" x1="422" y1="322" x2="430" y2="330"/>
+                  <line class="crowfoot" x1="430" y1="322" x2="430" y2="330"/>
+                  <line class="crowfoot" x1="438" y1="322" x2="430" y2="330"/>
 
-                  <!-- 3. products(1) — order_items(*): vertical, col 2 -->
-                  <path class="er-edge" d="M 470 190 V 270"/>
-                  <line class="crowfoot" x1="460" y1="194" x2="480" y2="194"/>
-                  <line class="crowfoot" x1="460" y1="198" x2="480" y2="198"/>
-                  <line class="crowfoot" x1="462" y1="262" x2="470" y2="270"/>
-                  <line class="crowfoot" x1="470" y1="262" x2="470" y2="270"/>
-                  <line class="crowfoot" x1="478" y1="262" x2="470" y2="270"/>
+                  <!-- 3. withdraw_bill(1) — trade_flow(1): bill_id, corridor → trade left -->
+                  <path class="er-edge" d="M 180 234 V 283 H 340 V 433 H 370"/>
+                  <line class="crowfoot" x1="172" y1="240" x2="188" y2="240"/>
+                  <line class="crowfoot" x1="172" y1="244" x2="188" y2="244"/>
+                  <line class="crowfoot" x1="364" y1="425" x2="364" y2="441"/>
+                  <line class="crowfoot" x1="368" y1="425" x2="368" y2="441"/>
 
-                  <!-- 4. categories(1) — products(*): horizontal, row 1 -->
-                  <path class="er-edge" d="M 720 120 H 570"/>
-                  <line class="crowfoot" x1="716" y1="110" x2="716" y2="130"/>
-                  <line class="crowfoot" x1="712" y1="110" x2="712" y2="130"/>
-                  <line class="crowfoot" x1="578" y1="112" x2="570" y2="120"/>
-                  <line class="crowfoot" x1="578" y1="120" x2="570" y2="120"/>
-                  <line class="crowfoot" x1="578" y1="128" x2="570" y2="120"/>
+                  <!-- 4. batch_trade_record(1) — detail_result(*): yurref, corridor → detail top -->
+                  <path class="er-edge" d="M 530 234 V 283 H 830 V 330"/>
+                  <line class="crowfoot" x1="522" y1="240" x2="538" y2="240"/>
+                  <line class="crowfoot" x1="522" y1="244" x2="538" y2="244"/>
+                  <line class="crowfoot" x1="822" y1="322" x2="830" y2="330"/>
+                  <line class="crowfoot" x1="830" y1="322" x2="830" y2="330"/>
+                  <line class="crowfoot" x1="838" y1="322" x2="830" y2="330"/>
 
-                  <!-- 5. categories self-reference (parent · 0..1 — *) -->
-                  <path class="er-edge dashed" d="M 940 90 H 956 V 150 H 940"/>
-                  <circle class="endpoint-circle" cx="944" cy="90" r="4"/>
-                  <line class="crowfoot" x1="948" y1="142" x2="940" y2="150"/>
-                  <line class="crowfoot" x1="948" y1="150" x2="940" y2="150"/>
-                  <line class="crowfoot" x1="948" y1="158" x2="940" y2="150"/>
-
-                  <!-- 6. orders(1) — payments(1) -->
-                  <path class="er-edge" d="M 220 390 V 440 H 720 V 410"/>
-                  <line class="crowfoot" x1="224" y1="380" x2="224" y2="400"/>
-                  <line class="crowfoot" x1="228" y1="380" x2="228" y2="400"/>
-                  <line class="crowfoot" x1="716" y1="400" x2="716" y2="420"/>
-                  <line class="crowfoot" x1="712" y1="400" x2="712" y2="420"/>
-
-                  <!-- 7. reviews(*) — users(1) -->
-                  <path class="er-edge" d="M 270 570 H 240 V 130 H 220"/>
-                  <line class="crowfoot" x1="278" y1="562" x2="270" y2="570"/>
-                  <line class="crowfoot" x1="278" y1="570" x2="270" y2="570"/>
-                  <line class="crowfoot" x1="278" y1="578" x2="270" y2="570"/>
-                  <line class="crowfoot" x1="216" y1="120" x2="216" y2="140"/>
-                  <line class="crowfoot" x1="212" y1="120" x2="212" y2="140"/>
-
-                  <!-- 8. reviews(*) — products(1) -->
-                  <path class="er-edge" d="M 460 510 V 485 H 320 V 130 H 370"/>
-                  <line class="crowfoot" x1="452" y1="518" x2="460" y2="510"/>
-                  <line class="crowfoot" x1="460" y1="518" x2="460" y2="510"/>
-                  <line class="crowfoot" x1="468" y1="518" x2="460" y2="510"/>
-                  <line class="crowfoot" x1="366" y1="120" x2="366" y2="140"/>
-                  <line class="crowfoot" x1="362" y1="120" x2="362" y2="140"/>
+                  <!-- 5. detail_result(1) — trade_flow(1): trxseq, horizontal row 2 -->
+                  <path class="er-edge" d="M 720 433 H 590"/>
+                  <line class="crowfoot" x1="716" y1="425" x2="716" y2="441"/>
+                  <line class="crowfoot" x1="712" y1="425" x2="712" y2="441"/>
+                  <line class="crowfoot" x1="594" y1="425" x2="594" y2="441"/>
+                  <line class="crowfoot" x1="598" y1="425" x2="598" y2="441"/>
                 </g>
 
                 <!-- ── RELATIONSHIP LABELS ── -->
                 <g text-anchor="middle">
-                  <g><rect class="edge-label-bg" x="84" y="221" width="72" height="16"/><text class="edge-label" x="120" y="233">places · 1—*</text></g>
-                  <g><rect class="edge-label-bg" x="252" y="336" width="86" height="16"/><text class="edge-label" x="295" y="348">contains · 1—*</text></g>
-                  <g><rect class="edge-label-bg" x="434" y="221" width="76" height="16"/><text class="edge-label" x="472" y="233">sold as · 1—*</text></g>
-                  <g><rect class="edge-label-bg" x="612" y="111" width="68" height="16"/><text class="edge-label" x="646" y="123">groups · 1—*</text></g>
-                  <g><rect class="edge-label-bg" x="846" y="44" width="78" height="16"/><text class="edge-label" x="885" y="56">parent · 0..1</text></g>
-                  <g><rect class="edge-label-bg" x="426" y="443" width="88" height="16"/><text class="edge-label" x="470" y="455">settled · 1—1</text></g>
-                  <g><rect class="edge-label-bg" x="208" y="461" width="64" height="16"/><text class="edge-label" x="240" y="473">writes · *</text></g>
-                  <g><rect class="edge-label-bg" x="284" y="351" width="72" height="16"/><text class="edge-label" x="320" y="363">reviewed</text></g>
+                  <g><rect class="edge-label-bg" x="90" y="274" width="80" height="16"/><text class="edge-label" x="130" y="286">bill_id · 1—*</text></g>
+                  <g><rect class="edge-label-bg" x="387" y="274" width="86" height="16"/><text class="edge-label" x="430" y="286">batch_id · 1—*</text></g>
+                  <g><rect class="edge-label-bg" x="300" y="350" width="80" height="16"/><text class="edge-label" x="340" y="362">bill_id · 1—1</text></g>
+                  <g><rect class="edge-label-bg" x="643" y="274" width="74" height="16"/><text class="edge-label" x="680" y="286">yurref · 1—*</text></g>
+                  <g><rect class="edge-label-bg" x="618" y="417" width="74" height="16"/><text class="edge-label" x="655" y="429">trxseq · 1—1</text></g>
                 </g>
 
                 <!-- ── ENTITY TABLES ── -->
 
-                <!-- users -->
-                <g class="node" data-id="users" tabindex="0">
-                  <rect class="table-frame" x="20" y="70" width="200" height="120"/>
-                  <path class="table-header" d="M 20 80 a10 10 0 0 1 10 -10 H 210 a10 10 0 0 1 10 10 V 98 H 20 Z"/>
-                  <text class="table-title" x="120" y="89" text-anchor="middle">users</text>
-                  <line class="row-divider" x1="20" y1="98" x2="220" y2="98"/>
-                  <rect class="row-zebra" x="20" y="98" width="200" height="22"/>
-                  <text class="cell pk" x="32" y="113">id</text><text class="tag-pk" x="52" y="113">PK</text><text class="typ" x="208" y="113" text-anchor="end">bigint</text>
-                  <text class="cell" x="32" y="135">email</text><text class="tag-uq" x="62" y="135">UQ</text><text class="typ" x="208" y="135" text-anchor="end">citext</text>
-                  <rect class="row-zebra" x="20" y="142" width="200" height="22"/>
-                  <text class="cell" x="32" y="157">name</text><text class="typ" x="208" y="157" text-anchor="end">text</text>
-                  <text class="cell" x="32" y="179">created_at</text><text class="typ" x="208" y="179" text-anchor="end">timestamptz</text>
+                <!-- withdraw_bill · 运营商提现账单（枢纽表） -->
+                <g class="node" data-id="withdraw_bill" tabindex="0">
+                  <rect class="table-frame" x="20" y="30" width="220" height="204"/>
+                  <path class="table-header" d="M 20 40 a10 10 0 0 1 10 -10 H 230 a10 10 0 0 1 10 10 V 58 H 20 Z"/>
+                  <text class="table-title" x="130" y="49" text-anchor="middle">withdraw_bill</text>
+                  <line class="row-divider" x1="20" y1="58" x2="240" y2="58"/>
+                  <rect class="row-zebra" x="20" y="58" width="220" height="22"/>
+                  <text class="cell pk" x="32" y="73">bill_id</text><text class="tag-pk" x="86" y="73">PK</text><text class="typ" x="228" y="73" text-anchor="end">bigint</text>
+                  <text class="cell" x="32" y="95">withdraw_way</text><text class="typ" x="228" y="95" text-anchor="end">tinyint</text>
+                  <rect class="row-zebra" x="20" y="102" width="220" height="22"/>
+                  <text class="cell" x="32" y="117">bill_status</text><text class="typ" x="228" y="117" text-anchor="end">tinyint</text>
+                  <text class="cell" x="32" y="139">payroll_credit_status</text><text class="typ" x="228" y="139" text-anchor="end">tinyint</text>
+                  <rect class="row-zebra" x="20" y="146" width="220" height="22"/>
+                  <text class="cell" x="32" y="161">transfer_amount</text><text class="typ" x="228" y="161" text-anchor="end">decimal</text>
+                  <text class="cell" x="32" y="183">arrival_amount</text><text class="typ" x="228" y="183" text-anchor="end">decimal</text>
+                  <rect class="row-zebra" x="20" y="190" width="220" height="22"/>
+                  <text class="cell" x="32" y="205">operator_id</text><text class="typ" x="228" y="205" text-anchor="end">bigint</text>
+                  <text class="cell" x="32" y="227">create_time</text><text class="typ" x="228" y="227" text-anchor="end">datetime</text>
                 </g>
 
-                <!-- products -->
-                <g class="node" data-id="products" tabindex="0">
-                  <rect class="table-frame" x="370" y="70" width="200" height="120"/>
-                  <path class="table-header" d="M 370 80 a10 10 0 0 1 10 -10 H 560 a10 10 0 0 1 10 10 V 98 H 370 Z"/>
-                  <text class="table-title" x="470" y="89" text-anchor="middle">products</text>
-                  <line class="row-divider" x1="370" y1="98" x2="570" y2="98"/>
-                  <rect class="row-zebra" x="370" y="98" width="200" height="22"/>
-                  <text class="cell pk" x="382" y="113">id</text><text class="tag-pk" x="402" y="113">PK</text><text class="typ" x="558" y="113" text-anchor="end">bigint</text>
-                  <text class="cell" x="382" y="135">name</text><text class="typ" x="558" y="135" text-anchor="end">text</text>
-                  <rect class="row-zebra" x="370" y="142" width="200" height="22"/>
-                  <text class="cell" x="382" y="157">price</text><text class="typ" x="558" y="157" text-anchor="end">numeric(10,2)</text>
-                  <text class="cell fk" x="382" y="179">category_id</text><text class="tag-fk" x="458" y="179">FK</text><text class="typ" x="558" y="179" text-anchor="end">bigint</text>
+                <!-- batch_trade_record · 薪福通代发批次 -->
+                <g class="node" data-id="batch_trade_record" tabindex="0">
+                  <rect class="table-frame" x="370" y="30" width="220" height="204"/>
+                  <path class="table-header" d="M 370 40 a10 10 0 0 1 10 -10 H 580 a10 10 0 0 1 10 10 V 58 H 370 Z"/>
+                  <text class="table-title" x="480" y="49" text-anchor="middle">batch_trade_record</text>
+                  <line class="row-divider" x1="370" y1="58" x2="590" y2="58"/>
+                  <rect class="row-zebra" x="370" y="58" width="220" height="22"/>
+                  <text class="cell pk" x="382" y="73">batch_id</text><text class="tag-pk" x="440" y="73">PK</text><text class="typ" x="578" y="73" text-anchor="end">bigint</text>
+                  <text class="cell" x="382" y="95">yurref</text><text class="tag-uq" x="428" y="95">UQ</text><text class="typ" x="578" y="95" text-anchor="end">varchar</text>
+                  <rect class="row-zebra" x="370" y="102" width="220" height="22"/>
+                  <text class="cell" x="382" y="117">ttlamt</text><text class="typ" x="578" y="117" text-anchor="end">decimal</text>
+                  <text class="cell" x="382" y="139">ttlcnt</text><text class="typ" x="578" y="139" text-anchor="end">int</text>
+                  <rect class="row-zebra" x="370" y="146" width="220" height="22"/>
+                  <text class="cell" x="382" y="161">status</text><text class="typ" x="578" y="161" text-anchor="end">tinyint</text>
+                  <text class="cell" x="382" y="183">curamt</text><text class="typ" x="578" y="183" text-anchor="end">decimal</text>
+                  <rect class="row-zebra" x="370" y="190" width="220" height="22"/>
+                  <text class="cell" x="382" y="205">fail_reason</text><text class="typ" x="578" y="205" text-anchor="end">varchar</text>
+                  <text class="cell" x="382" y="227">create_time</text><text class="typ" x="578" y="227" text-anchor="end">datetime</text>
                 </g>
 
-                <!-- categories -->
-                <g class="node" data-id="categories" tabindex="0">
-                  <rect class="table-frame" x="720" y="70" width="220" height="100"/>
-                  <path class="table-header" d="M 720 80 a10 10 0 0 1 10 -10 H 930 a10 10 0 0 1 10 10 V 98 H 720 Z"/>
-                  <text class="table-title" x="830" y="89" text-anchor="middle">categories</text>
-                  <line class="row-divider" x1="720" y1="98" x2="940" y2="98"/>
-                  <rect class="row-zebra" x="720" y="98" width="220" height="22"/>
-                  <text class="cell pk" x="732" y="113">id</text><text class="tag-pk" x="752" y="113">PK</text><text class="typ" x="928" y="113" text-anchor="end">bigint</text>
-                  <text class="cell" x="732" y="135">name</text><text class="typ" x="928" y="135" text-anchor="end">text</text>
-                  <rect class="row-zebra" x="720" y="142" width="220" height="22"/>
-                  <text class="cell fk" x="732" y="157">parent_id</text><text class="tag-fk" x="800" y="157">FK</text><text class="typ" x="928" y="157" text-anchor="end">bigint?</text>
+                <!-- wallet · 薪福通内部代发户资金（独立表） -->
+                <g class="node" data-id="wallet" tabindex="0">
+                  <rect class="table-frame" x="720" y="30" width="200" height="138"/>
+                  <path class="table-header" d="M 720 40 a10 10 0 0 1 10 -10 H 910 a10 10 0 0 1 10 10 V 58 H 720 Z"/>
+                  <text class="table-title" x="820" y="49" text-anchor="middle">wallet</text>
+                  <line class="row-divider" x1="720" y1="58" x2="920" y2="58"/>
+                  <rect class="row-zebra" x="720" y="58" width="200" height="22"/>
+                  <text class="cell pk" x="732" y="73">amount_id</text><text class="tag-pk" x="796" y="73">PK</text><text class="typ" x="908" y="73" text-anchor="end">bigint</text>
+                  <text class="cell" x="732" y="95">balance</text><text class="typ" x="908" y="95" text-anchor="end">decimal</text>
+                  <rect class="row-zebra" x="720" y="102" width="200" height="22"/>
+                  <text class="cell" x="732" y="117">freeze_amount</text><text class="typ" x="908" y="117" text-anchor="end">decimal</text>
+                  <text class="cell" x="732" y="139">create_time</text><text class="typ" x="908" y="139" text-anchor="end">datetime</text>
+                  <rect class="row-zebra" x="720" y="146" width="200" height="22"/>
+                  <text class="cell" x="732" y="161">update_time</text><text class="typ" x="908" y="161" text-anchor="end">datetime</text>
                 </g>
 
-                <!-- orders -->
-                <g class="node" data-id="orders" tabindex="0">
-                  <rect class="table-frame" x="20" y="270" width="200" height="150"/>
-                  <path class="table-header" d="M 20 280 a10 10 0 0 1 10 -10 H 210 a10 10 0 0 1 10 10 V 298 H 20 Z"/>
-                  <text class="table-title" x="120" y="289" text-anchor="middle">orders</text>
-                  <line class="row-divider" x1="20" y1="298" x2="220" y2="298"/>
-                  <rect class="row-zebra" x="20" y="298" width="200" height="22"/>
-                  <text class="cell pk" x="32" y="313">id</text><text class="tag-pk" x="52" y="313">PK</text><text class="typ" x="208" y="313" text-anchor="end">bigint</text>
-                  <text class="cell fk" x="32" y="335">user_id</text><text class="tag-fk" x="80" y="335">FK</text><text class="typ" x="208" y="335" text-anchor="end">bigint</text>
-                  <rect class="row-zebra" x="20" y="342" width="200" height="22"/>
-                  <text class="cell" x="32" y="357">total</text><text class="typ" x="208" y="357" text-anchor="end">numeric(10,2)</text>
-                  <text class="cell" x="32" y="379">status</text><text class="typ" x="208" y="379" text-anchor="end">order_status</text>
-                  <rect class="row-zebra" x="20" y="386" width="200" height="22"/>
-                  <text class="cell" x="32" y="401">created_at</text><text class="typ" x="208" y="401" text-anchor="end">timestamptz</text>
+                <!-- wallet_flow · 代发户资金流水 -->
+                <g class="node" data-id="wallet_flow" tabindex="0">
+                  <rect class="table-frame" x="20" y="330" width="220" height="204"/>
+                  <path class="table-header" d="M 20 340 a10 10 0 0 1 10 -10 H 230 a10 10 0 0 1 10 10 V 358 H 20 Z"/>
+                  <text class="table-title" x="130" y="349" text-anchor="middle">wallet_flow</text>
+                  <line class="row-divider" x1="20" y1="358" x2="240" y2="358"/>
+                  <rect class="row-zebra" x="20" y="358" width="220" height="22"/>
+                  <text class="cell pk" x="32" y="373">flow_id</text><text class="tag-pk" x="84" y="373">PK</text><text class="typ" x="228" y="373" text-anchor="end">bigint</text>
+                  <text class="cell fk" x="32" y="395">bill_id</text><text class="tag-fk" x="84" y="395">FK</text><text class="typ" x="228" y="395" text-anchor="end">bigint</text>
+                  <rect class="row-zebra" x="20" y="402" width="220" height="22"/>
+                  <text class="cell" x="32" y="417">event_type</text><text class="typ" x="228" y="417" text-anchor="end">tinyint</text>
+                  <text class="cell" x="32" y="439">amount_change_type</text><text class="typ" x="228" y="439" text-anchor="end">tinyint</text>
+                  <rect class="row-zebra" x="20" y="446" width="220" height="22"/>
+                  <text class="cell" x="32" y="461">change_amount</text><text class="typ" x="228" y="461" text-anchor="end">decimal</text>
+                  <text class="cell" x="32" y="483">before_balance</text><text class="typ" x="228" y="483" text-anchor="end">decimal</text>
+                  <rect class="row-zebra" x="20" y="490" width="220" height="22"/>
+                  <text class="cell" x="32" y="505">after_balance</text><text class="typ" x="228" y="505" text-anchor="end">decimal</text>
+                  <text class="cell" x="32" y="527">create_time</text><text class="typ" x="228" y="527" text-anchor="end">datetime</text>
                 </g>
 
-                <!-- order_items (junction · weak entity) -->
-                <g class="node" data-id="order_items" tabindex="0">
-                  <rect class="table-frame" x="370" y="270" width="220" height="150"/>
-                  <path class="table-header" d="M 370 280 a10 10 0 0 1 10 -10 H 580 a10 10 0 0 1 10 10 V 298 H 370 Z"/>
-                  <text class="table-title" x="480" y="289" text-anchor="middle">order_items</text>
-                  <line class="row-divider" x1="370" y1="298" x2="590" y2="298"/>
-                  <rect class="row-zebra" x="370" y="298" width="220" height="22"/>
-                  <text class="cell pk" x="382" y="313">id</text><text class="tag-pk" x="402" y="313">PK</text><text class="typ" x="578" y="313" text-anchor="end">bigint</text>
-                  <text class="cell fk" x="382" y="335">order_id</text><text class="tag-fk" x="438" y="335">FK</text><text class="typ" x="578" y="335" text-anchor="end">bigint</text>
-                  <rect class="row-zebra" x="370" y="342" width="220" height="22"/>
-                  <text class="cell fk" x="382" y="357">product_id</text><text class="tag-fk" x="452" y="357">FK</text><text class="typ" x="578" y="357" text-anchor="end">bigint</text>
-                  <text class="cell" x="382" y="379">quantity</text><text class="typ" x="578" y="379" text-anchor="end">int</text>
-                  <rect class="row-zebra" x="370" y="386" width="220" height="22"/>
-                  <text class="cell" x="382" y="401">price</text><text class="typ" x="578" y="401" text-anchor="end">numeric(10,2)</text>
+                <!-- trade_flow · 薪福通代发流水 -->
+                <g class="node" data-id="trade_flow" tabindex="0">
+                  <rect class="table-frame" x="370" y="330" width="220" height="204"/>
+                  <path class="table-header" d="M 370 340 a10 10 0 0 1 10 -10 H 580 a10 10 0 0 1 10 10 V 358 H 370 Z"/>
+                  <text class="table-title" x="480" y="349" text-anchor="middle">trade_flow</text>
+                  <line class="row-divider" x1="370" y1="358" x2="590" y2="358"/>
+                  <rect class="row-zebra" x="370" y="358" width="220" height="22"/>
+                  <text class="cell pk" x="382" y="373">detail_id</text><text class="tag-pk" x="436" y="373">PK</text><text class="typ" x="578" y="373" text-anchor="end">bigint</text>
+                  <text class="cell" x="382" y="395">trxseq</text><text class="typ" x="578" y="395" text-anchor="end">varchar</text>
+                  <rect class="row-zebra" x="370" y="402" width="220" height="22"/>
+                  <text class="cell fk" x="382" y="417">bill_id</text><text class="tag-fk" x="430" y="417">FK</text><text class="typ" x="578" y="417" text-anchor="end">bigint</text>
+                  <text class="cell fk" x="382" y="439">batch_id</text><text class="tag-fk" x="440" y="439">FK</text><text class="typ" x="578" y="439" text-anchor="end">bigint</text>
+                  <rect class="row-zebra" x="370" y="446" width="220" height="22"/>
+                  <text class="cell" x="382" y="461">accnbr</text><text class="typ" x="578" y="461" text-anchor="end">varchar</text>
+                  <text class="cell" x="382" y="483">trsamt</text><text class="typ" x="578" y="483" text-anchor="end">decimal</text>
+                  <rect class="row-zebra" x="370" y="490" width="220" height="22"/>
+                  <text class="cell" x="382" y="505">status</text><text class="typ" x="578" y="505" text-anchor="end">char</text>
+                  <text class="cell" x="382" y="527">create_time</text><text class="typ" x="578" y="527" text-anchor="end">datetime</text>
                 </g>
 
-                <!-- payments -->
-                <g class="node" data-id="payments" tabindex="0">
-                  <rect class="table-frame" x="720" y="290" width="220" height="140"/>
-                  <path class="table-header" d="M 720 300 a10 10 0 0 1 10 -10 H 930 a10 10 0 0 1 10 10 V 318 H 720 Z"/>
-                  <text class="table-title" x="830" y="309" text-anchor="middle">payments</text>
-                  <line class="row-divider" x1="720" y1="318" x2="940" y2="318"/>
-                  <rect class="row-zebra" x="720" y="318" width="220" height="22"/>
-                  <text class="cell pk" x="732" y="333">id</text><text class="tag-pk" x="752" y="333">PK</text><text class="typ" x="928" y="333" text-anchor="end">bigint</text>
-                  <text class="cell fk" x="732" y="355">order_id</text><text class="tag-fk" x="788" y="355">FK</text><text class="tag-uq" x="810" y="355">UQ</text><text class="typ" x="928" y="355" text-anchor="end">bigint</text>
-                  <rect class="row-zebra" x="720" y="362" width="220" height="22"/>
-                  <text class="cell" x="732" y="377">amount</text><text class="typ" x="928" y="377" text-anchor="end">numeric(10,2)</text>
-                  <text class="cell" x="732" y="399">status</text><text class="typ" x="928" y="399" text-anchor="end">payment_status</text>
-                  <rect class="row-zebra" x="720" y="406" width="220" height="22"/>
-                  <text class="cell" x="732" y="421">stripe_id</text><text class="tag-uq" x="788" y="421">UQ</text><text class="typ" x="928" y="421" text-anchor="end">text</text>
+                <!-- detail_result · 银行代发明细结果 -->
+                <g class="node" data-id="detail_result" tabindex="0">
+                  <rect class="table-frame" x="720" y="330" width="220" height="204"/>
+                  <path class="table-header" d="M 720 340 a10 10 0 0 1 10 -10 H 930 a10 10 0 0 1 10 10 V 358 H 720 Z"/>
+                  <text class="table-title" x="830" y="349" text-anchor="middle">detail_result</text>
+                  <line class="row-divider" x1="720" y1="358" x2="940" y2="358"/>
+                  <rect class="row-zebra" x="720" y="358" width="220" height="22"/>
+                  <text class="cell pk" x="732" y="373">result_id</text><text class="tag-pk" x="790" y="373">PK</text><text class="typ" x="928" y="373" text-anchor="end">bigint</text>
+                  <text class="cell fk" x="732" y="395">yurref</text><text class="tag-fk" x="776" y="395">FK</text><text class="typ" x="928" y="395" text-anchor="end">varchar</text>
+                  <rect class="row-zebra" x="720" y="402" width="220" height="22"/>
+                  <text class="cell" x="732" y="417">trxseq</text><text class="typ" x="928" y="417" text-anchor="end">varchar</text>
+                  <text class="cell" x="732" y="439">stscod</text><text class="typ" x="928" y="439" text-anchor="end">char</text>
+                  <rect class="row-zebra" x="720" y="446" width="220" height="22"/>
+                  <text class="cell" x="732" y="461">trsamt</text><text class="typ" x="928" y="461" text-anchor="end">decimal</text>
+                  <text class="cell" x="732" y="483">errcod</text><text class="typ" x="928" y="483" text-anchor="end">varchar</text>
+                  <rect class="row-zebra" x="720" y="490" width="220" height="22"/>
+                  <text class="cell" x="732" y="505">errtxt</text><text class="typ" x="928" y="505" text-anchor="end">varchar</text>
+                  <text class="cell" x="732" y="527">create_time</text><text class="typ" x="928" y="527" text-anchor="end">datetime</text>
                 </g>
 
-                <!-- reviews -->
-                <g class="node" data-id="reviews" tabindex="0">
-                  <rect class="table-frame" x="270" y="510" width="240" height="120"/>
-                  <path class="table-header" d="M 270 520 a10 10 0 0 1 10 -10 H 500 a10 10 0 0 1 10 10 V 538 H 270 Z"/>
-                  <text class="table-title" x="390" y="529" text-anchor="middle">reviews</text>
-                  <line class="row-divider" x1="270" y1="538" x2="510" y2="538"/>
-                  <rect class="row-zebra" x="270" y="538" width="240" height="22"/>
-                  <text class="cell pk" x="282" y="553">id</text><text class="tag-pk" x="302" y="553">PK</text><text class="typ" x="498" y="553" text-anchor="end">bigint</text>
-                  <text class="cell fk" x="282" y="575">user_id</text><text class="tag-fk" x="330" y="575">FK</text><text class="typ" x="498" y="575" text-anchor="end">bigint</text>
-                  <rect class="row-zebra" x="270" y="582" width="240" height="22"/>
-                  <text class="cell fk" x="282" y="597">product_id</text><text class="tag-fk" x="352" y="597">FK</text><text class="typ" x="498" y="597" text-anchor="end">bigint</text>
-                  <text class="cell" x="282" y="619">rating</text><text class="typ" x="498" y="619" text-anchor="end">smallint</text>
+                <!-- wallet 独立表注解 -->
+                <g class="annotation">
+                  <rect class="note" x="700" y="178" width="190" height="24" rx="5"/>
+                  <text class="note-text" x="712" y="194">独立表 · 无外键关联</text>
                 </g>
 
               </g>
@@ -626,16 +618,16 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
     <aside>
       <div class="panel detail" id="detailPanel">
-        <div class="hint">点击任一实体 / 元素图鉴卡查看含义和实现</div>
-        <h3 id="d-title">订单业务 ER 图 · IE Notation 完整覆盖</h3>
-        <div class="meta" id="d-meta"><span>7 实体</span><span class="dot">·</span><span>8 关系</span><span class="dot">·</span><span>10 元素图鉴</span></div>
+        <div class="hint">点击任一实体表查看字段 / 索引 / 关系</div>
+        <h3 id="d-title">薪福通提现代发 ER 图 · IE Notation</h3>
+        <div class="meta" id="d-meta"><span>6 实体</span><span class="dot">·</span><span>5 关系</span><span class="dot">·</span><span>1 独立表</span></div>
         <div id="d-body">
-          <p><b>A 区 · 订单业务 ER 主图</b> — 电商核心域的 7 张表：<code>users / orders / order_items / products / categories / payments / reviews</code>。用 IE notation（crow's foot）表达 8 条关系，含 <b>1—N</b> / <b>1—1</b> / <b>M—N (via junction)</b> / <b>自引用（categories.parent_id）</b>。</p>
-          <p><b>B 区 · 元素图鉴</b> — 10 张卡：实体三类（强 / 弱 / 关联表）+ 字段标记（PK / FK + [ex] UQ/IDX/NN）+ 4 种 crow's foot 端点 + 三种关系（1—N / M—N / 自引用）。主图实际使用的元素挂 olive ✓ 角标。</p>
-          <p>IE notation 的特点：表头是深色色块 + 字段以 zebra 行罗列 + PK/FK 用 inline tag 而非区域分隔 — 让阅读者一眼分清哪些字段是身份、哪些是引用、哪些是普通属性。</p>
+          <p><b>A 区 · 薪福通提现代发 ER 主图</b> — 运营商提现账单 <code>withdraw_bill</code> 为枢纽，向外接 <b>1—1</b> 代发流水 <code>trade_flow</code>（bill_id）、<b>1—*</b> 钱包流水 <code>wallet_flow</code>（bill_id）；代发批次 <code>batch_trade_record</code> 通过 <code>batch_id</code> 挂 <b>1—*</b> 流水、通过 <code>yurref</code> 挂 <b>1—*</b> 银行明细 <code>detail_result</code>；明细再以 <code>trxseq</code> 与流水 <b>1—1</b> 对齐。钱包 <code>wallet</code> 为<b>独立表（无外键）</b>，是全链路账务中枢。</p>
+          <p><b>幂等设计</b> — <code>uk_yurref</code>（批次幂等，每次 upload 唯一）与 <code>uk_yurref_trxseq</code>（明细幂等）是代发/确认链路防重放的关键；流水表 <code>idx_batch_id</code> / <code>idx_bill_id</code> 支撑按批次、按账单的反查。</p>
+          <p>状态机贯穿：<code>withdraw_bill.payroll_credit_status</code>（-3 待分账 → -2 → 0 → 1 → 2 / FAILURE）与 <code>batch.status</code>（TRADING / SUCCESS / PART_SUCCESS / FAILURE）联动，所有资金变动以 <code>wallet_flow.event_type 1~6</code> 记账留痕。</p>
         </div>
         <div class="tags" id="d-tags">
-          <span class="tag t-state">entity</span><span class="tag t-decision">relationship</span><span class="tag t-event">crow's foot</span><span class="tag t-success">PK</span><span class="tag t-fail">FK</span>
+          <span class="tag t-state">entity</span><span class="tag t-decision">relationship</span><span class="tag t-event">crow's foot</span><span class="tag t-success">PK</span><span class="tag t-fail">FK</span><span class="tag t-success">UQ</span>
         </div>
       </div>
     </aside>
@@ -671,102 +663,97 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 05 / 10 · ER 图 · IE Notation · 7 实体 + 10 元素图鉴</span>
-    <span><a href="index.html">← 返回图谱总览</a></span>
+    <span>薪福通提现代发 · ER 图 · IE Notation · 6 实体 + 5 关系 · 独立表 wallet</span>
   </div>
 </div>
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 840 },
-  exportName: '05-er-diagram-ie-complete',
+  viewBox: { w: 1080, h: 700 },
+  exportName: 'xft-withdraw-payroll-er',
   nodeData: {
-    // ─── A 区 · 7 实体 ───
-    'users': {
+    // ─── A 区 · 6 实体 ───
+    'withdraw_bill': {
       type: 'state', tagClass: 't-state',
-      title: 'users · 用户表',
-      meta: ['4 列', 'dimension', '根身份表'],
-      body: `<p>所有注册用户。<code>email</code> citext 唯一 · 软删走单独审计表。</p><pre>id          bigint  PK
-email       citext  UQ
-name        text
-created_at  timestamptz</pre><p><b>关系</b>：1—* orders / 1—* reviews</p><p><b>索引</b>：users_pkey (id) · users_email_uniq (email)</p>`,
-      tags: ['strong-entity','dimension','identity']
+      title: 'withdraw_bill · 运营商提现账单表（枢纽）',
+      meta: ['8 列', 'finance_d_t_operator_withdraw_bill', 'payroll_credit_status 状态机'],
+      body: `<p>提现账单主表 · 全链路枢纽。代发状态机 <code>payroll_credit_status</code>：-3 待分账 → -2 分账中 → 0 未开始 → 1 代发中 → 2 已提现；失败回 -1 / FAILURE。</p><pre>bill_id                 bigint    PK
+withdraw_way            tinyint   提现方式 (2=薪福通代发)
+bill_status             tinyint   账单状态
+payroll_credit_status   tinyint   代发状态机 -3..2
+transfer_amount         decimal   分账金额 (>0 需分账)
+arrival_amount          decimal   到账金额 (代发主线金额)
+operator_id             bigint    运营商 ID
+create_time             datetime</pre><p><b>关系</b>：1—1 trade_flow (bill_id) · 1—* wallet_flow (bill_id)</p>`,
+      tags: ['hub','billing','state-machine']
     },
-    'products': {
+    'batch_trade_record': {
       type: 'state', tagClass: 't-state',
-      title: 'products · 商品表',
-      meta: ['4 列', 'dimension', '归属一个 category'],
-      body: `<p>商品目录 · price 是当前定价 · 历史价存在 <code>order_items.price</code>（快照防漂移）。</p><pre>id           bigint        PK
-name         text
-price        numeric(10,2)
-category_id  bigint        FK → categories.id</pre><p><b>关系</b>：1—* order_items · 1—* reviews · *—1 categories</p>`,
-      tags: ['strong-entity','catalog']
+      title: 'batch_trade_record · 薪福通代发批次表',
+      meta: ['8 列', 'clearing_xft_withdraw_payroll_batch_trade_record', 'uk_yurref 幂等'],
+      body: `<p>每次薪福通提现代发的批次交易记录 · <code>uk_yurref</code> 保证上传幂等（每次 upload 唯一业务参考号）。</p><pre>batch_id     bigint    PK
+yurref       varchar   UQ · 业务参考号
+ttlamt       decimal   总金额 = Σ arrival_amount
+ttlcnt       int       总笔数
+status       tinyint   1 TRADING / 2 SUCCESS / 3 PART_SUCCESS / 4 FAILURE
+curamt       decimal   本次金额 = ttlamt
+fail_reason  varchar   失败原因
+create_time  datetime</pre><p><b>关系</b>：1—* trade_flow (batch_id) · 1—* detail_result (yurref)</p><p><b>索引</b>：uk_yurref (yurref)</p>`,
+      tags: ['batch','TRADING','idempotent']
     },
-    'categories': {
+    'trade_flow': {
       type: 'state', tagClass: 't-state',
-      title: 'categories · 商品分类（自引用树）',
-      meta: ['3 列', '自引用', '应用层 cap depth=4'],
-      body: `<p>嵌套分类树 · <code>parent_id</code> 可空 · null = 顶层。</p><pre>id         bigint   PK
-name       text
-parent_id  bigint?  FK → categories.id (self)</pre><p><b>递归查询</b>：</p><pre>WITH RECURSIVE tree AS (
-  SELECT id, name, parent_id, 1 AS depth
-  FROM categories WHERE parent_id IS NULL
-  UNION ALL
-  SELECT c.id, c.name, c.parent_id, t.depth + 1
-  FROM categories c JOIN tree t ON c.parent_id = t.id
-)
-SELECT * FROM tree;</pre>`,
-      tags: ['self-reference','tree']
+      title: 'trade_flow · 薪福通代发流水表',
+      meta: ['8 列', 'clearing_xft_withdraw_payroll_trade_flow', '一单一流水'],
+      body: `<p>每笔提现代发交易流水 · 一个提现账单对应一条流水（1—1），多条流水挂在同一批次下。</p><pre>detail_id    bigint    PK
+trxseq       varchar   批次内序号 (00000001...)
+bill_id      bigint    FK → withdraw_bill
+batch_id     bigint    FK → batch_trade_record
+accnbr       varchar   收方账号 (提现账单银行卡)
+trsamt       decimal   交易金额 = arrivalAmount
+status       char      0 待处理 / 1 成功 / 2 失败
+create_time  datetime</pre><p><b>关系</b>：*—1 withdraw_bill · *—1 batch_trade_record · 1—1 detail_result (trxseq)</p><p><b>索引</b>：idx_batch_id · idx_bill_id</p>`,
+      tags: ['flow','1:1']
     },
-    'orders': {
+    'detail_result': {
       type: 'state', tagClass: 't-state',
-      title: 'orders · 订单事实表',
-      meta: ['5 列', 'fact table', '状态由 payments 服务驱动'],
-      body: `<p>单次购买事件 · 拥有 line items 与唯一 payment 行 · status 由 payment service 改写。</p><pre>id          bigint        PK
-user_id     bigint        FK → users.id
-total       numeric(10,2)
-status      order_status  enum
-created_at  timestamptz</pre><p><b>索引</b>：orders_pkey · orders_user_idx (user_id, created_at desc) · orders_status_idx (status)</p><pre>SELECT id, total, status
-FROM orders
-WHERE user_id = $1
-ORDER BY created_at DESC LIMIT 20;</pre>`,
-      tags: ['fact-table','transactional']
+      title: 'detail_result · 银行代发明细结果表',
+      meta: ['8 列', 'clearing_xft_withdraw_payroll_trade_flow_detail_result', 'uk_yurref_trxseq 幂等'],
+      body: `<p>银行代发明细结果 · 结果确认时按 (yurref, trxseq) 落库判代发成败 · <code>uk_yurref_trxseq</code> 明细幂等。</p><pre>result_id   bigint    PK
+yurref      varchar   FK → batch_trade_record.yurref
+trxseq      varchar   批次内序号 → trade_flow.trxseq
+stscod      char      F 失败 / P 处理中 / S 成功
+trsamt      decimal   交易金额
+errcod      varchar   失败代码
+errtxt      varchar   失败原因
+create_time datetime</pre><p><b>关系</b>：*—1 batch_trade_record · 1—1 trade_flow (trxseq)</p><p><b>索引</b>：uk_yurref_trxseq (yurref, trxseq)</p>`,
+      tags: ['result','stscod','idempotent']
     },
-    'order_items': {
+    'wallet_flow': {
       type: 'state', tagClass: 't-state',
-      title: 'order_items · 订单明细（关联表 / 弱实体）',
-      meta: ['5 列', 'junction', '价格快照 · 防目录漂移'],
-      body: `<p>一笔订单中一个商品的快照 · 价格在结算时冻结 · (order_id, product_id) 在订单内唯一。</p><pre>id          bigint        PK
-order_id    bigint        FK → orders.id
-product_id  bigint        FK → products.id
-quantity    int           CHECK >= 1
-price       numeric(10,2) snapshot</pre><p><b>属于</b>：弱实体 / 关联表（同时解 orders↔products 的 M:N）。</p>`,
-      tags: ['junction','weak-entity']
+      title: 'wallet_flow · 代发户资金流水表',
+      meta: ['8 列', 'clearing_xft_withdraw_payroll_wallet_flow', 'event_type 1~6'],
+      body: `<p>薪福通代发户资金流水 · 每笔资金变动记流水 · <code>event_type 1~6</code> 对应全链路账务动作。</p><pre>flow_id             bigint    PK
+bill_id             bigint    FK → withdraw_bill
+event_type          tinyint   1 分账前 / 2 分账成功 / 3 分账失败 / 4 代发成功 / 5 代发失败 / 6 退票
+amount_change_type  tinyint   1 余额 / 2 冻结 / 3 两者
+change_amount       decimal   变动金额
+before_balance      decimal   变动前余额
+after_balance       decimal   变动后余额
+create_time         datetime</pre><p><b>关系</b>：*—1 withdraw_bill (bill_id)</p><p><b>账务</b>：所有变更走 CAS（balance / freeze_amount 乐观锁），before_* 取自钱包当前值。</p>`,
+      tags: ['ledger','event_type','cas']
     },
-    'payments': {
+    'wallet': {
       type: 'state', tagClass: 't-state',
-      title: 'payments · 支付记录',
-      meta: ['5 列', 'per-order=1', 'Stripe webhook only writer'],
-      body: `<p>Stripe payment intent 的镜像 · order_id unique · webhook 是唯一写者。</p><pre>id         bigint        PK
-order_id   bigint        FK UQ → orders.id
-amount     numeric(10,2)
-status     payment_status enum
-stripe_id  text           UQ</pre><p><b>关系</b>：1—1 orders (settled)</p>`,
-      tags: ['1-1','external-system']
-    },
-    'reviews': {
-      type: 'state', tagClass: 't-state',
-      title: 'reviews · 评价桥',
-      meta: ['5 列', 'users ↔ products bridge', 'rating 1..5'],
-      body: `<p>每个 (user, product) 一条 · 实际上是 users 与 products 的 M:N 桥。rating 限 1..5。</p><pre>id          bigint   PK
-user_id     bigint   FK → users.id
-product_id  bigint   FK → products.id
-rating      smallint CHECK 1..5
-body        text</pre>`,
-      tags: ['bridge','m-n']
-    },
-
-    // ─── B 区 · 10 元素图鉴 ───
+      title: 'wallet · 薪福通内部代发户资金表（独立）',
+      meta: ['5 列', 'clearing_xft_withdraw_payroll_wallet', '独立 · 无外键'],
+      body: `<p>薪福通内部代发户资金表 · <b>独立表（无外键）</b> · 全链路账务中枢，能力收口 <code>ClearingXftWithdrawPayrollWalletService</code>。</p><pre>amount_id      bigint    PK
+balance        decimal   余额 (分账成功/退票 +，代发成功 -)
+freeze_amount  decimal   代发占款冻结 (提现发起 +，分账/代发失败或成功 -)
+create_time    datetime
+update_time    datetime</pre><p><b>不变式</b>：balance ≥ 0 · freeze_amount ≥ 0 · 可用金额 = max(balance - freeze_amount, 0)。</p>`,
+      tags: ['ledger','balance','freeze','independent']
+    }
   }
 };
 </script>

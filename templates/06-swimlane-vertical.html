@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>垂直泳道图 · 结算流程纵向阶段 — Engineering Diagram Library</title>
+<title>薪福通提现代发 · 交互全景泳道图 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -407,7 +407,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="crumb"><a href="index.html">Engineering Diagram Library</a><span class="sep">/</span><span class="here">06 · 垂直泳道图</span></div>
+    <div class="crumb"><a href="index.html">Engineering Diagram Library</a><span class="sep">/</span><span class="here">06 · 垂直泳道图 · 提现代发全链路</span></div>
     <div class="topbar-actions">
       <button class="pill-btn" id="exportSvg"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>SVG</button>
       <button class="pill-btn" id="exportPng"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1"/></svg>PNG</button>
@@ -421,14 +421,14 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 06 · 垂直泳道图 · 阶段业务流</div>
-        <h1>结算流程 · 纵向阶段 <em>— settlement phased flow</em></h1>
-        <p class="lead">一笔结算按<b>业务阶段纵向推进</b>：受理 → 复核 → 打款 → 结清。纵向 = 时间推进，横向 = 业务领域（商户 / 平台 / 银行）。白盒 + 灰箭头、主路径橄榄加粗、复核不通过走 rust 退回 —— 业务视角，系统层消息时序见 <b>02</b>。</p>
+        <div class="eyebrow">Diagram type 06V · 垂直泳道图 · 提现代发全链路</div>
+        <h1>薪福通提现代发 · 交互全景 <em>— withdraw payroll phased flow</em></h1>
+        <p class="lead">一笔提现申请从发起到退票回补的<b>纵向全景</b>：5 个业务阶段 × 5 个业务域。clearing_server 承担全部写库事务，4 个 <code>XxlJob</code> 定时轮询驱动 <code>payrollCreditStatus</code> 状态机（-3→-2→0→1→2）逐段推进。主路径 olive 加粗，失败分支 rust，Job 触发与银行交互走 plum 虚线。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">4</span>业务阶段</div>
-        <div><span class="v">3</span>业务领域</div>
-        <div><span class="v">1</span>退回分支</div>
+        <div><span class="v">5</span>业务阶段</div>
+        <div><span class="v">5</span>业务领域</div>
+        <div><span class="v">4</span>定时任务</div>
       </div>      </div>
     </div>
   </header>
@@ -439,7 +439,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="1180" viewBox="0 0 1080 1180" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="1540" viewBox="0 0 1080 1540" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
                 <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
@@ -454,125 +454,280 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               </defs>
 
               <!-- ─── Diagram title row ─── -->
-              <text class="diagram-title" x="540" y="32" text-anchor="middle">结算流程 · 纵向阶段泳道 (Settlement Phased Flow)</text>
-              <text class="diagram-sub" x="540" y="52" text-anchor="middle">受理 → 复核 → 打款 → 结清 · 商户 / 平台 / 银行 · 白盒 + 灰箭头 · 主路径 olive</text>
+              <text class="diagram-title" x="540" y="32" text-anchor="middle">薪福通提现代发 · 交互全景泳道 (Withdraw Payroll Phased Flow)</text>
+              <text class="diagram-sub" x="540" y="52" text-anchor="middle">提现申请 → 分账 → 批量代发 → 结果确认 → 退票回补 · CPO / clearing / XxlJob / 能力中心 / 招行 · 主路径 olive</text>
 
               <!-- ═══════════════════════════════════════════════════════ -->
-              <!-- 区 A · 结算流程纵向阶段                                   -->
+              <!-- 区 A · 提现代发交互全景                                   -->
               <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="92">A · 结算流程纵向阶段</text>
-              <text class="section-sub" x="40" y="114">纵向 = 业务阶段推进 · 横向 = 业务领域 · 复核判断走 rust 退回 · 到账回执走消息流</text>
+              <text class="section-label" x="40" y="92">A · 提现代发交互全景</text>
+              <text class="section-sub" x="40" y="114">纵向 = 业务阶段推进 · 横向 = 业务域 · Job 触发与银行交互走 plum 虚线 · 失败分支 rust</text>
 
               <!-- Lane header row -->
-              <text class="lane-kicker" x="270" y="150" text-anchor="middle">LANE 1</text>
-              <text class="lane-label" x="270" y="173" text-anchor="middle">商户</text>
-              <text class="lane-sub" x="270" y="191" text-anchor="middle">Merchant</text>
-              <text class="lane-kicker" x="580" y="150" text-anchor="middle">LANE 2</text>
-              <text class="lane-label" x="580" y="173" text-anchor="middle">平台</text>
-              <text class="lane-sub" x="580" y="191" text-anchor="middle">Trade · Settlement</text>
-              <text class="lane-kicker" x="890" y="150" text-anchor="middle">LANE 3</text>
-              <text class="lane-label" x="890" y="173" text-anchor="middle">银行</text>
-              <text class="lane-sub" x="890" y="191" text-anchor="middle">Bank</text>
+              <text class="lane-kicker" x="212" y="152" text-anchor="middle">LANE 1</text>
+              <text class="lane-label" x="212" y="176" text-anchor="middle">提现入口</text>
+              <text class="lane-sub" x="212" y="193" text-anchor="middle">CPO · OMP</text>
+              <text class="lane-kicker" x="396" y="152" text-anchor="middle">LANE 2</text>
+              <text class="lane-label" x="396" y="176" text-anchor="middle">清结算</text>
+              <text class="lane-sub" x="396" y="193" text-anchor="middle">clearing_server</text>
+              <text class="lane-kicker" x="580" y="152" text-anchor="middle">LANE 3</text>
+              <text class="lane-label" x="580" y="176" text-anchor="middle">定时调度</text>
+              <text class="lane-sub" x="580" y="193" text-anchor="middle">XxlJob ×4</text>
+              <text class="lane-kicker" x="764" y="152" text-anchor="middle">LANE 4</text>
+              <text class="lane-label" x="764" y="176" text-anchor="middle">银行能力</text>
+              <text class="lane-sub" x="764" y="193" text-anchor="middle">ability_center</text>
+              <text class="lane-kicker" x="948" y="152" text-anchor="middle">LANE 5</text>
+              <text class="lane-label" x="948" y="176" text-anchor="middle">招商银行</text>
+              <text class="lane-sub" x="948" y="193" text-anchor="middle">交易通 · 薪福通</text>
               <line class="lane-header-rule" x1="120" y1="205" x2="1040" y2="205"/>
-              <line class="lane-divider" x1="420" y1="205" x2="420" y2="1130"/>
-              <line class="lane-divider" x1="730" y1="205" x2="730" y2="1130"/>
+              <line class="phase-col-rule" x1="120" y1="205" x2="120" y2="1500"/>
+              <line class="lane-divider" x1="304" y1="205" x2="304" y2="1500"/>
+              <line class="lane-divider" x1="488" y1="205" x2="488" y2="1500"/>
+              <line class="lane-divider" x1="672" y1="205" x2="672" y2="1500"/>
+              <line class="lane-divider" x1="856" y1="205" x2="856" y2="1500"/>
 
-              <!-- Phase 01 · 受理 -->
-              <text class="phase-num" x="130" y="245">01</text>
-              <text class="phase-name" x="160" y="245">受理</text>
-              <text class="phase-sub" x="160" y="261">Initiate</text>
-              <line class="phase-divider-rule" x1="120" y1="440" x2="1040" y2="440"/>
+              <!-- Phase 01 · 提现申请 -->
+              <text class="phase-num" x="80" y="245">01</text>
+              <text class="phase-name" x="80" y="263">提现申请</text>
+              <text class="phase-sub" x="80" y="279">Withdraw</text>
+              <line class="phase-divider-rule" x1="120" y1="420" x2="1040" y2="420"/>
 
-              <!-- Phase 02 · 复核 -->
-              <text class="phase-num" x="130" y="480">02</text>
-              <text class="phase-name" x="160" y="480">复核</text>
-              <text class="phase-sub" x="160" y="496">Review</text>
-              <line class="phase-divider-rule" x1="120" y1="670" x2="1040" y2="670"/>
+              <!-- Phase 02 · 分账 -->
+              <text class="phase-num" x="80" y="460">02</text>
+              <text class="phase-name" x="80" y="478">分账</text>
+              <text class="phase-sub" x="80" y="494">Split</text>
+              <line class="phase-divider-rule" x1="120" y1="760" x2="1040" y2="760"/>
 
-              <!-- Phase 03 · 打款 -->
-              <text class="phase-num" x="130" y="715">03</text>
-              <text class="phase-name" x="160" y="715">打款</text>
-              <text class="phase-sub" x="160" y="731">Payout</text>
-              <line class="phase-divider-rule" x1="120" y1="900" x2="1040" y2="900"/>
+              <!-- Phase 03 · 批量代发 -->
+              <text class="phase-num" x="80" y="800">03</text>
+              <text class="phase-name" x="80" y="818">批量代发</text>
+              <text class="phase-sub" x="80" y="834">Payroll</text>
+              <line class="phase-divider-rule" x1="120" y1="990" x2="1040" y2="990"/>
 
-              <!-- Phase 04 · 结清 -->
-              <text class="phase-num" x="130" y="955">04</text>
-              <text class="phase-name" x="160" y="955">结清</text>
-              <text class="phase-sub" x="160" y="971">Settle</text>
+              <!-- Phase 04 · 结果确认 -->
+              <text class="phase-num" x="80" y="1030">04</text>
+              <text class="phase-name" x="80" y="1048">结果确认</text>
+              <text class="phase-sub" x="80" y="1064">Confirm</text>
+              <line class="phase-divider-rule" x1="120" y1="1320" x2="1040" y2="1320"/>
+
+              <!-- Phase 05 · 退票回补 -->
+              <text class="phase-num" x="80" y="1360">05</text>
+              <text class="phase-name" x="80" y="1378">退票回补</text>
+              <text class="phase-sub" x="80" y="1394">Refund</text>
 
               <!-- ═══ Edges (drawn first) ═══ -->
-              <!-- start → 商户 P1 -->
-              <circle class="event-start" cx="270" cy="205" r="9"/>
-              <path class="vflow spine" d="M270,214 L270,250"/>
-              <!-- 商户 → 平台 (P1) -->
-              <path class="vflow spine" d="M390,295 L460,295"/>
-              <!-- 平台 P1 → 平台 P2 -->
-              <path class="vflow spine" d="M580,340 L580,480"/>
-              <!-- 平台 P2 → 商户 (退回 · rust) -->
-              <path class="vflow fail" d="M460,525 L284,525"/>
-              <rect class="edge-label-bg" x="330" y="509" width="112" height="13"/>
-              <text class="edge-label fail" x="386" y="519" text-anchor="middle">不通过 · 退回</text>
-              <circle class="event-end" cx="270" cy="525" r="9"/>
-              <!-- 平台 P2 → 平台 P3 -->
-              <path class="vflow spine" d="M580,570 L580,710"/>
-              <!-- 平台 → 银行 (P3 · 打款指令) -->
-              <path class="vflow spine" d="M700,755 L770,755"/>
-              <rect class="edge-label-bg" x="706" y="739" width="52" height="13"/>
-              <text class="edge-label" x="732" y="749" text-anchor="middle">指令</text>
-              <!-- 银行 P3 → 银行 P4 -->
-              <path class="vflow spine" d="M890,800 L890,940"/>
-              <!-- 银行 → 商户 (P4 · 到账回执 msg) -->
-              <path class="vflow msg" d="M770,985 L390,985"/>
-              <rect class="edge-label-bg" x="530" y="969" width="110" height="13"/>
-              <text class="edge-label" x="585" y="979" text-anchor="middle" fill="#6B5B95">到账回执</text>
+              <!-- start → 提现入口 P1 -->
+              <circle class="event-start" cx="212" cy="205" r="9"/>
+              <path class="vflow spine" d="M212,214 L212,230"/>
+              <!-- 入口 → 清结算 P1 (TX1) -->
+              <path class="vflow spine" d="M297,270 L311,270"/>
+              <!-- TX1 → 分账判定 -->
+              <path class="vflow spine" d="M396,310 L396,336"/>
+              <!-- 分账判定 是 → 分账Job (P2) -->
+              <path class="vflow spine" d="M396,412 L396,497 L495,497"/>
+              <rect class="edge-label-bg" x="404" y="444" width="76" height="13"/>
+              <text class="edge-label yes" x="442" y="454" text-anchor="middle">是 · -3 需分账</text>
+              <!-- 分账判定 否 → 直发代发 (stub) -->
+              <path class="vflow msg" d="M481,374 L627,374"/>
+              <rect class="edge-label-bg" x="520" y="364" width="66" height="13"/>
+              <text class="edge-label" x="553" y="374" text-anchor="middle">否 · =0 直发</text>
+              <circle cx="632" cy="374" r="5" fill="#FFFFFF" stroke="#6B5B95" stroke-width="1.2"/>
+
+              <!-- P2 · 分账Job → 发起分账 -->
+              <path class="vflow spine" d="M580,537 L580,552 L396,552 L396,560"/>
+              <rect class="edge-label-bg" x="446" y="542" width="48" height="13"/>
+              <text class="edge-label" x="470" y="552" text-anchor="middle">发起分账</text>
+              <!-- 发起分账 → 交易通 (PLT001) -->
+              <path class="vflow msg" d="M481,600 L863,600"/>
+              <rect class="edge-label-bg" x="630" y="590" width="90" height="13"/>
+              <text class="edge-label" x="675" y="600" text-anchor="middle">PLT001 转账指令</text>
+              <!-- 交易通 → 确认分账 (回执) -->
+              <path class="vflow msg" d="M948,640 L948,703 L481,703"/>
+              <rect class="edge-label-bg" x="634" y="693" width="72" height="13"/>
+              <text class="edge-label" x="670" y="703" text-anchor="middle">分账结果回执</text>
+              <!-- 确认分账 失败 → 分账失败 -->
+              <path class="vflow fail" d="M311,703 L221,703"/>
+              <rect class="edge-label-bg" x="230" y="695" width="84" height="13"/>
+              <text class="edge-label fail" x="272" y="705" text-anchor="middle">失败 · 退还+告警</text>
+              <!-- 确认分账 成功 → 代发Job (P3) -->
+              <path class="vflow spine" d="M396,743 L396,812 L580,812 L580,830"/>
+              <rect class="edge-label-bg" x="452" y="802" width="56" height="13"/>
+              <text class="edge-label yes" x="480" y="812" text-anchor="middle">成功 · -2→0</text>
+
+              <!-- P3 · 代发Job → TX2 建批次 -->
+              <path class="vflow spine" d="M495,870 L481,870"/>
+              <!-- TX2 建批次 → 加密签名 -->
+              <path class="vflow spine" d="M396,910 L396,950 L764,950 L764,910"/>
+              <rect class="edge-label-bg" x="548" y="940" width="64" height="13"/>
+              <text class="edge-label" x="580" y="950" text-anchor="middle">SM4 + 签名</text>
+              <!-- 加密签名 → 批量受理 -->
+              <path class="vflow msg" d="M849,870 L863,870"/>
+              <!-- 批量受理 → 确认Job (P4 · 待轮询) -->
+              <path class="vflow msg" d="M948,910 L948,1010 L580,1010 L580,1020"/>
+              <rect class="edge-label-bg" x="763" y="1000" width="86" height="13"/>
+              <text class="edge-label" x="806" y="1010" text-anchor="middle">受理完成 · 待确认</text>
+
+              <!-- P4 · 确认Job → payrollQuery -->
+              <path class="vflow spine" d="M665,1060 L679,1060"/>
+              <!-- payrollQuery → 返回 rtnflg -->
+              <path class="vflow spine" d="M849,1060 L863,1060"/>
+              <!-- 返回 rtnflg → 结果三分支 -->
+              <path class="vflow msg" d="M948,1100 L948,1168 L481,1168"/>
+              <rect class="edge-label-bg" x="630" y="1158" width="66" height="13"/>
+              <text class="edge-label" x="663" y="1168" text-anchor="middle">返回 rtnflg</text>
+              <!-- 结果三分支 P → 处理中 -->
+              <path class="vflow msg" d="M311,1150 L221,1150"/>
+              <rect class="edge-label-bg" x="232" y="1140" width="50" height="13"/>
+              <text class="edge-label" x="257" y="1150" text-anchor="middle">P 处理中</text>
+              <!-- 结果三分支 F → 全部失败 -->
+              <path class="vflow fail" d="M481,1188 L571,1188"/>
+              <rect class="edge-label-bg" x="496" y="1178" width="52" height="13"/>
+              <text class="edge-label fail" x="522" y="1188" text-anchor="middle">F 全部失败</text>
+              <!-- 结果三分支 S/其他 → 成功入账 -->
+              <path class="vflow spine" d="M396,1206 L396,1230"/>
+              <rect class="edge-label-bg" x="406" y="1212" width="56" height="13"/>
+              <text class="edge-label yes" x="434" y="1222" text-anchor="middle">S 成功/明细</text>
+              <!-- 成功入账 → 退票Job (P5 · 窗口) -->
+              <path class="vflow msg" d="M396,1310 L396,1340 L580,1340 L580,1350"/>
+              <rect class="edge-label-bg" x="466" y="1330" width="76" height="13"/>
+              <text class="edge-label" x="504" y="1340" text-anchor="middle">T-1 退票窗口</text>
+
+              <!-- P5 · 退票Job → refundQuery -->
+              <path class="vflow spine" d="M665,1390 L679,1390"/>
+              <!-- refundQuery → 幂等回补 -->
+              <path class="vflow msg" d="M764,1430 L764,1460 L396,1460 L396,1430"/>
+              <rect class="edge-label-bg" x="530" y="1450" width="76" height="13"/>
+              <text class="edge-label" x="568" y="1460" text-anchor="middle">幂等检查 · 回补</text>
 
               <!-- ═══ Nodes overlay ═══ -->
-              <!-- 商户 P1 · 提交结算申请 -->
-              <g class="node" data-id="submit" tabindex="0">
-                <rect class="vlane-card" x="150" y="250" width="240" height="90"/>
-                <text class="vlane-title" x="270" y="292" text-anchor="middle">提交结算申请</text>
-                <text class="vlane-body" x="270" y="312" text-anchor="middle">商户操作 · 人工</text>
+              <!-- P1 · 提现入口 · 发起提现 -->
+              <g class="node" data-id="withdraw-req" tabindex="0">
+                <rect class="vlane-card" x="127" y="230" width="170" height="80"/>
+                <text class="vlane-title" x="212" y="266" text-anchor="middle">发起提现</text>
+                <text class="vlane-body" x="212" y="286" text-anchor="middle">executeWithdraw · CPO</text>
               </g>
-              <!-- 平台 P1 · 冻结受理 -->
-              <g class="node" data-id="freeze" tabindex="0">
-                <rect class="vlane-card" x="460" y="250" width="240" height="90"/>
-                <text class="vlane-title" x="580" y="292" text-anchor="middle">冻结受理 · 确认订单</text>
-                <text class="vlane-body" x="580" y="312" text-anchor="middle">系统自动 · CAS 防超扣</text>
+              <!-- P1 · 清结算 · TX1 扣款冻结 -->
+              <g class="node" data-id="tx1-freeze" tabindex="0">
+                <rect class="vlane-card" x="311" y="230" width="170" height="80"/>
+                <text class="vlane-title" x="396" y="266" text-anchor="middle">TX1 扣款冻结</text>
+                <text class="vlane-body" x="396" y="286" text-anchor="middle">withdraw_bill + freeze</text>
               </g>
-              <!-- 平台 P2 · 双人复核 (decision) -->
-              <g class="node" data-id="review" tabindex="0">
-                <rect class="vlane-card decision" x="460" y="480" width="240" height="90"/>
-                <text class="vlane-title decision" x="580" y="522" text-anchor="middle">双人复核</text>
-                <text class="vlane-body" x="580" y="542" text-anchor="middle">通过 → 打款 · 不通过 → 退回</text>
+              <!-- P1 · 清结算 · 分账判定 -->
+              <g class="node" data-id="split-decision" tabindex="0">
+                <rect class="vlane-card decision" x="311" y="336" width="170" height="76"/>
+                <text class="vlane-title decision" x="396" y="366" text-anchor="middle">分账判定</text>
+                <text class="vlane-body" x="396" y="386" text-anchor="middle">transferAmount > 0 ?</text>
               </g>
-              <!-- 平台 P3 · 对账打款 -->
-              <g class="node" data-id="finance" tabindex="0">
-                <rect class="vlane-card" x="460" y="710" width="240" height="90"/>
-                <text class="vlane-title" x="580" y="752" text-anchor="middle">对账 · 生成打款指令</text>
-                <text class="vlane-body" x="580" y="772" text-anchor="middle">财务操作 · 双签留痕</text>
+              <!-- P2 · 定时调度 · 分账Job 扫描 -->
+              <g class="node" data-id="split-poll" tabindex="0">
+                <rect class="vlane-card" x="495" y="457" width="170" height="80"/>
+                <text class="vlane-title" x="580" y="493" text-anchor="middle">分账Job 扫描</text>
+                <text class="vlane-body" x="580" y="513" text-anchor="middle">-3 · 每N分钟 · 锁12h</text>
               </g>
-              <!-- 银行 P3 · 划拨资金 -->
-              <g class="node" data-id="payout" tabindex="0">
-                <rect class="vlane-card" x="770" y="710" width="240" height="90"/>
-                <text class="vlane-title" x="890" y="752" text-anchor="middle">银行划拨资金</text>
-                <text class="vlane-body" x="890" y="772" text-anchor="middle">通道结算 · 异步回执</text>
+              <!-- P2 · 清结算 · 发起分账 -->
+              <g class="node" data-id="split-initiate" tabindex="0">
+                <rect class="vlane-card" x="311" y="560" width="170" height="80"/>
+                <text class="vlane-title" x="396" y="596" text-anchor="middle">发起分账</text>
+                <text class="vlane-body" x="396" y="616" text-anchor="middle">bill -3→-2 · 子账TRADING</text>
               </g>
-              <!-- 银行 P4 · 回执确认 -->
-              <g class="node" data-id="receipt-bank" tabindex="0">
-                <rect class="vlane-card" x="770" y="940" width="240" height="90"/>
-                <text class="vlane-title" x="890" y="982" text-anchor="middle">回执确认</text>
-                <text class="vlane-body" x="890" y="1002" text-anchor="middle">成功 / 失败 · 幂等去重</text>
+              <!-- P2 · 招商银行 · 交易通转账 -->
+              <g class="node" data-id="bank-transfer" tabindex="0">
+                <rect class="vlane-card" x="863" y="560" width="170" height="80"/>
+                <text class="vlane-title" x="948" y="596" text-anchor="middle">交易通转账</text>
+                <text class="vlane-body" x="948" y="616" text-anchor="middle">PLT001 → 代发户</text>
               </g>
-              <!-- 商户 P4 · 到账结清 -->
-              <g class="node" data-id="receipt-merchant" tabindex="0">
-                <rect class="vlane-card" x="150" y="940" width="240" height="90"/>
-                <text class="vlane-title" x="270" y="982" text-anchor="middle">到账结清</text>
-                <text class="vlane-body" x="270" y="1002" text-anchor="middle">资金到账 · 流程完成</text>
+              <!-- P2 · 清结算 · 确认分账 -->
+              <g class="node" data-id="split-confirm" tabindex="0">
+                <rect class="vlane-card decision" x="311" y="663" width="170" height="80"/>
+                <text class="vlane-title decision" x="396" y="699" text-anchor="middle">确认分账</text>
+                <text class="vlane-body" x="396" y="719" text-anchor="middle">成功 balance+ / 失败 退还</text>
               </g>
-              <!-- 退回终止 (商户 P2) -->
-              <g class="node" data-id="reject" tabindex="0">
-                <circle class="event-end" cx="270" cy="525" r="9"/>
-                <text class="vlane-body" x="270" y="552" text-anchor="middle" fill="#B04A3F">已退回 · 解冻</text>
+              <!-- P2 · 提现入口 · 分账失败终止 -->
+              <g class="node" data-id="split-fail" tabindex="0">
+                <circle class="event-end" cx="212" cy="703" r="9"/>
+                <text class="vlane-body" x="212" y="726" text-anchor="middle" fill="#B04A3F">分账失败 · 退还+告警</text>
+              </g>
+              <!-- P3 · 定时调度 · 代发Job 扫描 -->
+              <g class="node" data-id="payroll-poll" tabindex="0">
+                <rect class="vlane-card" x="495" y="830" width="170" height="80"/>
+                <text class="vlane-title" x="580" y="866" text-anchor="middle">代发Job 扫描</text>
+                <text class="vlane-body" x="580" y="886" text-anchor="middle">=0 · 每15min · 100笔/批</text>
+              </g>
+              <!-- P3 · 清结算 · TX2 建批次 -->
+              <g class="node" data-id="batch-create" tabindex="0">
+                <rect class="vlane-card" x="311" y="830" width="170" height="80"/>
+                <text class="vlane-title" x="396" y="866" text-anchor="middle">TX2 建批次</text>
+                <text class="vlane-body" x="396" y="886" text-anchor="middle">batch_record + trade_flow</text>
+              </g>
+              <!-- P3 · 银行能力 · 加密签名 -->
+              <g class="node" data-id="sign" tabindex="0">
+                <rect class="vlane-card" x="679" y="830" width="170" height="80"/>
+                <text class="vlane-title" x="764" y="866" text-anchor="middle">加密签名</text>
+                <text class="vlane-body" x="764" y="886" text-anchor="middle">SM4 + SM3withSM2</text>
+              </g>
+              <!-- P3 · 招商银行 · 批量受理 -->
+              <g class="node" data-id="bank-accept" tabindex="0">
+                <rect class="vlane-card" x="863" y="830" width="170" height="80"/>
+                <text class="vlane-title" x="948" y="866" text-anchor="middle">批量受理</text>
+                <text class="vlane-body" x="948" y="886" text-anchor="middle">payrollUpload+Execute</text>
+              </g>
+              <!-- P4 · 定时调度 · 确认Job 扫描 -->
+              <g class="node" data-id="confirm-poll" tabindex="0">
+                <rect class="vlane-card" x="495" y="1020" width="170" height="80"/>
+                <text class="vlane-title" x="580" y="1056" text-anchor="middle">确认Job 扫描</text>
+                <text class="vlane-body" x="580" y="1076" text-anchor="middle">TRADING · 每22min</text>
+              </g>
+              <!-- P4 · 银行能力 · payrollQuery -->
+              <g class="node" data-id="payroll-query" tabindex="0">
+                <rect class="vlane-card" x="679" y="1020" width="170" height="80"/>
+                <text class="vlane-title" x="764" y="1056" text-anchor="middle">payrollQuery</text>
+                <text class="vlane-body" x="764" y="1076" text-anchor="middle">按 yurref 查结果</text>
+              </g>
+              <!-- P4 · 招商银行 · 返回 rtnflg -->
+              <g class="node" data-id="bank-result" tabindex="0">
+                <rect class="vlane-card" x="863" y="1020" width="170" height="80"/>
+                <text class="vlane-title" x="948" y="1056" text-anchor="middle">返回 rtnflg</text>
+                <text class="vlane-body" x="948" y="1076" text-anchor="middle">P / F / 其他</text>
+              </g>
+              <!-- P4 · 清结算 · 结果三分支 -->
+              <g class="node" data-id="confirm-decision" tabindex="0">
+                <rect class="vlane-card decision" x="311" y="1130" width="170" height="76"/>
+                <text class="vlane-title decision" x="396" y="1160" text-anchor="middle">结果三分支</text>
+                <text class="vlane-body" x="396" y="1180" text-anchor="middle">P跳过 / F失败 / 其他明细</text>
+              </g>
+              <!-- P4 · 提现入口 · 处理中终止 -->
+              <g class="node" data-id="pending" tabindex="0">
+                <circle class="event-start" cx="212" cy="1150" r="9"/>
+                <text class="vlane-body" x="212" y="1173" text-anchor="middle">P 处理中 · 等下轮</text>
+              </g>
+              <!-- P4 · 定时调度 · 全部失败终止 -->
+              <g class="node" data-id="all-fail" tabindex="0">
+                <circle class="event-end" cx="580" cy="1188" r="9"/>
+                <text class="vlane-body" x="580" y="1211" text-anchor="middle" fill="#B04A3F">F 全部失败 · 退还告警</text>
+              </g>
+              <!-- P4 · 清结算 · 成功入账 -->
+              <g class="node" data-id="all-ok" tabindex="0">
+                <rect class="vlane-card ok" x="311" y="1230" width="170" height="80"/>
+                <text class="vlane-title" x="396" y="1266" text-anchor="middle">成功入账 · 结清</text>
+                <text class="vlane-body" x="396" y="1286" text-anchor="middle">全部/部分成功 · 明细分组</text>
+              </g>
+              <!-- P5 · 定时调度 · 退票Job 扫描 -->
+              <g class="node" data-id="refund-poll" tabindex="0">
+                <rect class="vlane-card" x="495" y="1350" width="170" height="80"/>
+                <text class="vlane-title" x="580" y="1386" text-anchor="middle">退票Job 扫描</text>
+                <text class="vlane-body" x="580" y="1406" text-anchor="middle">每5h · T-1 日退票</text>
+              </g>
+              <!-- P5 · 银行能力 · refundQuery -->
+              <g class="node" data-id="refund-query" tabindex="0">
+                <rect class="vlane-card" x="679" y="1350" width="170" height="80"/>
+                <text class="vlane-title" x="764" y="1386" text-anchor="middle">refundQuery</text>
+                <text class="vlane-body" x="764" y="1406" text-anchor="middle">查 T-1 退票列表</text>
+              </g>
+              <!-- P5 · 清结算 · 幂等回补 -->
+              <g class="node" data-id="refund-credit" tabindex="0">
+                <rect class="vlane-card" x="311" y="1350" width="170" height="80"/>
+                <text class="vlane-title" x="396" y="1386" text-anchor="middle">幂等回补</text>
+                <text class="vlane-body" x="396" y="1406" text-anchor="middle">wallet.balance+ · DISHONOUR</text>
               </g>
             </svg>
           </div>
@@ -592,16 +747,17 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
     <aside>
       <div class="panel detail" id="detailPanel">
         <div class="hint">点击任一业务步骤查看细节</div>
-        <h3 id="d-title">结算流程 · 纵向阶段总览</h3>
-        <div class="meta" id="d-meta"><span>4 阶段</span><span class="dot">·</span><span>3 领域</span><span class="dot">·</span><span>1 退回分支</span></div>
+        <h3 id="d-title">薪福通提现代发 · 交互全景总览</h3>
+        <div class="meta" id="d-meta"><span>5 阶段</span><span class="dot">·</span><span>5 业务域</span><span class="dot">·</span><span>4 定时任务</span></div>
         <div id="d-body">
-          <p><b>主路径</b>（olive）：商户提交 → 平台冻结 → 双人复核 → 对账打款 → 银行划拨 → 回执 → 商户到账。</p>
-          <p><b>退回分支</b>（rust）：复核不通过 → 退回商户并解冻。</p>
-          <p><b>消息流</b>（plum）：打款指令 平台→银行；到账回执 银行→商户（幂等去重）。</p>
-          <p>纵向泳道 = 业务阶段（时间推进）；横向 = 业务领域。系统层的消息时序见 02 时序图。</p>
+          <p><b>主路径</b>（olive）：提现申请 TX1 扣款冻结 → 分账判定 → 分账 Job 发起/确认 → 代发 Job 建批次 → 加密签名 → 银行批量受理 → 确认 Job 轮询 → 成功入账结清。</p>
+          <p><b>状态机</b>：<code>payrollCreditStatus</code> -3(待分账) → -2(分账中) → 0(待代发) → 1(代发中) → 2(FINISH)；<code>billStatus</code> WITHDRAWING → WITHDRAWAL → DISHONOUR。</p>
+          <p><b>失败兜底</b>（rust）：分账失败 / 整批失败 → 退还提现扣款 + <code>summary_clear_record</code> 回 CAN_WITHDRAW + 钉钉告警。</p>
+          <p><b>退票回补</b>：T-1 退票命中 → <code>wallet.balance += arrivalAmount</code>（<code>event_type=6</code>），无手续费走 <code>doDishonourRollback</code>。</p>
+          <p>纵向泳道 = 业务阶段（时间推进）；横向 = 业务域。系统层消息时序见 02 时序图。</p>
         </div>
         <div class="tags" id="d-tags">
-          <span class="tag t-state">phase</span><span class="tag t-event">商户</span><span class="tag t-decision">平台</span><span class="tag t-gate">银行</span>
+          <span class="tag t-state">phase</span><span class="tag t-subprocess">split</span><span class="tag t-event">payroll</span><span class="tag t-fail">refund</span>
         </div>        </div>
       </div>
     </aside>
@@ -611,9 +767,11 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <div class="legend-group" aria-label="legend - 节点">
     <div class="legend-group-label">节点 · 业务步骤</div>
     <div class="legend">
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="8" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.3"/></svg></span><span class="name">业务步骤</span><span class="sub">白盒 · 商户/平台/银行</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="8" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.5"/></svg></span><span class="name">判断</span><span class="sub">深边 · 复核分支</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#F0EEE6" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">起止事件</span><span class="sub">起始 / 退回终止</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="8" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.3"/></svg></span><span class="name">业务步骤</span><span class="sub">白盒 · CPO/clearing/Job/能力/招行</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="8" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.5"/></svg></span><span class="name">判断</span><span class="sub">深边 · 分账/结果三分支</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="8" fill="rgba(120,140,93,0.12)" stroke="#788C5D" stroke-width="1.3"/></svg></span><span class="name">成功态</span><span class="sub">olive · 入账结清</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="rgba(176,74,63,0.10)" stroke="#B04A3F" stroke-width="1.3"/></svg></span><span class="name">失败终止</span><span class="sub">rust · 退还告警</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#F0EEE6" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">起止事件</span><span class="sub">起始 / 处理中</span></div>
     </div>
   </div>
 
@@ -621,96 +779,259 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
     <div class="legend-group-label">连线 · 流向</div>
     <div class="legend">
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.2"/><path d="M22,8 L18,5 L18,11 z" fill="#788C5D"/></svg></span><span class="name">主路径</span><span class="sub">happy path · olive</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#B04A3F" stroke-width="1.4" stroke-dasharray="5 3"/><path d="M22,8 L18,5 L18,11 z" fill="#B04A3F"/></svg></span><span class="name">退回</span><span class="sub">rust 虚线</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="3" cy="8" r="2" fill="#FFFFFF" stroke="#6B5B95"/><line x1="6" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M22,8 L18,5 L18,11 z" fill="#6B5B95"/></svg></span><span class="name">消息流</span><span class="sub">指令 / 回执 · plum</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="1" width="22" height="14" rx="3" fill="#FAF9F5" stroke="#D1CFC5" stroke-width="1.2"/><line x1="13" y1="1" x2="13" y2="15" stroke="#D1CFC5" stroke-dasharray="2 2"/></svg></span><span class="name">阶段泳道</span><span class="sub">纵向阶段 · 横向领域</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#B04A3F" stroke-width="1.4" stroke-dasharray="5 3"/><path d="M22,8 L18,5 L18,11 z" fill="#B04A3F"/></svg></span><span class="name">失败回退</span><span class="sub">rust 虚线 · 退还+告警</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="3" cy="8" r="2" fill="#FFFFFF" stroke="#6B5B95"/><line x1="6" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M22,8 L18,5 L18,11 z" fill="#6B5B95"/></svg></span><span class="name">Job触发·银行交互</span><span class="sub">plum 虚线 · 指令/回执/轮询</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="1" width="22" height="14" rx="3" fill="#FAF9F5" stroke="#D1CFC5" stroke-width="1.2"/><line x1="13" y1="1" x2="13" y2="15" stroke="#D1CFC5" stroke-dasharray="2 2"/></svg></span><span class="name">阶段泳道</span><span class="sub">纵向阶段 · 横向业务域</span></div>
     </div>
   </div>  </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 06-vertical · 垂直泳道图 · 结算阶段业务流</span>
+    <span>Engineering Diagram Library · 06-vertical · 薪福通提现代发交互全景</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 1180 },
-  exportName: '06-swimlane-vertical',
+  viewBox: { w: 1080, h: 1540 },
+  exportName: 'xft-withdraw-payroll-swimlane-vertical',
   nodeData: {
-    'submit': {
+    'withdraw-req': {
       type: 'process', tagClass: 't-process',
-      title: '提交结算申请 · 商户',
-      meta: ['阶段 01 受理', '商户', '人工'],
-      body: `<p>商户在结算平台提交结算申请（金额、收款账户、结算周期）。</p><pre>输入: 金额 + 收款账户
-约束: 在可结算余额内
-幂等: settlement_id 防重复</pre>`,
-      tags: ['merchant', 'submit', 'idempotent']
+      title: '发起提现 · CPO/OMP',
+      meta: ['阶段 01 提现申请', 'CPO · OMP', '用户入口'],
+      body: `<p>用户在 CPO/OMP 发起提现申请，进入清结算提现主链路。</p><pre>入口: executeWithdraw
+出参: 到账金额 arrivalAmount
+单据: withdraw_bill
+  (status=WITHDRAWING, way=2)</pre>`,
+      tags: ['cpo', 'withdraw', 'entry']
     },
-    'freeze': {
+    'tx1-freeze': {
       type: 'process', tagClass: 't-process',
-      title: '冻结受理 · 平台',
-      meta: ['阶段 01 受理', '平台', '系统自动'],
-      body: `<p>平台确认订单并冻结对应资金，受理结算申请。</p><pre>动作: 冻结可用余额
-并发: version CAS 防超扣
-幂等: settlement_id</pre>`,
-      tags: ['platform', 'freeze', 'cas']
+      title: 'TX1 扣款冻结 · clearing_server',
+      meta: ['阶段 01 提现申请', 'clearing_server', 'TX1 事务'],
+      body: `<p>TX1 事务内完成扣款与冻结：插入提现单、扣减钱包余额、CAS 冻结到账金额。</p><pre>INSERT withdraw_bill
+UPDATE clearing_wallet 余额扣减
+changeBeforeWithdrawBusiness
+UPDATE summary_clear_record → WITHDRAWING
+CAS wallet.freeze += arrivalAmount
+INSERT wallet_flow event_type=1</pre>`,
+      tags: ['clearing', 'tx1', 'freeze']
     },
-    'review': {
+    'split-decision': {
       type: 'decision', tagClass: 't-decision',
-      title: '双人复核 · 平台',
-      meta: ['阶段 02 复核', '平台', '判断'],
-      body: `<p><b>业务判断</b>：风控双人复核（合规 / 黑名单 / 额度）。</p><pre>通过 → 打款阶段
-不通过 → 退回商户并解冻
-
-规则: 任一复核员拒绝即拒绝
-SLA: P95 < 2h</pre>`,
-      tags: ['review', 'decision', '双签']
+      title: '分账判定 · clearing_server',
+      meta: ['阶段 01 提现申请', 'clearing_server', '判断'],
+      body: `<p>计算可分账金额，决定账单是否进入分账链路。</p><pre>transferAmount = calculateTransferAmount()
+> 0 → 需分账 payrollCreditStatus=-3
+= 0 → 直发   payrollCreditStatus=0
+bill.transferAmount 落库</pre>`,
+      tags: ['decision', 'split', 'transfer-amount']
     },
-    'finance': {
+    'split-poll': {
       type: 'process', tagClass: 't-process',
-      title: '对账 · 生成打款指令 · 平台',
-      meta: ['阶段 03 打款', '平台', '财务'],
-      body: `<p>财务对账确认后生成打款指令，发送给银行。</p><pre>动作: 对账 → 生成打款指令
-发送: 打款指令 → 银行 (消息流)
-留痕: 指令号 + 双签记录</pre>`,
-      tags: ['finance', 'reconcile', 'manual']
+      title: '分账Job 扫描 · XxlJob',
+      meta: ['阶段 02 分账', 'XxlJob', 'confirmTransferJob'],
+      body: `<p>定时扫描待分账账单，进入分账链路。</p><pre>Job: confirmPersonalCpoXft
+       WithdrawPayrollTransferJob
+频率: 每 N 分钟 · 锁 12h
+条件: payrollCreditStatus=-3</pre>`,
+      tags: ['xxljob', 'split', 'poll']
     },
-    'payout': {
+    'split-initiate': {
       type: 'process', tagClass: 't-process',
-      title: '银行划拨资金 · 银行',
-      meta: ['阶段 03 打款', '银行', '异步'],
-      body: `<p>银行按打款指令划拨资金，异步回执确认。</p><pre>通道: 对公打款
-回执: 成功 / 失败 (幂等去重)
-超时: 补单对账兜底</pre>`,
-      tags: ['bank', 'payout', 'async']
+      title: '发起分账 · clearing_server',
+      meta: ['阶段 02 分账', 'clearing_server', '父类事务'],
+      body: `<p>发起单笔分账，账单进入分账中状态，记录子账户交易。</p><pre>父类事务 BEGIN
+changePreTradeBusinessData
+bill.payrollCreditStatus: -3 → -2
+INSERT sub_account_trade_record
+  (status=TRADING, amount=transferAmount)
+父类事务 COMMIT</pre>`,
+      tags: ['clearing', 'split', 'trade-record']
     },
-    'receipt-bank': {
+    'bank-transfer': {
       type: 'process', tagClass: 't-process',
-      title: '回执确认 · 银行',
-      meta: ['阶段 04 结清', '银行', '异步'],
-      body: `<p>银行回执确认资金已划拨，进入结清阶段。</p><pre>状态: 成功 / 失败
-幂等: 按回执单号去重
-触发: 到账回执通知商户</pre>`,
-      tags: ['bank', 'receipt', 'async']
+      title: '交易通转账 · 招行',
+      meta: ['阶段 02 分账', '招商银行', 'applyOnceTransfer'],
+      body: `<p>通过交易通单笔转账，从薪福通代发户划出分账金额。</p><pre>接口: applyOnceTransfer
+业务: PLT001 → 薪福通代发户
+金额: transferAmount</pre>`,
+      tags: ['bank', 'transfer', 'plt001']
     },
-    'receipt-merchant': {
-      type: 'process', tagClass: 't-process',
-      title: '到账结清 · 商户',
-      meta: ['阶段 04 结清', '商户', '终态'],
-      body: `<p>商户确认资金到账，结算流程完成。</p><pre>事件: settlement.completed
-产物: 对账单 + 回执存档
-终态: 流程结束</pre>`,
-      tags: ['merchant', 'settled', 'completed']
+    'split-confirm': {
+      type: 'decision', tagClass: 't-decision',
+      title: '确认分账 · clearing_server',
+      meta: ['阶段 02 分账', 'clearing_server', '父类事务'],
+      body: `<p>查询分账结果，成功入账 / 失败整体回滚。</p><pre>成功: trade_record → SUCCESS
+  bill -2 → 0
+  wallet.balance += tradeFlow.amount
+  wallet_flow event_type=2
+失败: 回滚 + 退还 + 钉钉告警</pre>`,
+      tags: ['clearing', 'confirm', 'decision']
     },
-    'reject': {
+    'split-fail': {
       type: 'event', tagClass: 't-fail',
-      title: '已退回 · 解冻',
-      meta: ['阶段 02 复核', '失败分支', 'rust'],
-      body: `<p>复核不通过 → 退回商户并解冻冻结资金。</p><pre>动作: 解冻 + 通知商户
-原因: 合规 / 风控拒绝
-事件: settlement.rejected</pre>`,
-      tags: ['reject', '解冻', 'fail']
+      title: '分账失败 · 退还告警',
+      meta: ['阶段 02 分账', '失败分支', 'rust'],
+      body: `<p>分账失败整体回滚，退还扣款并告警。</p><pre>trade_record → FAILURE
+bill -2 → -1 → FAILURE
+billStatus WITHDRAWING → FAILURE
+clearing_wallet 退还提现扣款
+summary_clear_record → CAN_WITHDRAW
+wallet.freeze -= arrivalAmount
+wallet_flow event_type=3 · 钉钉告警</pre>`,
+      tags: ['split', 'fail', 'rollback']
+    },
+    'payroll-poll': {
+      type: 'process', tagClass: 't-process',
+      title: '代发Job 扫描 · XxlJob',
+      meta: ['阶段 03 批量代发', 'XxlJob', 'executePayrollJob'],
+      body: `<p>扫描待代发账单，按 100 笔分片组批。</p><pre>Job: executePersonalCpoXft
+       WithdrawPayrollJob
+频率: 每 15 分钟 · 锁 12h
+条件: billStatus=1, payrollCreditStatus=0,
+      withdrawWay=2 · 100 笔/批</pre>`,
+      tags: ['xxljob', 'payroll', 'batch']
+    },
+    'batch-create': {
+      type: 'process', tagClass: 't-process',
+      title: 'TX2 建批次 · clearing_server',
+      meta: ['阶段 03 批量代发', 'clearing_server', 'TX2 事务'],
+      body: `<p>TX2 事务内创建代发批次与资金流水。</p><pre>INSERT batch_trade_record
+  (TRADING, yurref, ttlamt=ΣarrivalAmount)
+BATCH INSERT trade_flow
+  (trxseq, accnbr, trsamt=arrivalAmount)
+UPDATE bills payrollCreditStatus: 0 → 1
+       ONGOING</pre>`,
+      tags: ['clearing', 'batch', 'tx2']
+    },
+    'sign': {
+      type: 'process', tagClass: 't-process',
+      title: '加密签名 · bank_ability_center',
+      meta: ['阶段 03 批量代发', 'ability_center', '国密'],
+      body: `<p>对外报文做国密加密与签名后送招行。</p><pre>payrollUpdateExecute
+SM4 加密 + SM3withSM2 签名
+→ 调用招行薪福通</pre>`,
+      tags: ['ability-center', 'sm4', 'sign']
+    },
+    'bank-accept': {
+      type: 'process', tagClass: 't-process',
+      title: '批量受理 · 招行薪福通',
+      meta: ['阶段 03 批量代发', '招商银行', 'payrollUpload'],
+      body: `<p>招行薪福通受理批量代发文件。</p><pre>payrollUpload + payrollExecute
+批量代发受理
+批次状态 TRADING → 等待结果确认</pre>`,
+      tags: ['bank', 'payroll', 'accept']
+    },
+    'confirm-poll': {
+      type: 'process', tagClass: 't-process',
+      title: '确认Job 扫描 · XxlJob',
+      meta: ['阶段 04 结果确认', 'XxlJob', 'confirmResultJob'],
+      body: `<p>扫描处理中的批次，向银行查询代发结果。</p><pre>Job: confirmPersonalCpoXft
+       WithdrawPayrollResultJob
+频率: 每 22 分钟 · 锁 12h
+条件: batch_record TRADING 且
+      create_time < N 分钟前</pre>`,
+      tags: ['xxljob', 'confirm', 'poll']
+    },
+    'payroll-query': {
+      type: 'process', tagClass: 't-process',
+      title: 'payrollQuery · ability_center',
+      meta: ['阶段 04 结果确认', 'ability_center', '查询'],
+      body: `<p>按批次号向招行查询代发结果。</p><pre>payrollQuery(yurref)
+→ 招行薪福通返回 rtnflg</pre>`,
+      tags: ['ability-center', 'query', 'payroll']
+    },
+    'bank-result': {
+      type: 'process', tagClass: 't-process',
+      title: '返回 rtnflg · 招行薪福通',
+      meta: ['阶段 04 结果确认', '招商银行', '异步回执'],
+      body: `<p>招行返回代发处理标志，驱动三分支。</p><pre>rtnflg=P → 处理中
+rtnflg=F → 全部失败
+其他(含 S) → 拉取明细比对</pre>`,
+      tags: ['bank', 'rtnflg', 'async']
+    },
+    'confirm-decision': {
+      type: 'decision', tagClass: 't-decision',
+      title: '结果三分支 · clearing_server',
+      meta: ['阶段 04 结果确认', 'clearing_server', '判断'],
+      body: `<p>按 rtnflg 分流：处理中跳过、全部失败回滚、其他拉明细按成功笔数判定。</p><pre>P → 跳过，等下次轮询
+F → 整批失败回滚
+S/其他 → payrollQueryDetail 拉明细
+    sucnum==ttlcnt → 全部成功
+    否则 → 部分成功</pre>`,
+      tags: ['clearing', 'decision', 'rtnflg']
+    },
+    'pending': {
+      type: 'event', tagClass: 't-event',
+      title: '处理中 · 等下轮',
+      meta: ['阶段 04 结果确认', 'P 分支', 'gray'],
+      body: `<p>招行仍在处理，跳过本批，等下次轮询。</p><pre>rtnflg=P
+batch 保持 TRADING
+不更新任何状态</pre>`,
+      tags: ['pending', 'skip', 'poll']
+    },
+    'all-fail': {
+      type: 'event', tagClass: 't-fail',
+      title: '全部失败 · 退还告警',
+      meta: ['阶段 04 结果确认', 'F 分支', 'rust'],
+      body: `<p>整批代发失败，批量回滚并退还扣款。</p><pre>batch_record → FAILURE
+trade_flow → FAILURE
+bills ONGOING → FAILURE / WITHDRAWING → FAILURE
+clearing_wallet 退还提现扣款
+summary_clear_record → CAN_WITHDRAW
+wallet.freeze -= arrivalAmount
+wallet_flow event_type=5 · 钉钉告警</pre>`,
+      tags: ['all-fail', 'rollback', 'alert']
+    },
+    'all-ok': {
+      type: 'success', tagClass: 't-success',
+      title: '成功入账 · 结清',
+      meta: ['阶段 04 结果确认', 'S 分支', 'olive'],
+      body: `<p>按成功笔数分流，全部成功或部分成功分别记账。</p><pre>全部成功: batch/flow → SUCCESS
+  bill → FINISH / WITHDRAWAL
+  summary_clear_record → WITHDRAWAL
+  CAS wallet.balance -= arrivalAmount
+  wallet.freeze -= arrivalAmount
+  wallet_flow event_type=4
+部分成功: batch → PART_SUCCESS
+  成功明细入账 / 失败明细退还+告警</pre>`,
+      tags: ['success', 'settle', 'wallet']
+    },
+    'refund-poll': {
+      type: 'process', tagClass: 't-process',
+      title: '退票Job 扫描 · XxlJob',
+      meta: ['阶段 05 退票回补', 'XxlJob', 'refundJob'],
+      body: `<p>定期查询 T-1 日退票，命中已代发账单。</p><pre>Job: confirmPersonalCpoXft
+       WithdrawPayrollRefundJob
+频率: 每 5 小时 · 锁 12h
+窗口: T-1 日退票
+触发: bill.status=WITHDRAWAL</pre>`,
+      tags: ['xxljob', 'refund', 'poll']
+    },
+    'refund-query': {
+      type: 'process', tagClass: 't-process',
+      title: 'refundQuery · ability_center',
+      meta: ['阶段 05 退票回补', 'ability_center', '查询'],
+      body: `<p>按日期向招行查询退票明细。</p><pre>refundQuery(date=T-1)
+→ 招行返回退票列表</pre>`,
+      tags: ['ability-center', 'refund', 'query']
+    },
+    'refund-credit': {
+      type: 'process', tagClass: 't-process',
+      title: '幂等回补 · clearing_server',
+      meta: ['阶段 05 退票回补', 'clearing_server', 'TX 事务'],
+      body: `<p>按退票明细反查账单，幂等回补资金。</p><pre>refund.yurref → batch → trade_flow → bill
+幂等检查: 已退票则跳过
+wallet.balance += arrivalAmount
+wallet_flow event_type=6
+有手续费 → 手续费流水待归还
+无手续费 → doDishonourRollback
+  bill WITHDRAWAL → DISHONOUR
+  clearing_wallet 退还扣款+手续费
+  summary_clear_record → CAN_WITHDRAW</pre>`,
+      tags: ['clearing', 'refund', 'idempotent']
     },
   }
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>状态机 · 结算单生命周期 — Engineering Diagram Library</title>
+<title>薪福通 · 运营商提现代发状态机 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -398,14 +398,14 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 03 · 状态机 / State Machine · v2</div>
-        <h1>结算单生命周期 <em>— settlement state machine</em></h1>
-        <p class="lead">一张结算单从<b>冻结 → 结算 → 结清</b>的完整生命周期，以及回执失败后的<b>重试兜底</b>、结清后的<b>冲正补偿</b>。主路径橄榄加粗，失败/补偿路径 rust 虚线。每个状态标注 entry / do 行为与副作用 —— 冻结、扣减、双写账本、version CAS。点击状态查看字段与 SQL。</p>
+        <div class="eyebrow">Diagram 03 · 状态机 / State Machine · 薪福通提现代发</div>
+        <h1>提现代发状态机 <em>— withdraw payroll state machine</em></h1>
+        <p class="lead">个人运营商提现命中灰度后走薪福通代发：从<b>提现申请 → 分账 → 批量代发 → 结果确认 → 退票</b>的完整状态机。主路径橄榄加粗，失败 / 退票路径 rust 虚线。每个状态标注 entry / do 行为与钱包账务副作用（event_type 1~6，CAS 原子变更）。点击状态查看表字段与 SQL。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">9</span>节点</div>
-        <div><span class="v">2</span>终态</div>
-        <div><span class="v">3</span>失败/补偿路径</div>
+        <div><span class="v">7</span>提现单主状态</div>
+        <div><span class="v">4</span>批次状态</div>
+        <div><span class="v">6</span>钱包账务</div>
       </div>
     </div>
   </header>
@@ -416,7 +416,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="1660" viewBox="0 0 1080 1660" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
                 <marker id="arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
@@ -429,136 +429,261 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               </defs>
 
               <!-- ═══════════════════════════════════════════════════════════════════════ -->
-              <!-- 区 A · 结算单生命周期状态机 -->
+              <!-- 区 A · 薪福通运营商提现代发状态机 -->
               <!-- ═══════════════════════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="92">A · 结算单生命周期 · 待结算 → 结清 / 失败 / 冲正</text>
-              <text class="section-sub"   x="40" y="112">主路径橄榄加粗 = 正常结算 · rust 虚线 = 回执失败重试与终态 · 底部 = 结清后退款冲正 · version CAS + 幂等键保账本安全</text>
+              <text class="section-label" x="40" y="64">A · 提现单代发状态机 · payroll_credit_status</text>
+              <text class="section-sub"   x="40" y="84">主路径橄榄加粗 = 提现 → 分账 → 代发 → 已提现（主终态）· rust 虚线 = 失败与退票（低频补偿）· 底部 B/C 为 A 区迁移派生的联动视图 · 金额全程走 wallet_flow（event_type 1~6 · CAS）</text>
 
               <!-- ─── Edges (drawn first; states overlay) ─── -->
-              <!-- initial → CREATED (spine) -->
-              <path class="edge spine" d="M400,159 L400,180"/>
+              <!-- initial → 分账判定 (spine) -->
+              <path class="edge spine" d="M400,111 L400,150"/>
 
-              <!-- CREATED → SETTLING (spine) -->
-              <path class="edge spine" d="M400,240 L400,310"/>
-              <rect class="edge-label-bg" x="408" y="258" width="100" height="13"/>
-              <text class="edge-label trigger" x="412" y="268">settle.batch</text>
+              <!-- 分账判定 → -3 待分账 (spine 是) -->
+              <path class="edge spine" d="M400,230 L400,290"/>
+              <rect class="edge-label-bg" x="408" y="248" width="136" height="13"/>
+              <text class="edge-label trigger" x="412" y="258">是 · transferAmount &gt; 0</text>
 
-              <!-- SETTLING → 回执结果 (spine) -->
-              <path class="edge spine" d="M400,390 L400,440"/>
+              <!-- 分账判定 → 0 未开始 (否 · 绕行) -->
+              <path class="edge" d="M470,190 L930,190 L930,740 L500,740"/>
+              <rect class="edge-label-bg" x="572" y="180" width="158" height="13"/>
+              <text class="edge-label trigger" x="576" y="190">否 · transferAmount = 0</text>
 
-              <!-- 回执结果 → SETTLED (spine success) -->
-              <path class="edge spine" d="M400,520 L400,600"/>
-              <text class="t-lbl t-lbl-yes" x="408" y="556">SUCCESS</text>
+              <!-- -3 待分账 → -2 分账中 (spine) -->
+              <path class="edge spine" d="M400,350 L400,420"/>
+              <rect class="edge-label-bg" x="408" y="372" width="96" height="13"/>
+              <text class="edge-label trigger" x="412" y="382">分账Job 发起</text>
 
-              <!-- 回执结果 → RETRYING (rust failure) -->
-              <path class="edge no" d="M470,480 L780,480 L780,600"/>
-              <rect class="edge-label-bg" x="524" y="468" width="108" height="13"/>
-              <text class="edge-label trigger" x="528" y="478">FAIL / TIMEOUT</text>
+              <!-- -2 分账中 → 分账结果 (spine) -->
+              <path class="edge spine" d="M400,500 L400,560"/>
+              <rect class="edge-label-bg" x="408" y="522" width="112" height="13"/>
+              <text class="edge-label trigger" x="412" y="532">PLT001 受理回执</text>
 
-              <!-- RETRYING self-loop (retry counter) -->
-              <path class="edge" d="M700,600 Q700,545 780,545 Q860,545 860,600"/>
-              <rect class="edge-label-bg" x="724" y="536" width="112" height="13"/>
-              <text class="edge-label trigger" x="728" y="546">retry [n &lt; 3]</text>
+              <!-- 分账结果 → 0 未开始 (spine success) -->
+              <path class="edge spine" d="M400,640 L400,710"/>
+              <text class="t-lbl t-lbl-yes" x="408" y="672">成功</text>
 
-              <!-- RETRYING → SETTLED (retry success, olive) -->
-              <path class="edge yes" d="M680,630 L500,630"/>
-              <text class="t-lbl t-lbl-yes" x="556" y="622">重试成功</text>
+              <!-- 分账结果 → -1 分账失败 (rust) -->
+              <path class="edge no" d="M470,600 L758,600"/>
+              <rect class="edge-label-bg" x="540" y="590" width="54" height="13"/>
+              <text class="edge-label trigger" x="544" y="600">失败</text>
 
-              <!-- RETRYING → SETTLE_FAILED (rust, exhausted) -->
-              <path class="edge no" d="M780,680 L780,738"/>
-              <text class="t-lbl t-lbl-no" x="788" y="706">n ≥ 3</text>
+              <!-- 0 未开始 → 1 代发中 (spine) -->
+              <path class="edge spine" d="M400,770 L400,840"/>
+              <rect class="edge-label-bg" x="408" y="792" width="96" height="13"/>
+              <text class="edge-label trigger" x="412" y="802">代发Job 批量</text>
 
-              <!-- SETTLED → REVERSING (compensation) -->
-              <path class="edge no" d="M400,660 L400,760"/>
-              <rect class="edge-label-bg" x="408" y="694" width="116" height="13"/>
-              <text class="edge-label trigger" x="412" y="704">return.request</text>
+              <!-- 1 代发中 → 代发结果 (spine) -->
+              <path class="edge spine" d="M400,920 L400,980"/>
+              <rect class="edge-label-bg" x="408" y="942" width="104" height="13"/>
+              <text class="edge-label trigger" x="412" y="952">payrollUpload</text>
 
-              <!-- REVERSING → REVERSED -->
-              <path class="edge" d="M400,820 L400,908"/>
-              <text class="t-lbl" x="408" y="860">冲正回执</text>
+              <!-- 代发结果 → 2 已提现 (spine success · 主终态) -->
+              <path class="edge spine" d="M400,1060 L400,1108"/>
+              <text class="t-lbl t-lbl-yes" x="408" y="1092">S 全部 / PART 部分成功</text>
+
+              <!-- 代发结果 → 代发失败 (rust) -->
+              <path class="edge no" d="M470,1020 L758,1020"/>
+              <rect class="edge-label-bg" x="540" y="1010" width="96" height="13"/>
+              <text class="edge-label trigger" x="544" y="1020">F 全部失败</text>
+
+              <!-- 2 已提现 → DISHONOUR (rust 退票 · 低频补偿) -->
+              <path class="edge no" d="M400,1152 L400,1248"/>
+              <rect class="edge-label-bg" x="408" y="1206" width="140" height="13"/>
+              <text class="edge-label trigger" x="412" y="1216">退票Job refundQuery</text>
+
+              <!-- 1 代发中 self-loop (P 处理中) -->
+              <path class="edge" d="M500,864 C544,864 544,898 500,898"/>
+              <rect class="edge-label-bg" x="552" y="866" width="88" height="13"/>
+              <text class="edge-label trigger" x="556" y="876">P 处理中</text>
 
               <!-- ───── States (overlay edges) ───── -->
               <!-- ① Initial pseudostate -->
               <g class="node state-initial" data-id="initial" tabindex="0">
-                <circle class="shape" cx="400" cy="150" r="9"/>
+                <circle class="shape" cx="400" cy="102" r="9"/>
               </g>
 
-              <!-- ② CREATED · 待结算 -->
-              <g class="node state" data-id="created" tabindex="0">
-                <rect class="shape state-rect" x="300" y="180" width="200" height="60"/>
-                <text class="t-title" x="400" y="205" text-anchor="middle">CREATED 待结算</text>
-                <line class="state-divider" x1="310" y1="215" x2="490" y2="215"/>
-                <text class="state-body" x="400" y="231" text-anchor="middle">entry / freeze() 冻结</text>
+              <!-- ② 分账判定 decision -->
+              <g class="node decision" data-id="split-judge" tabindex="0">
+                <path class="shape" d="M400,150 L470,190 L400,230 L330,190 Z"/>
+                <text class="t-title" x="400" y="186" text-anchor="middle">分账判定</text>
+                <text class="t-sub" x="400" y="202" text-anchor="middle">transferAmount &gt; 0?</text>
               </g>
 
-              <!-- ③ SETTLING · 结算中 (spine) -->
-              <g class="node state success" data-id="settling" tabindex="0">
-                <rect class="shape state-rect" x="300" y="310" width="200" height="80"/>
-                <text class="t-title" x="400" y="336" text-anchor="middle">SETTLING 结算中</text>
-                <line class="state-divider" x1="310" y1="346" x2="490" y2="346"/>
-                <text class="state-body" x="400" y="362" text-anchor="middle">entry / submitToBank()</text>
-                <text class="state-body do" x="400" y="378" text-anchor="middle">do / pollReceipt()</text>
+              <!-- ③ -3 待分账 -->
+              <g class="node state" data-id="wait-distribute" tabindex="0">
+                <rect class="shape state-rect" x="300" y="290" width="200" height="60"/>
+                <text class="t-title" x="400" y="315" text-anchor="middle">-3 待分账</text>
+                <line class="state-divider" x1="310" y1="325" x2="490" y2="325"/>
+                <text class="state-body" x="400" y="341" text-anchor="middle">entry / occupyFreeze() CAS</text>
               </g>
 
-              <!-- ④ 回执结果 decision -->
-              <g class="node decision" data-id="receipt" tabindex="0">
-                <path class="shape" d="M400,440 L470,480 L400,520 L330,480 Z"/>
-                <text class="t-title" x="400" y="476" text-anchor="middle">回执结果</text>
-                <text class="t-sub" x="400" y="492" text-anchor="middle">receipt?</text>
+              <!-- ④ -2 分账中 -->
+              <g class="node state success" data-id="distributing" tabindex="0">
+                <rect class="shape state-rect" x="300" y="420" width="200" height="80"/>
+                <text class="t-title" x="400" y="446" text-anchor="middle">-2 分账中</text>
+                <line class="state-divider" x1="310" y1="456" x2="490" y2="456"/>
+                <text class="state-body" x="400" y="472" text-anchor="middle">entry / applyBatchTrade(PLT001)</text>
+                <text class="state-body do" x="400" y="488" text-anchor="middle">do / 交易通单笔转账</text>
               </g>
 
-              <!-- ⑤ SETTLED · 已结算 (spine success) -->
-              <g class="node state success" data-id="settled" tabindex="0">
-                <rect class="shape state-rect" x="300" y="600" width="200" height="60"/>
-                <text class="t-title" x="400" y="625" text-anchor="middle">SETTLED 已结算</text>
-                <line class="state-divider" x1="310" y1="635" x2="490" y2="635"/>
-                <text class="state-body" x="400" y="651" text-anchor="middle">entry / deduct · writeLedger</text>
+              <!-- ⑤ 分账结果 decision -->
+              <g class="node decision" data-id="distribute-result" tabindex="0">
+                <path class="shape" d="M400,560 L470,600 L400,640 L330,600 Z"/>
+                <text class="t-title" x="400" y="596" text-anchor="middle">分账结果</text>
+                <text class="t-sub" x="400" y="612" text-anchor="middle">receipt?</text>
               </g>
 
-              <!-- ⑥ RETRYING · 重试中 (fail branch) -->
-              <g class="node state" data-id="retrying" tabindex="0">
-                <rect class="shape state-rect" x="680" y="600" width="200" height="80"/>
-                <text class="t-title" x="780" y="626" text-anchor="middle">RETRYING 重试中</text>
-                <line class="state-divider" x1="690" y1="636" x2="870" y2="636"/>
-                <text class="state-body" x="780" y="652" text-anchor="middle">entry / backoff()</text>
-                <text class="state-body do" x="780" y="668" text-anchor="middle">do / resubmit()</text>
+              <!-- ⑥ 0 未开始 -->
+              <g class="node state" data-id="not-started" tabindex="0">
+                <rect class="shape state-rect" x="300" y="710" width="200" height="60"/>
+                <text class="t-title" x="400" y="735" text-anchor="middle">0 未开始</text>
+                <line class="state-divider" x1="310" y1="745" x2="490" y2="745"/>
+                <text class="state-body" x="400" y="761" text-anchor="middle">entry / 冻结已占 · 可代发</text>
               </g>
 
-              <!-- ⑦ REVERSING · 冲正中 -->
-              <g class="node state" data-id="reversing" tabindex="0">
-                <rect class="shape state-rect" x="300" y="760" width="200" height="60"/>
-                <text class="t-title" x="400" y="785" text-anchor="middle">REVERSING 冲正中</text>
-                <line class="state-divider" x1="310" y1="795" x2="490" y2="795"/>
-                <text class="state-body" x="400" y="811" text-anchor="middle">entry / reverse()</text>
+              <!-- ⑦ 1 代发中 -->
+              <g class="node state success" data-id="ongoing" tabindex="0">
+                <rect class="shape state-rect" x="300" y="840" width="200" height="80"/>
+                <text class="t-title" x="400" y="866" text-anchor="middle">1 代发中</text>
+                <line class="state-divider" x1="310" y1="876" x2="490" y2="876"/>
+                <text class="state-body" x="400" y="892" text-anchor="middle">entry / initiateBatchTrade()</text>
+                <text class="state-body do" x="400" y="908" text-anchor="middle">do / payrollUpload · execute</text>
               </g>
 
-              <!-- ⑧ SETTLE_FAILED · 结算失败 (final fail) -->
-              <g class="node state-final fail" data-id="settle-failed" tabindex="0">
-                <circle class="shape" cx="780" cy="760" r="22"/>
-                <circle class="shape-inner" cx="780" cy="760" r="16"/>
-                <text class="t-title" x="780" y="810" text-anchor="middle">SETTLE_FAILED</text>
-                <text class="t-sub" x="780" y="826" text-anchor="middle">结算失败 · 解冻</text>
+              <!-- ⑧ 代发结果 decision -->
+              <g class="node decision" data-id="payroll-result" tabindex="0">
+                <path class="shape" d="M400,980 L470,1020 L400,1060 L330,1020 Z"/>
+                <text class="t-title" x="400" y="1016" text-anchor="middle">代发结果</text>
+                <text class="t-sub" x="400" y="1032" text-anchor="middle">rtnflg?</text>
               </g>
 
-              <!-- ⑨ REVERSED · 已冲正 (final neutral) -->
-              <g class="node state-final" data-id="reversed" tabindex="0">
-                <circle class="shape" cx="400" cy="930" r="22"/>
-                <circle class="shape-inner" cx="400" cy="930" r="16"/>
-                <text class="t-title" x="400" y="980" text-anchor="middle">REVERSED</text>
-                <text class="t-sub" x="400" y="996" text-anchor="middle">已冲正 · 反向账本</text>
+              <!-- ⑨ 2 已提现 (主终态 · 绝大多数) -->
+              <g class="node state-final success" data-id="withdrawn" tabindex="0">
+                <circle class="shape" cx="400" cy="1130" r="22"/>
+                <circle class="shape-inner" cx="400" cy="1130" r="16"/>
+                <text class="t-title" x="400" y="1162" text-anchor="middle">2 已提现</text>
+                <text class="t-sub" x="400" y="1178" text-anchor="middle">balance- · freeze- · et=4</text>
               </g>
 
-              <!-- Notes (信息自足) -->
-              <g class="annotation" data-id="note-cas">
-                <path class="note" d="M515,545 L670,545 L670,597 L515,597 Z"/>
-                <text class="note-text" x="523" y="562">version CAS 乐观锁</text>
-                <text class="note-text" x="523" y="578">双写账本 ledger</text>
+              <!-- ⑩ DISHONOUR · 退票 (final neutral) -->
+              <g class="node state-final" data-id="dishonour" tabindex="0">
+                <circle class="shape" cx="400" cy="1270" r="22"/>
+                <circle class="shape-inner" cx="400" cy="1270" r="16"/>
+                <text class="t-title" x="400" y="1302" text-anchor="middle">DISHONOUR</text>
+                <text class="t-sub" x="400" y="1318" text-anchor="middle">退票 · 回补</text>
               </g>
 
-              <g class="annotation" data-id="note-esc">
-                <path class="note" d="M825,740 L1035,740 L1035,800 L825,800 Z"/>
-                <text class="note-text" x="833" y="757">重试 N 次仍失败 → 解冻</text>
-                <text class="note-text" x="833" y="773">告警 + 人工介入</text>
+              <!-- ⑪ -1 分账失败 (final fail) -->
+              <g class="node state-final fail" data-id="distribute-failed" tabindex="0">
+                <circle class="shape" cx="780" cy="600" r="22"/>
+                <circle class="shape-inner" cx="780" cy="600" r="16"/>
+                <text class="t-title" x="780" y="632" text-anchor="middle">-1 分账失败</text>
+                <text class="t-sub" x="780" y="648" text-anchor="middle">退还 + 告警</text>
+              </g>
+
+              <!-- ⑫ 代发失败 (final fail) -->
+              <g class="node state-final fail" data-id="payroll-failed" tabindex="0">
+                <circle class="shape" cx="780" cy="1020" r="22"/>
+                <circle class="shape-inner" cx="780" cy="1020" r="16"/>
+                <text class="t-title" x="780" y="1052" text-anchor="middle">代发失败</text>
+                <text class="t-sub" x="780" y="1068" text-anchor="middle">退还 + 告警</text>
+              </g>
+
+              <!-- ═══════ B · 批次状态子状态机 ═══════ -->
+              <rect class="composite-bg" x="40" y="1350" width="480" height="290"/>
+              <path class="composite-tag" d="M40,1372 L40,1366 Q40,1350 56,1350 L340,1350 L340,1372 Z"/>
+              <text class="composite-title-tag" x="50" y="1367">B · 批次状态 batch.status</text>
+
+              <path class="edge yes" d="M260,1437 L290,1437 L290,1425 L370,1425"/>
+              <text class="t-lbl t-lbl-yes" x="264" y="1417">sucnum=ttlcnt</text>
+
+              <path class="edge" d="M260,1437 L290,1437 L290,1515 L370,1515"/>
+              <text class="t-lbl" x="264" y="1495">部分成功</text>
+
+              <path class="edge no" d="M260,1437 L290,1437 L290,1605 L370,1605"/>
+              <text class="t-lbl t-lbl-no" x="264" y="1580">全部失败</text>
+
+              <g class="node state" data-id="batch-trading" tabindex="0">
+                <rect class="shape state-rect" x="100" y="1410" width="160" height="54"/>
+                <text class="t-title" x="180" y="1432" text-anchor="middle">1 处理中</text>
+                <line class="state-divider" x1="110" y1="1440" x2="250" y2="1440"/>
+                <text class="state-body" x="180" y="1455" text-anchor="middle">TRADING</text>
+              </g>
+
+              <g class="node state success" data-id="batch-success" tabindex="0">
+                <rect class="shape state-rect" x="370" y="1400" width="140" height="50"/>
+                <text class="t-title" x="440" y="1420" text-anchor="middle">2 成功</text>
+                <line class="state-divider" x1="380" y1="1428" x2="500" y2="1428"/>
+                <text class="state-body" x="440" y="1442" text-anchor="middle">SUCCESS</text>
+              </g>
+
+              <g class="node state" data-id="batch-part" tabindex="0">
+                <rect class="shape state-rect" x="370" y="1490" width="140" height="50"/>
+                <text class="t-title" x="440" y="1510" text-anchor="middle">3 部分成功</text>
+                <line class="state-divider" x1="380" y1="1518" x2="500" y2="1518"/>
+                <text class="state-body" x="440" y="1532" text-anchor="middle">PART_SUCCESS</text>
+              </g>
+
+              <g class="node state fail" data-id="batch-fail" tabindex="0">
+                <rect class="shape state-rect" x="370" y="1580" width="140" height="50"/>
+                <text class="t-title" x="440" y="1600" text-anchor="middle">4 失败</text>
+                <line class="state-divider" x1="380" y1="1608" x2="500" y2="1608"/>
+                <text class="state-body" x="440" y="1622" text-anchor="middle">FAILURE</text>
+              </g>
+
+              <!-- ═══════ C · 钱包账务子状态机 ═══════ -->
+              <rect class="composite-bg" x="560" y="1350" width="480" height="290"/>
+              <path class="composite-tag" d="M560,1372 L560,1366 Q560,1350 576,1350 L860,1350 L860,1372 Z"/>
+              <text class="composite-title-tag" x="570" y="1367">C · 钱包账务 wallet_flow.event_type</text>
+
+              <path class="edge spine" d="M755,1426 L865,1426"/>
+              <path class="edge no" d="M680,1452 L680,1495"/>
+              <text class="t-lbl t-lbl-no" x="688" y="1470">失败</text>
+              <path class="edge spine" d="M940,1452 L940,1495"/>
+              <path class="edge no" d="M890,1452 L890,1482 L818,1482 L818,1606 L755,1606"/>
+              <text class="t-lbl t-lbl-no" x="786" y="1594">代发失败</text>
+              <path class="edge spine" d="M940,1547 L940,1580"/>
+
+              <g class="node state" data-id="wf-freeze" tabindex="0">
+                <rect class="shape state-rect" x="605" y="1400" width="150" height="52"/>
+                <text class="t-title" x="680" y="1420" text-anchor="middle">1 分账前</text>
+                <line class="state-divider" x1="615" y1="1428" x2="745" y2="1428"/>
+                <text class="state-body" x="680" y="1442" text-anchor="middle">freeze +=</text>
+              </g>
+
+              <g class="node state success" data-id="wf-split-ok" tabindex="0">
+                <rect class="shape state-rect" x="865" y="1400" width="150" height="52"/>
+                <text class="t-title" x="940" y="1420" text-anchor="middle">2 分账成功</text>
+                <line class="state-divider" x1="875" y1="1428" x2="1005" y2="1428"/>
+                <text class="state-body" x="940" y="1442" text-anchor="middle">balance +=</text>
+              </g>
+
+              <g class="node state fail" data-id="wf-split-fail" tabindex="0">
+                <rect class="shape state-rect" x="605" y="1495" width="150" height="52"/>
+                <text class="t-title" x="680" y="1515" text-anchor="middle">3 分账失败</text>
+                <line class="state-divider" x1="615" y1="1523" x2="745" y2="1523"/>
+                <text class="state-body" x="680" y="1537" text-anchor="middle">freeze -=</text>
+              </g>
+
+              <g class="node state success" data-id="wf-pay-ok" tabindex="0">
+                <rect class="shape state-rect" x="865" y="1495" width="150" height="52"/>
+                <text class="t-title" x="940" y="1515" text-anchor="middle">4 代发成功</text>
+                <line class="state-divider" x1="875" y1="1523" x2="1005" y2="1523"/>
+                <text class="state-body" x="940" y="1537" text-anchor="middle">balance -= · freeze -=</text>
+              </g>
+
+              <g class="node state fail" data-id="wf-pay-fail" tabindex="0">
+                <rect class="shape state-rect" x="605" y="1580" width="150" height="52"/>
+                <text class="t-title" x="680" y="1600" text-anchor="middle">5 代发失败</text>
+                <line class="state-divider" x1="615" y1="1608" x2="745" y2="1608"/>
+                <text class="state-body" x="680" y="1622" text-anchor="middle">freeze -=</text>
+              </g>
+
+              <g class="node state" data-id="wf-refund" tabindex="0">
+                <rect class="shape state-rect" x="865" y="1580" width="150" height="52"/>
+                <text class="t-title" x="940" y="1600" text-anchor="middle">6 退票</text>
+                <line class="state-divider" x1="875" y1="1608" x2="1005" y2="1608"/>
+                <text class="state-body" x="940" y="1622" text-anchor="middle">balance +=</text>
               </g>
             </svg>
           </div>
@@ -577,17 +702,17 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
     <aside>
       <div class="panel detail" id="detailPanel">
-        <div class="hint">点击状态 / 判断 / 注释查看字段与 SQL</div>
-        <h3 id="d-title">结算单生命周期 · 状态机总览</h3>
-        <div class="meta" id="d-meta"><span>9 节点</span><span class="dot">·</span><span>2 终态</span><span class="dot">·</span><span>3 失败/补偿路径</span></div>
+        <div class="hint">点击状态 / 判断 / 子状态机查看字段与 SQL</div>
+        <h3 id="d-title">提现代发状态机 · 总览</h3>
+        <div class="meta" id="d-meta"><span>22 节点</span><span class="dot">·</span><span>4 终态</span><span class="dot">·</span><span>4 定时 Job</span></div>
         <div id="d-body">
-          <p><b>主路径</b>（橄榄加粗）：<code>待结算 → 结算中 → 已结算</code> —— 冻结 → 提交银行 → 轮询回执 → 扣减冻结 + 双写账本。</p>
-          <p><b>失败路径</b>（rust 虚线）：回执失败 / 超时 → 退避重试（≤3 次）→ 仍失败进 <code>SETTLE_FAILED</code> 终态（解冻 + 人工介入）。</p>
-          <p><b>补偿路径</b>：已结算后退款 → 冲正 → <code>REVERSED</code>（写反向账本）。</p>
-          <p><b>一致性保障</b>：所有写账本走 <code>version CAS</code> 乐观锁 + 幂等键 <code>settlement_id</code>，双写账本同事务 / 本地消息表。</p>
+          <p><b>主路径</b>（橄榄加粗）：<code>提现发起 → 分账判定 → -3 待分账 → -2 分账中 → 0 未开始 → 1 代发中 → 2 已提现</code> —— 由 clearing_server 事务 + 4 个 XxlJob 轮询驱动。</p>
+          <p><b>失败路径</b>（rust 虚线）：分账失败 → <code>-1</code> 终态；代发全部失败 → 代发失败终态；已提现后退票 → <code>DISHONOUR</code>。统一「退还扣款 + summary 回滚 + 钉钉告警」兜底。</p>
+          <p><b>子状态机</b>：底部 B 区展示批次表 <code>status</code>（TRADING → SUCCESS / PART_SUCCESS / FAILURE）；C 区展示钱包账务 <code>event_type 1~6</code> 全链路流水。</p>
+          <p><b>一致性保障</b>：钱包余额/冻结所有变更走 <code>version CAS</code> 乐观锁 + <code>before_change_*</code> 流水留痕，能力收口 <code>ClearingXftWithdrawPayrollWalletService</code>。</p>
         </div>
         <div class="tags" id="d-tags">
-          <span class="tag t-state">settlement</span><span class="tag t-decision">receipt</span><span class="tag t-success">settled</span><span class="tag t-fail">failed</span><span class="tag t-event">reversal</span>
+          <span class="tag t-state">payroll_credit_status</span><span class="tag t-decision">rtnflg</span><span class="tag t-success">withdrawn</span><span class="tag t-fail">failed</span><span class="tag t-event">wallet_flow</span>
         </div>
       </div>
     </aside>
@@ -622,123 +747,219 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   </div>  </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 03 / 07 · 状态机 · 结算单生命周期</span>
+    <span>Engineering Diagram Library · 03 / 07 · 状态机 · 薪福通提现代发</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 1080 },
-  exportName: '03-state-machine-settlement',
+  viewBox: { w: 1080, h: 1660 },
+  exportName: 'xft-withdraw-payroll-state-machine',
   nodeData: {
     'initial': {
       type: 'state-initial', tagClass: 't-state',
       title: 'INITIAL · 起始',
       meta: ['pseudo-state', '实心圆', '每图一个'],
-      body: `<p>状态机起点，不是真实状态。结算单被创建时进入 <code>CREATED</code>。</p>`,
+      body: `<p>状态机起点，不是真实状态。个人运营商提现命中灰度后进入 <code>executeWithdraw</code> 入口。</p>`,
       tags: ['pseudo-state', 'initial']
     },
-    'created': {
-      type: 'state', tagClass: 't-state',
-      title: 'CREATED · 待结算',
-      meta: ['simple state', 'entry 冻结', '幂等键'],
-      body: `<p>结算单已创建，冻结对应金额。冻结动作必须<b>幂等</b>（以 <code>settlement_id</code> 为幂等键）。</p><pre>entry / freeze(amount)
-  UPDATE account
-  SET frozen = frozen + :amt,
-      version = version + 1
-  WHERE id = :id AND version = :v</pre><p>version CAS 防止并发冻结超扣。</p>`,
-      tags: ['state', 'freeze', 'idempotent']
-    },
-    'settling': {
-      type: 'state', tagClass: 't-state',
-      title: 'SETTLING · 结算中',
-      meta: ['spine state', '异步', 'P99 < 5min'],
-      body: `<p>已组装批次并向银行发起结算。受理返回后进入轮询回执阶段。</p><pre>entry / submitToBank(out_trade_no)
-do    / pollReceipt()  // 每 5s 查一次，≤ 12 次
-
-out_trade_no = settlement_id
-→ 银行侧幂等，重复提交不重复结算</pre>`,
-      tags: ['state', 'async', 'idempotent']
-    },
-    'receipt': {
+    'split-judge': {
       type: 'decision', tagClass: 't-decision',
-      title: '回执结果 · 判断',
-      meta: ['decision', 'SUCCESS / FAIL / TIMEOUT'],
-      body: `<p>根据银行最终回执分流：</p><pre>SUCCESS → SETTLED（正常结清）
-FAIL    → RETRYING（退避重试）
-TIMEOUT → RETRYING（主动查询补单）</pre>`,
+      title: '分账判定 · transferAmount>0?',
+      meta: ['decision', '灰度命中', '分账分流'],
+      body: `<p>提现发起时计算分账金额 <code>transferAmount</code>，决定走分账还是直发：</p><pre>transferAmount &gt; 0 → -3 待分账（先分账）
+transferAmount = 0 → 0  未开始（直接代发）</pre><p>无论哪条路，<code>occupyFreezeAndWriteFlow</code> 已冻结整笔提现金额并写 <code>event_type=1</code> 流水。</p>`,
+      tags: ['decision', 'split', 'freeze']
+    },
+    'wait-distribute': {
+      type: 'state', tagClass: 't-state',
+      title: '-3 待分账 · WAIT_DISTRIBUTE',
+      meta: ['spine state', '冻结已占', 'event_type=1'],
+      body: `<p>分账金额 &gt; 0 的账单进入待分账。冻结已在提现发起时 CAS 占用（整笔提现金额）。</p><pre>freeze_amount += 提现金额
+wallet_flow: event_type=1 分账之前
+（balance 不变）</pre>`,
+      tags: ['state', 'wait-distribute', 'frozen']
+    },
+    'distributing': {
+      type: 'state', tagClass: 't-state',
+      title: '-2 分账中 · DISTRIBUTING',
+      meta: ['spine state', 'PLT001', 'AP 文件'],
+      body: `<p>分账 Job（每 15 分钟）扫描 <code>-3</code> 账单，按 1000 笔分片发起分账：</p><pre>changeTradingBusinessData（事务内）: -3 → -2
+writeApItems businessType=15 生成 AP 文件
+applyBatchTrade → 招行交易通 PLT001
+（薪福通代发户 ← transferAmount 单笔转账）</pre>`,
+      tags: ['state', 'distribute', 'plt001']
+    },
+    'distribute-result': {
+      type: 'decision', tagClass: 't-decision',
+      title: '分账结果 · 判断',
+      meta: ['decision', '成功 / 失败'],
+      body: `<p>复用交易通批量交易结果确认通道 <code>confirmBatchTradeResult</code> 轮询分账交易结果：</p><pre>成功 → 0 未开始（balance += 分账金额, event_type=2）
+失败 → -1 分账失败（freeze -= 提现金额, event_type=3）</pre>`,
       tags: ['decision', 'receipt']
     },
-    'settled': {
-      type: 'state', tagClass: 't-success',
-      title: 'SETTLED · 已结算',
-      meta: ['spine success', '双写账本', 'version CAS'],
-      body: `<p>资金已确认到账。核心副作用：扣减冻结额 + 双写账本（<code>ledger</code>）。</p><pre>entry / deduct &amp; writeLedger()
-  account.frozen -= :amt
-  account.balance -= :amt
-  ledger.insert(dr: account, cr: bank)
-
-⚑ 双写必须原子：
-  · 同事务 / 本地消息表
-  · 幂等键 = settlement_id
-  · version CAS 冲突则重试（≤3）</pre><p>已结算后可因用户退款发起冲正（→ REVERSING）。</p>`,
-      tags: ['state', 'success', 'ledger', 'cas']
-    },
-    'retrying': {
+    'not-started': {
       type: 'state', tagClass: 't-state',
-      title: 'RETRYING · 重试中',
-      meta: ['compensation', 'backoff 1s/2s/4s', 'n < 3'],
-      body: `<p>回执失败或超时，进入退避重试。每次重试重新向银行发起并再次等待回执。</p><pre>self-transition: retry [n &lt; 3] / resubmit()
-  backoff: 1s → 2s → 4s
-
-成功 → 回到 SETTLED
-n ≥ 3 仍失败 → SETTLE_FAILED</pre>`,
-      tags: ['state', 'retry', 'backoff']
+      title: '0 未开始 · NOT_STARTED',
+      meta: ['spine state', '可代发', '分账完成/无需分账'],
+      body: `<p>分账成功或无需分账的账单进入未开始，等待代发 Job 拉取。冻结占款仍在（<code>freeze_amount</code> 未释放）。</p>`,
+      tags: ['state', 'not-started', 'ready']
     },
-    'settle-failed': {
-      type: 'state-final', tagClass: 't-fail',
-      title: 'SETTLE_FAILED · 结算失败（终态）',
-      meta: ['final · fail', '解冻', '人工介入'],
-      body: `<p>重试 N 次后仍失败，进入失败终态。必须执行：</p><pre>side-effects:
-· 解冻 frozen 余额
-· 写失败流水（供对账）
-· 告警 → 人工介入（查银行原始单）
-· event: settlement.failed</pre>`,
-      tags: ['final', 'fail', '人工介入']
-    },
-    'reversing': {
+    'ongoing': {
       type: 'state', tagClass: 't-state',
-      title: 'REVERSING · 冲正中',
-      meta: ['compensation', '异步', 'P99 < 1min'],
-      body: `<p>已结算后退款 / 对账差异触发冲正。向银行发起冲正交易。</p><pre>entry / reverse(bank, amount)
-  reverse_id 独立幂等键
-  do    / 轮询冲正回执</pre>`,
-      tags: ['state', 'reversal', 'compensation']
+      title: '1 代发中 · ONGOING',
+      meta: ['spine state', '建批次', '100笔/批'],
+      body: `<p>代发 Job（每 15 分钟）扫描 <code>status=1 + payroll_credit_status=0 + withdraw_way=2</code>，按 100 笔分片建批次：</p><pre>事务内:
+  INSERT batch_trade_record（TRADING, yurref, ttlamt=ΣarrivalAmount）
+  BATCH INSERT trade_flow（trsamt=arrivalAmount）
+  bill: 0 → 1 ONGOING
+事务外: payrollUpdateExecute（上传+执行）</pre>`,
+      tags: ['state', 'ongoing', 'batch']
     },
-    'reversed': {
+    'payroll-result': {
+      type: 'decision', tagClass: 't-decision',
+      title: '代发结果 · rtnflg?',
+      meta: ['decision', 'P/F/S', '三分支'],
+      body: `<p>结果确认 Job（每 22 分钟）调 <code>payrollQuery</code> 轮询批次结果，按 <code>rtnflg</code> 三分支：</p><pre>P 处理中  → 跳过，等下次轮询
+F 全部失败 → 整批 FAILURE，退还+告警（event_type=5）
+S 其他    → payrollQueryDetail 拉明细，按 sucnum 判定
+            全部成功 / 部分成功</pre>`,
+      tags: ['decision', 'payroll', 'rtnflg']
+    },
+    'withdrawn': {
+      type: 'state-final', tagClass: 't-success',
+      title: '2 已提现 · WITHDRAWN（主终态）',
+      meta: ['final · success', '主终态 · 绝大多数', 'event_type=4'],
+      body: `<p><b>主终态</b>：绝大多数提现单止于此；<code>退票</code> 为低频补偿路径。</p><p>代发成功，账单结清：</p><pre>batch/flow → SUCCESS
+bill: payroll_credit_status 0→2 FINISH
+      status → 2 WITHDRAWAL
+wallet: balance -= 提现金额, freeze -= 提现金额
+wallet_flow: event_type=4 代发成功</pre><p>部分成功时成功明细走此路径，失败明细走 FAILURE / 退还。</p>`,
+      tags: ['final', 'success', 'settled']
+    },
+    'dishonour': {
       type: 'state-final', tagClass: 't-state',
-      title: 'REVERSED · 已冲正（终态）',
-      meta: ['final · neutral', '反向账本'],
-      body: `<p>冲正成功，写入反向账本，资金回到冻结前状态。</p><pre>side-effects:
-· ledger 写反向分录（cr: account, dr: bank）
-· 解冻余额
-· event: settlement.reversed</pre>`,
-      tags: ['final', 'reversed', 'ledger']
+      title: 'DISHONOUR · 退票',
+      meta: ['final · neutral', '退票回补', 'event_type=6'],
+      body: `<p>退票 Job（每 5 小时查 T-1）调 <code>refundQuery</code> 发现退票，幂等回补：</p><pre>wallet.balance += arrivalAmount（event_type=6）
+有手续费 → 新增退票手续费流水由定时任务归还
+无手续费 → doDishonourRollback：
+  bill WITHDRAWAL → DISHONOUR
+  退还扣款+手续费, summary 回 CAN_WITHDRAW</pre>`,
+      tags: ['final', 'dishonour', 'refund']
     },
-    'note-cas': {
-      type: 'event', tagClass: 't-event',
-      title: 'Note · 账本安全约束',
-      meta: ['version CAS', '双写账本', '幂等键'],
-      body: `<p><b>信息自足</b>：写账本必须满足 —— ① version CAS 乐观锁防并发超扣；② 双写账本同事务 / 本地消息表保原子；③ 幂等键 <code>settlement_id</code> 防重复。</p>`,
-      tags: ['annotation', 'consistency']
+    'distribute-failed': {
+      type: 'state-final', tagClass: 't-fail',
+      title: '-1 分账失败 · DISTRIBUTE_FAIL（终态）',
+      meta: ['final · fail', '退还扣款', '告警'],
+      body: `<p>分账失败，整单回滚：</p><pre>bill: -2 → -1 → FAILURE, billStatus → FAILURE
+freeze -= arrivalAmount（event_type=3）
+退还提现扣款金额
+summary_clear_record 回 CAN_WITHDRAW
+钉钉告警</pre>`,
+      tags: ['final', 'fail', 'rollback']
     },
-    'note-esc': {
-      type: 'event', tagClass: 't-event',
-      title: 'Note · 失败兜底',
-      meta: ['人工介入', '对账'],
-      body: `<p>重试 N 次仍失败 → 解冻 + 告警。由人工介入核对银行原始单，确认后补单或冲正。</p>`,
-      tags: ['annotation', 'escalation']
+    'payroll-failed': {
+      type: 'state-final', tagClass: 't-fail',
+      title: '代发失败 · PAYROLL_FAILED（终态）',
+      meta: ['final · fail', '退还', '告警'],
+      body: `<p>代发全部失败（rtnflg=F 或受理异常）：</p><pre>batch/flow → FAILURE
+bill ONGOING → FAILURE, billStatus → FAILURE
+freeze -= arrivalAmount（event_type=5）
+退还提现扣款金额, summary 回 CAN_WITHDRAW
+钉钉告警</pre>`,
+      tags: ['final', 'fail', 'rollback']
+    },
+    'batch-trading': {
+      type: 'state', tagClass: 't-state',
+      title: 'TRADING · 1 处理中',
+      meta: ['批次初始', 'yurref 幂等', 'uk_yurref'],
+      body: `<p>批次创建即 <code>TRADING(1)</code>。核心追踪标识 <code>yurref</code> 由 <code>batchNoGenerator</code> 生成，唯一索引 <code>uk_yurref</code> 保证幂等。</p><pre>ttlamt = Σ 到账金额
+ttlcnt = 账单个数
+curamt = ttlamt, curcnt = ttlcnt</pre>`,
+      tags: ['state', 'batch', 'trading']
+    },
+    'batch-success': {
+      type: 'state', tagClass: 't-success',
+      title: 'SUCCESS · 2 成功',
+      meta: ['sucnum=ttlcnt', '全部成功'],
+      body: `<p>确认 Job 查到 <code>sucnum == ttlcnt</code>，整批成功：</p><pre>batch_trade_record.status = 2
+trade_flow 批量 status = 1
+bill 结清（event_type=4）</pre>`,
+      tags: ['state', 'success']
+    },
+    'batch-part': {
+      type: 'state', tagClass: 't-state',
+      title: 'PART_SUCCESS · 3 部分成功',
+      meta: ['部分成功', '明细分流'],
+      body: `<p>批次部分成功：</p><pre>batch.status = 3 PART_SUCCESS
+成功明细 → 流水 status=1, 账单结清
+失败明细 → 流水 status=2, 账单 FAILURE/退还</pre>`,
+      tags: ['state', 'partial']
+    },
+    'batch-fail': {
+      type: 'state', tagClass: 't-fail',
+      title: 'FAILURE · 4 失败',
+      meta: ['全部失败', '退还', '告警'],
+      body: `<p>整批失败（rtnflg=F 或受理异常）：</p><pre>batch.status = 4 FAILURE
+流水批量 FAILURE
+freeze -=（event_type=5）· 退还 · 告警</pre>`,
+      tags: ['state', 'fail']
+    },
+    'wf-freeze': {
+      type: 'state', tagClass: 't-state',
+      title: '1 分账前 · 冻结占用',
+      meta: ['event_type=1', 'CAS', 'occupyFreezeAndWriteFlow'],
+      body: `<p>提现发起时统一冻结整笔提现金额（分账金额为 0 也冻结）：</p><pre>freeze_amount += 提现金额
+balance 不变
+方法: occupyFreezeAndWriteFlow</pre>`,
+      tags: ['state', 'wallet', 'freeze']
+    },
+    'wf-split-ok': {
+      type: 'state', tagClass: 't-success',
+      title: '2 分账成功 · 余额入账',
+      meta: ['event_type=2', 'CAS', 'addBalanceAndWriteFlow'],
+      body: `<p>分账成功，分账金额入账：</p><pre>balance += 实际分账金额
+freeze_amount 不变
+方法: addBalanceAndWriteFlow</pre>`,
+      tags: ['state', 'wallet', 'balance-in']
+    },
+    'wf-split-fail': {
+      type: 'state', tagClass: 't-fail',
+      title: '3 分账失败 · 释放冻结',
+      meta: ['event_type=3', 'CAS', 'subFreezeAndWriteFlow'],
+      body: `<p>分账失败，释放冻结：</p><pre>freeze_amount -= 提现金额
+balance 不变
+方法: subFreezeAndWriteFlow</pre>`,
+      tags: ['state', 'wallet', 'freeze-release']
+    },
+    'wf-pay-ok': {
+      type: 'state', tagClass: 't-success',
+      title: '4 代发成功 · 扣减结清',
+      meta: ['event_type=4', 'CAS', 'subBalanceAndFreezeAndWriteFlow'],
+      body: `<p>代发成功，同时扣减余额与冻结：</p><pre>balance -= 提现金额
+freeze_amount -= 提现金额
+方法: subBalanceAndFreezeAndWriteFlow</pre>`,
+      tags: ['state', 'wallet', 'settle']
+    },
+    'wf-pay-fail': {
+      type: 'state', tagClass: 't-fail',
+      title: '5 代发失败 · 释放冻结',
+      meta: ['event_type=5', 'CAS', 'subFreezeAndWriteFlow'],
+      body: `<p>代发失败，释放冻结占款：</p><pre>freeze_amount -= 提现金额
+balance 不变
+方法: subFreezeAndWriteFlow</pre>`,
+      tags: ['state', 'wallet', 'freeze-release']
+    },
+    'wf-refund': {
+      type: 'state', tagClass: 't-state',
+      title: '6 退票 · 余额回补',
+      meta: ['event_type=6', 'CAS', 'addBalanceAndWriteFlow'],
+      body: `<p>退票回补到账金额：</p><pre>balance += 提现金额（arrivalAmount）
+freeze_amount 不变
+方法: addBalanceAndWriteFlow</pre><p>不变式：<code>balance ≥ 0</code>，<code>freeze_amount ≥ 0</code>，可用金额 = <code>max(balance-freeze, 0)</code>。所有变更走 CAS + <code>before_change_*</code> 记录。</p>`,
+      tags: ['state', 'wallet', 'refund']
     },
   }
 };

@@ -117,7 +117,7 @@ h1 em { font-style: italic; color: var(--gray-500); font-weight: 400; }
 .canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; box-shadow: var(--shadow); }
 .canvas-stage { position: absolute; inset: 0; cursor: grab; user-select: none; touch-action: none; }
 .canvas-stage.dragging { cursor: grabbing; }
-.canvas-grid { position: absolute; inset: -2000px; background-image: radial-gradient(circle, var(--gray-300) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+.canvas-grid { position: absolute; inset: -2000px; background: transparent; pointer-events: none; }
 .canvas-inner { position: absolute; left: 50%; top: 24px; transform-origin: center top; transition: transform 60ms ease; }
 svg.diagram { display: block; }
 .diagram text { font-family: var(--mono); font-size: 12px; fill: var(--slate); pointer-events: none; }

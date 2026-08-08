@@ -107,14 +107,14 @@ h1 em { font-style: italic; color: var(--gray-500); font-weight: 400; }
 .lead b { color: var(--slate); font-weight: 600; }
 .lead code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 6px; border-radius: 4px; }
 .stat-row { display: flex; gap: 28px; align-items: baseline; font-family: var(--mono); font-size: 11px; color: var(--gray-500); }
-.stat-row .v { color: var(--slate); font-size: 24px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.1; margin-bottom: 2px; }
+.stat-row .v { color: var(--gray-700); font-size: 18px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.2; margin-bottom: 3px; }
 
 /* ── Layout ── */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-top: 28px; align-items: start; }
 @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
 
 /* ── Canvas ── */
-.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; box-shadow: var(--shadow); }
+.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; }
 .canvas-stage { position: absolute; inset: 0; cursor: grab; user-select: none; touch-action: none; }
 .canvas-stage.dragging { cursor: grabbing; }
 .canvas-grid { position: absolute; inset: -2000px; background: transparent; pointer-events: none; }
@@ -198,7 +198,7 @@ svg.diagram { display: block; }
 .edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#arrow-clay); }
 .edge.async { stroke-dasharray: 6 3; }
 .edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#arrow-open); }
-.edge.sync { stroke: var(--slate); marker-end: url(#arrow-slate); }
+.edge.sync { stroke: var(--gray-700); marker-end: url(#arrow-sync); }
 .edge.msg { stroke: var(--plum); marker-end: url(#arrow-plum); }
 .edge.thick { stroke-width: 2.2; }
 .edge.bidir { marker-start: url(#arrow-rev); marker-end: url(#arrow); }
@@ -355,7 +355,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   .diagram .card-dot.gray { fill: var(--gray-500); }
 
   /* architecture edges */
-  .diagram .edge.sync-arch { stroke: var(--slate); stroke-width: 1.4; fill: none; marker-end: url(#arrow-slate); }
+  .diagram .edge.sync-arch { stroke: var(--gray-700); stroke-width: 1.4; fill: none; marker-end: url(#arrow-sync); }
   .diagram .edge.spine { stroke: var(--olive); stroke-width: 2.6; fill: none; marker-end: url(#arrow-olive-bold); }
   .diagram .edge.rpc { stroke: var(--clay); stroke-width: 1.4; fill: none; marker-end: url(#arrow-clay); }
   .diagram .edge.async-event { stroke: var(--plum); stroke-width: 1.4; stroke-dasharray: 6 4; fill: none; marker-end: url(#arrow-plum); }
@@ -427,7 +427,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <marker id="arrow-plum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
                 <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C4994E"/></marker>
                 <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A8585"/></marker>
-                <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+                <marker id="arrow-sync" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
                 <marker id="arrow-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#87867F" stroke-width="1.4"/></marker>
               </defs>
 
@@ -956,7 +956,7 @@ SLA:
     <div class="legend-group-label">线条与标记 · EDGES &amp; MARKERS</div>
     <div class="legend">
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.6"/><path d="M22,8 L18,5 L18,11 z" fill="#788C5D"/></svg></span><span class="name">主路径 spine</span><span class="sub">happy path 加粗</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#141413" stroke-width="1.4"/><path d="M22,8 L18,5 L18,11 z" fill="#141413"/></svg></span><span class="name">sync-arch</span><span class="sub">分层骨架 slate</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#3D3D3A" stroke-width="1.4"/><path d="M22,8 L18,5 L18,11 z" fill="#3D3D3A"/></svg></span><span class="name">sync-arch</span><span class="sub">分层骨架 gray</span></div>
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#D97757" stroke-width="1.4"/><path d="M22,8 L18,5 L18,11 z" fill="#D97757"/></svg></span><span class="name">同步 RPC</span><span class="sub">gRPC · sync</span></div>
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.4" stroke-dasharray="6 4"/><path d="M22,8 L18,5 L18,11 z" fill="#6B5B95"/></svg></span><span class="name">异步事件</span><span class="sub">Kafka · MQ</span></div>
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#C4994E" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M22,8 L18,5 L18,11 z" fill="#C4994E"/></svg></span><span class="name">缓存</span><span class="sub">cache-aside</span></div>
@@ -1757,7 +1757,7 @@ GitOps · ArgoCD 同步</pre>`,
       .edge.db { stroke: ${p.clay}; stroke-dasharray: 3 3; }
       .edge.async { stroke-dasharray: 6 3; }
       .edge.return { stroke: ${p.gray500}; stroke-dasharray: 4 3; }
-      .edge.sync { stroke: ${p.slate}; }
+      .edge.sync { stroke: ${p.gray700}; }
       .edge.msg { stroke: ${p.plum}; }
       .edge.relation { stroke: ${p.clay}; }
       .edge.lane { stroke: ${p.gray300}; stroke-width: 1; }

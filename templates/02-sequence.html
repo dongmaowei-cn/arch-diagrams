@@ -152,7 +152,7 @@ svg.diagram { display: block; }
 .node.success .shape { fill: color-mix(in oklab, var(--olive), transparent 85%); stroke: var(--olive); }
 .node.fail .shape { fill: color-mix(in oklab, var(--rust), transparent 85%); stroke: var(--rust); }
 .node.actor .shape { fill: var(--paper); stroke: var(--gray-500); }
-.node.actor-system .shape { fill: color-mix(in oklab, var(--plum), transparent 88%); stroke: var(--plum); }
+.node.actor-system .shape { fill: var(--paper); stroke: var(--gray-500); }
 .node.actor-external .shape { fill: color-mix(in oklab, var(--gold), transparent 88%); stroke: var(--gold); }
 .node.state .shape { fill: var(--paper); stroke: var(--gray-500); }
 .node.state-initial .shape { fill: var(--slate); stroke: var(--slate); }
@@ -198,7 +198,7 @@ svg.diagram { display: block; }
 .edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#arrow-clay); }
 .edge.async { stroke-dasharray: 6 3; }
 .edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#arrow-open); }
-.edge.sync { stroke: var(--slate); marker-end: url(#arrow-slate); }
+.edge.sync { stroke: var(--gray-700); marker-end: url(#arrow-sync); }
 .edge.msg { stroke: var(--plum); marker-end: url(#arrow-plum); }
 .edge.thick { stroke-width: 2.2; }
 .edge.bidir { marker-start: url(#arrow-rev); marker-end: url(#arrow); }
@@ -303,19 +303,18 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 <style>
   /* Sequence-specific layering */
   .diagram .lifeline       { stroke: var(--gray-300); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
-  .diagram .activation     { fill: color-mix(in oklab, var(--plum), transparent 76%); stroke: var(--plum); stroke-width: 1; }
-  .diagram .phase-frame    { fill: none; stroke: var(--clay); stroke-width: 1; stroke-dasharray: 8 4; }
-  .diagram .phase-tab      { fill: var(--paper); stroke: var(--clay); stroke-width: 1; }
-  .diagram .fragment       { fill: none; stroke: var(--olive); stroke-width: 1.2; stroke-dasharray: 5 3; }
-  .diagram .fragment-tab   { fill: color-mix(in oklab, var(--olive), transparent 82%); stroke: var(--olive); stroke-width: 1; }
-  .diagram .fragment-divider { stroke: var(--olive); stroke-width: 1; stroke-dasharray: 5 4; }
-  .diagram text.t-phase    { font-family: var(--mono); font-size: 11px; font-weight: 700; fill: var(--clay); letter-spacing: 0.12em; text-transform: uppercase; }
-  .diagram text.t-frag     { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--olive); letter-spacing: 0.06em; text-transform: uppercase; }
-  .diagram text.t-cond     { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-700); font-style: italic; }
-  .diagram text.t-msg      { font-family: var(--mono); font-size: 11px; fill: var(--slate); }
+  .diagram .activation     { fill: color-mix(in oklab, var(--plum), transparent 90%); stroke: var(--plum); stroke-width: 0.8; }
+  .diagram .phase-frame    { fill: color-mix(in oklab, var(--gray-150), transparent 60%); stroke: var(--gray-300); stroke-width: 1; }
+  .diagram .phase-tab      { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1; }
+  .diagram .fragment       { fill: none; stroke: var(--gray-300); stroke-width: 1.2; stroke-dasharray: 4 3; }
+  .diagram .fragment-tab   { fill: var(--gray-150); stroke: var(--gray-300); stroke-width: 1; }
+  .diagram .fragment-divider { stroke: var(--gray-300); stroke-width: 1; stroke-dasharray: 4 4; }
+  .diagram text.t-phase    { font-family: var(--mono); font-size: 11px; font-weight: 500; fill: var(--gray-700); letter-spacing: 0.1em; text-transform: uppercase; }
+  .diagram text.t-frag     { font-family: var(--mono); font-size: 10px; font-weight: 500; fill: var(--gray-700); letter-spacing: 0.06em; text-transform: uppercase; }
+  .diagram text.t-cond     { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-500); font-style: italic; }
+  .diagram text.t-msg      { font-family: var(--mono); font-size: 11px; fill: var(--gray-700); }
   .diagram text.t-msg-ret  { font-family: var(--mono); font-size: 10.5px; fill: var(--gray-500); font-style: italic; }
-  .diagram text.t-ord      { font-family: var(--mono); font-size: 9px; fill: var(--clay); font-weight: 700; letter-spacing: 0.04em; }
-  .diagram .destroy        { stroke: var(--rust); stroke-width: 2.8; }
+  .diagram text.t-ord      { font-family: var(--mono); font-size: 9px; fill: var(--gray-500); font-weight: 400; letter-spacing: 0.04em; }
   .diagram .note-box       { fill: color-mix(in oklab, var(--gold), transparent 84%); stroke: var(--gold); stroke-width: 1.2; }
   .diagram .note-fold      { fill: var(--gold); fill-opacity: 0.35; stroke: var(--gold); stroke-width: 1; }
   .diagram .actor-head     { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; }
@@ -343,15 +342,15 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 02 · 时序图 / Sequence Diagram</div>
+        <div class="eyebrow">Diagram type 02 · 时序图 / Sequence Diagram · v2</div>
         <h1>订单结算的幂等时序 <em>— order settlement with idempotency</em></h1>
-        <p class="lead">五个参与者，四个 <b>阶段（phase）</b> 串成一笔从下单到银行扣款的真实链路。每条消息严格从一根<b>激活框边缘</b>出发、落到另一根<b>激活框边缘</b>，全部走 90° 正交。调用方激活长度 ≥ 被调用方 — 这是时序图的「骨」。</p>
+        <p class="lead">一笔订单从提交到银行扣款，经过 <b>网关 → 订单服务 → 支付服务 → 银行</b> 四段接力。<code>Idempotency-Key</code> 从请求头一路贯穿到银行侧 <code>out_trade_no</code>，配合幂等校验、轮询重试、异步回执三层保障 —— 重复提交、乱序回调都不会重复扣款。点击任意参与者或消息查看细节。</p>
       </div>
       <div class="stat-row">
         <div><span class="v">5</span>参与者</div>
         <div><span class="v">4</span>阶段</div>
         <div><span class="v">17</span>消息</div>
-        <div><span class="v">3</span>fragment</div>
+        <div><span class="v">3</span>分支</div>
       </div>
     </div>
   </header>
@@ -365,7 +364,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
             <svg class="diagram" id="diagram" width="1080" height="1500" viewBox="0 0 1080 1500" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
-                <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+                <marker id="arrow-sync" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
                 <marker id="arrow-plum"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B5B95"/></marker>
                 <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
                 <marker id="arrow-rust"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
@@ -378,7 +377,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               <!-- A · 订单结算 idempotency 时序主图                          -->
               <!-- ═══════════════════════════════════════════════════════ -->
               <text class="section-label" x="40" y="24">A · 订单结算 idempotency 时序主图</text>
-              <text class="section-sub"   x="40" y="42">5 参与者 · 4 阶段 · 17 消息 · 3 fragment · 主路径 sync + return + plum async</text>
+              <text class="section-sub"   x="40" y="42">5 参与者 · 4 阶段 · 17 消息 · 幂等键贯穿全程 · 轮询重试 ≤3 · 异步回执</text>
 
 
               <!-- ============================================
@@ -483,7 +482,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
               <!-- M3 Order self-message -->
               <text class="t-ord" x="535" y="276">③</text>
-              <path class="edge" d="M525,285 L568,285 L568,308 L525,308" stroke="#141413"/>
+              <path class="edge" d="M525,285 L568,285 L568,308 L525,308"/>
               <text class="t-msg" x="555" y="280">SETNX idempotency_key</text>
               <text class="t-msg-ret" x="555" y="297">→ existing? cached_order_id</text>
 
@@ -599,13 +598,6 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <text class="t-ann" x="592" y="1352">→ 重发请求只扣一次款</text>
               </g>
 
-              <!-- ============================================
-                   DESTROY MARKER (Bank lifeline ends)
-                   ============================================ -->
-              <line class="destroy" x1="950" y1="1372" x2="970" y2="1392"/>
-              <line class="destroy" x1="970" y1="1372" x2="950" y2="1392"/>
-              <text class="t-ann" x="940" y="1410" text-anchor="end" fill="#B04A3F">⊗ connection closed</text>
-
             </svg>
           </div>
         </div>
@@ -626,24 +618,23 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
           <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="5" r="2.5" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/><path d="M10,9 L10,11 L16,11 L16,9 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">客户端</span><span class="sub">stick-figure actor</span></div>
           <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="2" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">系统服务</span><span class="sub">internal / external</span></div>
           <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="13" y1="1" x2="13" y2="15" stroke="#D1CFC5" stroke-dasharray="2 2" stroke-width="1.2"/></svg></span><span class="name">lifeline</span><span class="sub">虚线竖向</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="11" y="2" width="4" height="12" fill="#6B5B95AA" stroke="#6B5B95"/></svg></span><span class="name">activation</span><span class="sub">激活框 · caller ≥ callee</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="11" y="2" width="4" height="12" fill="#6B5B9518" stroke="#6B5B95"/></svg></span><span class="name">activation</span><span class="sub">激活框 · caller ≥ callee</span></div>
         </div>
       </div>
 
       <div class="legend-group" aria-label="legend - 消息与片段">
         <div class="legend-group-label">消息与片段 · MESSAGES &amp; FRAGMENTS</div>
         <div class="legend">
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#141413" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#141413"/></svg></span><span class="name">sync 消息</span><span class="sub">实线 + 实心头</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#3D3D3A" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#3D3D3A"/></svg></span><span class="name">sync 消息</span><span class="sub">实线 + 实心头</span></div>
           <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.5" stroke-dasharray="6 3"/><path d="M22,8 L19,5 L19,11 z" fill="#6B5B95"/></svg></span><span class="name">async 消息</span><span class="sub">虚线 plum + 实心头</span></div>
           <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#87867F" stroke-dasharray="4 3" stroke-width="1.2"/><path d="M22,8 L19,5 L22,8 L19,11" fill="none" stroke="#87867F" stroke-width="1.2"/></svg></span><span class="name">return</span><span class="sub">虚线 + 开口头</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M3,4 L11,4 L11,11 L4,11" fill="none" stroke="#141413" stroke-width="1.2"/><path d="M4,11 L7,9 L7,13 z" fill="#141413"/></svg></span><span class="name">self-message</span><span class="sub">自调用 U 形</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#D97757" stroke-width="1.1"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#D97757" font-weight="700">1</text></svg></span><span class="name">order ① ② ③</span><span class="sub">消息序号 · clay</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#D97757" stroke-dasharray="3 2" stroke-width="1.2"/><path d="M2,3 L8,3 L10,5 L10,7 L2,7 z" fill="#D9775733" stroke="#D97757"/></svg></span><span class="name">phase 阶段</span><span class="sub">clay 容器 + tab</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#788C5D" stroke-dasharray="3 2" stroke-width="1.2"/><path d="M2,3 L9,3 L11,6 L11,8 L2,8 z" fill="#788C5D33" stroke="#788C5D"/></svg></span><span class="name">fragment</span><span class="sub">alt / loop / opt</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-dasharray="5 4" stroke-width="1"/></svg></span><span class="name">fragment divider</span><span class="sub">分支分隔虚线</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#3D3D3A" font-style="italic">[ guard ]</text></svg></span><span class="name">guard</span><span class="sub">[条件] 斜体</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M3,4 L11,4 L11,11 L4,11" fill="none" stroke="#3D3D3A" stroke-width="1.2"/><path d="M4,11 L7,9 L7,13 z" fill="#3D3D3A"/></svg></span><span class="name">self-message</span><span class="sub">自调用 U 形</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.1"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#87867F" font-weight="700">1</text></svg></span><span class="name">order ① ② ③</span><span class="sub">消息序号 · gray</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#D1CFC5" stroke-dasharray="3 2" stroke-width="1.2"/><path d="M2,3 L8,3 L10,5 L10,7 L2,7 z" fill="#D1CFC533" stroke="#D1CFC5"/></svg></span><span class="name">phase 阶段</span><span class="sub">gray 容器 + tab</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#D1CFC5" stroke-dasharray="3 2" stroke-width="1.2"/><path d="M2,3 L9,3 L11,6 L11,8 L2,8 z" fill="#D1CFC533" stroke="#D1CFC5"/></svg></span><span class="name">fragment</span><span class="sub">alt / loop / opt</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#D1CFC5" stroke-dasharray="5 4" stroke-width="1"/></svg></span><span class="name">fragment divider</span><span class="sub">分支分隔虚线</span></div>
+          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#87867F" font-style="italic">[ guard ]</text></svg></span><span class="name">guard</span><span class="sub">[条件] 斜体</span></div>
           <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="20" height="10" fill="#C4994E22" stroke="#C4994E" stroke-width="1.1"/><path d="M18,3 L22,3 L22,7 Z" fill="#C4994E66" stroke="#C4994E"/></svg></span><span class="name">note</span><span class="sub">折角注释</span></div>
-          <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="6" y1="3" x2="20" y2="13" stroke="#B04A3F" stroke-width="2.5"/><line x1="20" y1="3" x2="6" y2="13" stroke="#B04A3F" stroke-width="2.5"/></svg></span><span class="name">destroy</span><span class="sub">销毁标记 ✕</span></div>
         </div>
       </div>
     </div>
@@ -652,14 +643,14 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
       <div class="panel detail" id="detailPanel">
         <div class="hint">点击参与者 / 阶段 / 片段查看细节</div>
         <h3 id="d-title">订单结算时序 · 总览</h3>
-        <div class="meta" id="d-meta"><span>5 参与者</span><span class="dot">·</span><span>4 阶段</span><span class="dot">·</span><span>15 消息</span><span class="dot">·</span><span>3 fragment</span></div>
+        <div class="meta" id="d-meta"><span>5 参与者</span><span class="dot">·</span><span>4 阶段</span><span class="dot">·</span><span>17 消息</span><span class="dot">·</span><span>3 分支</span></div>
         <div id="d-body">
           <p>一笔订单从用户提交到银行扣款的完整时序。四个阶段串行：<b>幂等校验</b> → <b>发起支付</b> → <b>状态轮询</b> → <b>异步完成</b>。</p>
           <p>关键不变量：同一 <code>idempotency_key</code> 重复请求永远返回同一 <code>order_id</code>；<code>out_trade_no</code> 在 Payment 侧也保证不会重复扣款。</p>
-          <p><b>骨架规则</b>：每根激活框宽 10px 居中于 lifeline；消息从一根激活框右/左边缘出发，到另一根激活框对应边缘结束 —— <b>不画</b>到 lifeline 中心；调用方激活长度 ≥ 被调用方。</p>
+          <p>兜底策略：状态轮询用指数退避（1s / 2s / 4s，≤3 次）；超过 5 分钟无回调，定时补单任务接管；webhook 98% 在 30 秒内到达。</p>
         </div>
         <div class="tags" id="d-tags">
-          <span class="tag t-actor">5 actors</span><span class="tag t-process">15 msg</span><span class="tag t-decision">3 fragment</span>
+          <span class="tag t-actor">5 actors</span><span class="tag t-process">17 msg</span><span class="tag t-decision">3 分支</span>
         </div>
       </div>
     </aside>
@@ -717,7 +708,7 @@ Body
       type: 'actor-external', tagClass: 't-actor',
       title: 'Bank / UnionPay · 外部',
       meta: ['external', 'unreliable', 'connection ephemeral'],
-      body: `<p>外部银行支付通道。SLA 99.9%，偶发超时 / 延迟回调。Payment Service 通过 ack 机制 + 主动查询补单兜底。</p><p><b>激活框</b>有两段：⑦→⑧（受理 settle）与 ⑫（推送 webhook）。结算完成后 connection 关闭 — lifeline 末端的 ✕ 标记 destroy。</p>`,
+      body: `<p>外部银行支付通道。SLA 99.9%，偶发超时 / 延迟回调。Payment Service 通过 ack 机制 + 主动查询补单兜底。</p><p><b>激活框</b>有两段：⑦→⑧（受理 settle）与 ⑫（推送 webhook）。结算完成后连接关闭，外部 lifeline 就此结束。</p>`,
       tags: ['external', '银行']
     },
     'frag-alt': {
@@ -940,7 +931,7 @@ Body
       .node.success .shape { fill: ${p.olive}33; stroke: ${p.olive}; }
       .node.fail .shape { fill: ${p.rust}33; stroke: ${p.rust}; }
       .node.actor .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
-      .node.actor-system .shape { fill: ${p.plum}22; stroke: ${p.plum}; }
+      .node.actor-system .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
       .node.actor-external .shape { fill: ${p.gold}22; stroke: ${p.gold}; }
       .node.state .shape { fill: ${p.paper}; stroke: ${p.gray500}; }
       .node.state-initial .shape { fill: ${p.slate}; stroke: ${p.slate}; }
@@ -979,7 +970,7 @@ Body
       .edge.db { stroke: ${p.clay}; stroke-dasharray: 3 3; }
       .edge.async { stroke-dasharray: 6 3; }
       .edge.return { stroke: ${p.gray500}; stroke-dasharray: 4 3; }
-      .edge.sync { stroke: ${p.slate}; }
+      .edge.sync { stroke: ${p.gray700}; }
       .edge.msg { stroke: ${p.plum}; }
       .edge.relation { stroke: ${p.clay}; }
       .edge.lane { stroke: ${p.gray300}; stroke-width: 1; }

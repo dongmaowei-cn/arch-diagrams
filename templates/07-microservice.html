@@ -134,7 +134,7 @@ svg.diagram { display: block; }
 
 /* ── Generic node shapes (per-diagram pages add specifics) ── */
 .node { cursor: pointer; transition: opacity 150ms ease; }
-.node .shape { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
+.node .shape { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
 .node .shape-inner { fill: none; stroke: var(--gray-500); stroke-width: 1.5; }
 .node.term .shape { fill: var(--gray-150); }
 .node.process .shape { fill: var(--paper); }
@@ -1503,7 +1503,7 @@ discover  灰点线           服务发现注册</pre>`,
       text.t-lane { font-family: Georgia, serif; font-size: 16px; fill: ${p.slate}; font-weight: 500; }
       text.t-big  { font-family: Georgia, serif; font-size: 18px; fill: ${p.slate}; font-weight: 500; }
       text.t-stage { font-size: 10px; letter-spacing: 0.1em; fill: ${p.gray500}; text-transform: uppercase; }
-      .node .shape { fill: ${p.paper}; stroke: ${p.gray500}; stroke-width: 1.5; }
+      .node .shape { fill: ${p.paper}; stroke: ${p.gray300}; stroke-width: 1.5; }
       .node .shape-inner { fill: none; stroke: ${p.gray500}; stroke-width: 1.5; }
       .node.term .shape { fill: ${p.gray150}; }
       .node.io .shape, .node.io .shape-inner { stroke: ${p.plum}; }

@@ -118,7 +118,7 @@
 
   /* Node shapes */
   .node { cursor: pointer; transition: opacity 150ms ease; }
-  .node .shape { fill: var(--paper); stroke: var(--gray-500); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
+  .node .shape { fill: var(--paper); stroke: var(--gray-300); stroke-width: 1.5; transition: stroke 150ms ease, stroke-width 150ms ease, fill 150ms ease; }
   .node .shape-inner { fill: none; stroke: var(--gray-500); stroke-width: 1.5; }
   .node.term .shape { fill: var(--gray-150); }
   .node.process .shape { fill: var(--paper); }
@@ -893,7 +893,7 @@ function buildExportableSvg() {
     text.t-lbl-no { fill: ${palette.rust}; }
     text.t-connector { font-family: Georgia, serif; font-weight: 500; font-size: 14px; fill: ${palette.clay}; }
     text.t-ann { font-size: 10.5px; fill: ${palette.gray700}; }
-    .node .shape { fill: ${palette.paper}; stroke: ${palette.gray500}; stroke-width: 1.5; }
+    .node .shape { fill: ${palette.paper}; stroke: ${palette.gray300}; stroke-width: 1.5; }
     .node .shape-inner { fill: none; stroke: ${palette.gray500}; stroke-width: 1.5; }
     .node.term .shape { fill: ${palette.gray150}; }
     .node.io .shape, .node.io .shape-inner { stroke: ${palette.plum}; }

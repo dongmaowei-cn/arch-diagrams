@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>状态机 · 订单生命周期 — Engineering Diagram Library</title>
+<title>状态机 · 结算单生命周期 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -107,17 +107,17 @@ h1 em { font-style: italic; color: var(--gray-500); font-weight: 400; }
 .lead b { color: var(--slate); font-weight: 600; }
 .lead code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 6px; border-radius: 4px; }
 .stat-row { display: flex; gap: 28px; align-items: baseline; font-family: var(--mono); font-size: 11px; color: var(--gray-500); }
-.stat-row .v { color: var(--slate); font-size: 24px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.1; margin-bottom: 2px; }
+.stat-row .v { color: var(--gray-700); font-size: 18px; font-family: var(--serif); font-weight: 500; display: block; line-height: 1.2; margin-bottom: 3px; }
 
 /* ── Layout ── */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-top: 28px; align-items: start; }
 @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
 
 /* ── Canvas ── */
-.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; box-shadow: var(--shadow); }
+.canvas-frame { position: relative; border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--paper); height: 760px; overflow: hidden; }
 .canvas-stage { position: absolute; inset: 0; cursor: grab; user-select: none; touch-action: none; }
 .canvas-stage.dragging { cursor: grabbing; }
-.canvas-grid { position: absolute; inset: -2000px; background-image: radial-gradient(circle, var(--gray-300) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.4; pointer-events: none; }
+.canvas-grid { position: absolute; inset: -2000px; background: transparent; pointer-events: none; }
 .canvas-inner { position: absolute; left: 50%; top: 24px; transform-origin: center top; transition: transform 60ms ease; }
 svg.diagram { display: block; }
 .diagram text { font-family: var(--mono); font-size: 12px; fill: var(--slate); pointer-events: none; }
@@ -398,14 +398,14 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 03 · 状态机 · UML Statechart</div>
-        <h1>订单生命周期 <em>— order state machine</em></h1>
-        <p class="lead">完整覆盖 <b>UML 2.5 状态机的全部 14 个标准元素</b>：上半区是订单业务图（含 initial、final、composite、choice、fork/join、history、self/external/completion/after()/internal transitions、entry/do/exit 三段式行为、defer 事件），下半区是元素图鉴（含 orthogonal、submachine、junction、deep history、entry/exit points、terminate、when 事件 7 个补充元素，外加一个 <b>[ex] 扩展示例</b>）。可拖拽缩放，所有节点可点击查看详情。</p>
+        <div class="eyebrow">Diagram type 03 · 状态机 / State Machine · v2</div>
+        <h1>结算单生命周期 <em>— settlement state machine</em></h1>
+        <p class="lead">一张结算单从<b>冻结 → 结算 → 结清</b>的完整生命周期，以及回执失败后的<b>重试兜底</b>、结清后的<b>冲正补偿</b>。主路径橄榄加粗，失败/补偿路径 rust 虚线。每个状态标注 entry / do 行为与副作用 —— 冻结、扣减、双写账本、version CAS。点击状态查看字段与 SQL。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">14</span>UML 标准</div>
-        <div><span class="v">+1</span>扩展[ex]</div>
-        <div><span class="v">18</span>状态节点</div>
+        <div><span class="v">9</span>节点</div>
+        <div><span class="v">2</span>终态</div>
+        <div><span class="v">3</span>失败/补偿路径</div>
       </div>
     </div>
   </header>
@@ -416,7 +416,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="1400" viewBox="0 0 1080 1400" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
                 <marker id="arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
@@ -428,269 +428,138 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
               </defs>
 
-              <!-- ─── Diagram title row (centered, 04-style) ─── -->
-              <text class="diagram-title" x="540" y="32" text-anchor="middle">订单生命周期 · 状态机 (Order State Machine)</text>
-              <text class="diagram-sub"   x="540" y="52" text-anchor="middle">UML 2.5 · 18 状态节点 · 11 标准元素 · 全部 5 类内部行为 + 5 类 transition</text>
-
-              <!-- ═══════════════════════════════════════════════════════ -->
-              <!-- 区 A · 订单业务状态机                                    -->
-              <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="92">A · 订单业务示意主图</text>
-              <text class="section-sub"   x="40" y="114">电商场景 · 主路径橄榄加粗 = happy path · 涵盖 composite / fork-join / choice / history / defer / after() / internal / completion</text>
-
-              <!-- Composite state PENDING_PAYMENT container — expanded left 20px so sub-states no longer share the border -->
-              <rect class="composite-bg" x="320" y="290" width="420" height="320"/>
-              <path class="composite-tag" d="M320,312 L320,306 Q320,290 336,290 L552,290 L552,312 Z"/>
-              <text class="composite-title-tag" x="330" y="307">composite · pending_payment</text>
+              <!-- ═══════════════════════════════════════════════════════════════════════ -->
+              <!-- 区 A · 结算单生命周期状态机 -->
+              <!-- ═══════════════════════════════════════════════════════════════════════ -->
+              <text class="section-label" x="40" y="92">A · 结算单生命周期 · 待结算 → 结清 / 失败 / 冲正</text>
+              <text class="section-sub"   x="40" y="112">主路径橄榄加粗 = 正常结算 · rust 虚线 = 回执失败重试与终态 · 底部 = 结清后退款冲正 · version CAS + 幂等键保账本安全</text>
 
               <!-- ─── Edges (drawn first; states overlay) ─── -->
-              <!-- initial → CREATED (spine main path) -->
-              <path class="edge spine" d="M520,140 L520,160"/>
+              <!-- initial → CREATED (spine) -->
+              <path class="edge spine" d="M400,159 L400,180"/>
 
-              <!-- CREATED → composite (spine) -->
-              <path class="edge spine" d="M520,230 L520,290"/>
-              <rect class="edge-label-bg" x="528" y="248" width="56" height="13"/>
-              <text class="edge-label trigger" x="532" y="258">submit()</text>
-              <rect class="edge-label-bg" x="528" y="266" width="100" height="13"/>
-              <text class="edge-label action" x="532" y="276">/ lockInventory()</text>
+              <!-- CREATED → SETTLING (spine) -->
+              <path class="edge spine" d="M400,240 L400,310"/>
+              <rect class="edge-label-bg" x="408" y="258" width="100" height="13"/>
+              <text class="edge-label trigger" x="412" y="268">settle.batch</text>
 
-              <!-- composite-initial → Awaiting (moved to left to give room for retry self-loop on top) -->
-              <path class="edge" d="M350,356 L350,380"/>
+              <!-- SETTLING → 回执结果 (spine) -->
+              <path class="edge spine" d="M400,390 L400,440"/>
 
-              <!-- Awaiting self-loop (retry) — top arc, clean UML self-transition -->
-              <path class="edge" d="M 420,380 A 22,18 0 0 0 380,380"/>
-              <rect class="edge-label-bg" x="377" y="343" width="46" height="13"/>
-              <text class="edge-label trigger" x="400" y="353" text-anchor="middle">retry [n&lt;3]</text>
+              <!-- 回执结果 → SETTLED (spine success) -->
+              <path class="edge spine" d="M400,520 L400,600"/>
+              <text class="t-lbl t-lbl-yes" x="408" y="556">SUCCESS</text>
 
-              <!-- Awaiting → sub-Paid (success branch) -->
-              <path class="edge yes" d="M460,410 L580,410"/>
-              <rect class="edge-label-bg" x="468" y="392" width="110" height="13"/>
-              <text class="edge-label trigger" x="472" y="402">payment.succeeded</text>
-              <rect class="edge-label-bg" x="468" y="418" width="80" height="13"/>
-              <text class="edge-label action" x="472" y="428">/ markPaid()</text>
+              <!-- 回执结果 → RETRYING (rust failure) -->
+              <path class="edge no" d="M470,480 L780,480 L780,600"/>
+              <rect class="edge-label-bg" x="524" y="468" width="108" height="13"/>
+              <text class="edge-label trigger" x="528" y="478">FAIL / TIMEOUT</text>
 
-              <!-- Awaiting → sub-Failed (after() time event) -->
-              <path class="edge no" d="M400,470 L400,520"/>
-              <rect class="edge-label-bg" x="408" y="487" width="64" height="13"/>
-              <text class="edge-label trigger" x="412" y="497">after(15min)</text>
+              <!-- RETRYING self-loop (retry counter) -->
+              <path class="edge" d="M700,600 Q700,545 780,545 Q860,545 860,600"/>
+              <rect class="edge-label-bg" x="724" y="536" width="112" height="13"/>
+              <text class="edge-label trigger" x="728" y="546">retry [n &lt; 3]</text>
 
-              <!-- sub-Paid → PAID (completion transition — NO LABEL, UML 2.5 standard) -->
-              <path class="edge spine" d="M700,410 L740,410 L740,465 L800,465"/>
+              <!-- RETRYING → SETTLED (retry success, olive) -->
+              <path class="edge yes" d="M680,630 L500,630"/>
+              <text class="t-lbl t-lbl-yes" x="556" y="622">重试成功</text>
 
-              <!-- sub-Failed → CANCELLED -->
-              <path class="edge no" d="M340,545 L150,545 L150,702"/>
-              <rect class="edge-label-bg" x="160" y="528" width="92" height="13"/>
-              <text class="edge-label trigger" x="164" y="538">payment.failed</text>
-              <rect class="edge-label-bg" x="160" y="546" width="84" height="13"/>
-              <text class="edge-label action" x="164" y="556">/ releaseStock</text>
+              <!-- RETRYING → SETTLE_FAILED (rust, exhausted) -->
+              <path class="edge no" d="M780,680 L780,738"/>
+              <text class="t-lbl t-lbl-no" x="788" y="706">n ≥ 3</text>
 
-              <!-- PAID → PACKING (spine main success path) -->
-              <path class="edge spine" d="M860,510 L860,620"/>
-              <rect class="edge-label-bg" x="868" y="540" width="100" height="13"/>
-              <text class="edge-label trigger" x="872" y="550">paid.confirmed</text>
-              <rect class="edge-label-bg" x="868" y="558" width="124" height="13"/>
-              <text class="edge-label action" x="872" y="568">/ allocateWarehouse</text>
+              <!-- SETTLED → REVERSING (compensation) -->
+              <path class="edge no" d="M400,660 L400,760"/>
+              <rect class="edge-label-bg" x="408" y="694" width="116" height="13"/>
+              <text class="edge-label trigger" x="412" y="704">return.request</text>
 
-              <!-- PAID → choice (refund branch) -->
-              <path class="edge" d="M800,465 L640,465 L640,580"/>
-              <rect class="edge-label-bg" x="688" y="453" width="92" height="13"/>
-              <text class="edge-label trigger" x="692" y="463">refund.request</text>
-
-              <!-- choice → REFUNDING (enters REFUNDING from top — leaves choice via bottom tip, clean orthogonal route) -->
-              <path class="edge no" d="M640,620 L640,650 L520,650 L520,880"/>
-              <rect class="edge-label-bg" x="540" y="636" width="92" height="13"/>
-              <text class="edge-label guard" x="544" y="646">[refund.eligible]</text>
-
-              <!-- PACKING → fork bar (spine) -->
-              <path class="edge spine" d="M860,740 L860,760"/>
-
-              <!-- fork → SHIPPED + NOTIFY (parallel, spine olive) -->
-              <path class="edge spine" d="M790,766 L790,830"/>
-              <path class="edge spine" d="M930,766 L930,830"/>
-
-              <!-- SHIPPED → join (spine) -->
-              <path class="edge spine" d="M790,910 L790,950"/>
-              <rect class="edge-label-bg" x="710" y="922" width="98" height="13"/>
-              <text class="edge-label trigger" x="714" y="932">carrier.confirmed</text>
-
-              <!-- NOTIFY → join (spine) -->
-              <path class="edge spine" d="M930,910 L930,950"/>
-
-              <!-- join → DELIVERED (spine) -->
-              <path class="edge spine" d="M860,956 L860,1000"/>
-
-              <!-- DELIVERED → COMPLETED (spine final segment) -->
-              <path class="edge spine" d="M860,1080 L860,1138"/>
-              <rect class="edge-label-bg" x="868" y="1100" width="90" height="13"/>
-              <text class="edge-label trigger" x="872" y="1110">user.received</text>
-              <rect class="edge-label-bg" x="868" y="1118" width="96" height="13"/>
-              <text class="edge-label guard" x="872" y="1128">[&gt;7 days auto]</text>
-
-              <!-- DELIVERED → REFUNDING (enters REFUNDING from right side — left from DELIVERED, up, then west into right-mid) -->
-              <path class="edge no" d="M800,1040 L660,1040 L660,920 L580,920"/>
-              <rect class="edge-label-bg" x="680" y="1023" width="106" height="13"/>
-              <text class="edge-label trigger" x="684" y="1033">return.requested</text>
-
-              <!-- REFUNDING → REFUNDED -->
-              <path class="edge" d="M520,960 L520,1138"/>
-              <rect class="edge-label-bg" x="528" y="1010" width="118" height="13"/>
-              <text class="edge-label trigger" x="532" y="1020">refund.completed</text>
-              <rect class="edge-label-bg" x="528" y="1028" width="100" height="13"/>
-              <text class="edge-label action" x="532" y="1038">/ creditWallet</text>
-
-              <!-- History pseudostate (inside composite top-right, away from sub-Paid) -->
-              <circle class="history-circle" cx="708" cy="332" r="10"/>
-              <text class="t-history" x="708" y="337" text-anchor="middle">H</text>
-              <text class="state-body" x="708" y="355" text-anchor="middle" fill="#D97757">history</text>
+              <!-- REVERSING → REVERSED -->
+              <path class="edge" d="M400,820 L400,908"/>
+              <text class="t-lbl" x="408" y="860">冲正回执</text>
 
               <!-- ───── States (overlay edges) ───── -->
               <!-- ① Initial pseudostate -->
               <g class="node state-initial" data-id="initial" tabindex="0">
-                <circle class="shape" cx="520" cy="130" r="10"/>
+                <circle class="shape" cx="400" cy="150" r="9"/>
               </g>
 
-              <!-- ② CREATED — simple state -->
+              <!-- ② CREATED · 待结算 -->
               <g class="node state" data-id="created" tabindex="0">
-                <rect class="shape state-rect" x="430" y="160" width="180" height="70"/>
-                <text class="t-big" x="520" y="188" text-anchor="middle">CREATED</text>
-                <line class="state-divider" x1="446" y1="198" x2="594" y2="198"/>
-                <text class="state-body" x="520" y="216" text-anchor="middle">entry / reserveCart()</text>
+                <rect class="shape state-rect" x="300" y="180" width="200" height="60"/>
+                <text class="t-title" x="400" y="205" text-anchor="middle">CREATED 待结算</text>
+                <line class="state-divider" x1="310" y1="215" x2="490" y2="215"/>
+                <text class="state-body" x="400" y="231" text-anchor="middle">entry / freeze() 冻结</text>
               </g>
 
-              <!-- ③ Initial inside composite (moved left from x=400 to x=350 to give retry self-loop space at top of Awaiting) -->
-              <g class="node state-initial" data-id="composite-initial" tabindex="0">
-                <circle class="shape" cx="350" cy="350" r="6"/>
+              <!-- ③ SETTLING · 结算中 (spine) -->
+              <g class="node state success" data-id="settling" tabindex="0">
+                <rect class="shape state-rect" x="300" y="310" width="200" height="80"/>
+                <text class="t-title" x="400" y="336" text-anchor="middle">SETTLING 结算中</text>
+                <line class="state-divider" x1="310" y1="346" x2="490" y2="346"/>
+                <text class="state-body" x="400" y="362" text-anchor="middle">entry / submitToBank()</text>
+                <text class="state-body do" x="400" y="378" text-anchor="middle">do / pollReceipt()</text>
               </g>
 
-              <!-- ④ Awaiting (sub) — entry + do + exit (UML internal behaviors complete) -->
-              <g class="node state" data-id="awaiting" tabindex="0">
-                <rect class="shape state-rect" x="340" y="380" width="120" height="90"/>
-                <text class="t-title" x="400" y="402" text-anchor="middle">Awaiting</text>
-                <line class="state-divider" x1="350" y1="410" x2="450" y2="410"/>
-                <text class="state-body" x="400" y="425" text-anchor="middle">entry / startTimer</text>
-                <text class="state-body do" x="400" y="440" text-anchor="middle">do / pollStatus</text>
-                <text class="state-body" x="400" y="455" text-anchor="middle">exit / cancelTimer</text>
+              <!-- ④ 回执结果 decision -->
+              <g class="node decision" data-id="receipt" tabindex="0">
+                <path class="shape" d="M400,440 L470,480 L400,520 L330,480 Z"/>
+                <text class="t-title" x="400" y="476" text-anchor="middle">回执结果</text>
+                <text class="t-sub" x="400" y="492" text-anchor="middle">receipt?</text>
               </g>
 
-              <!-- ⑤ Paid (sub-state · success) -->
-              <g class="node state success" data-id="sub-paid" tabindex="0">
-                <rect class="shape state-rect" x="580" y="380" width="120" height="60"/>
-                <text class="t-title" x="640" y="405" text-anchor="middle">Paid</text>
-                <line class="state-divider" x1="590" y1="414" x2="690" y2="414"/>
-                <text class="state-body" x="640" y="428" text-anchor="middle">exit / stopTimer</text>
+              <!-- ⑤ SETTLED · 已结算 (spine success) -->
+              <g class="node state success" data-id="settled" tabindex="0">
+                <rect class="shape state-rect" x="300" y="600" width="200" height="60"/>
+                <text class="t-title" x="400" y="625" text-anchor="middle">SETTLED 已结算</text>
+                <line class="state-divider" x1="310" y1="635" x2="490" y2="635"/>
+                <text class="state-body" x="400" y="651" text-anchor="middle">entry / deduct · writeLedger</text>
               </g>
 
-              <!-- ⑥ Failed (sub-state · fail) -->
-              <g class="node state fail" data-id="sub-failed" tabindex="0">
-                <rect class="shape state-rect" x="340" y="520" width="120" height="50"/>
-                <text class="t-title" x="400" y="540" text-anchor="middle">Failed</text>
-                <line class="state-divider" x1="350" y1="548" x2="450" y2="548"/>
-                <text class="state-body" x="400" y="562" text-anchor="middle">exit / releaseStock</text>
+              <!-- ⑥ RETRYING · 重试中 (fail branch) -->
+              <g class="node state" data-id="retrying" tabindex="0">
+                <rect class="shape state-rect" x="680" y="600" width="200" height="80"/>
+                <text class="t-title" x="780" y="626" text-anchor="middle">RETRYING 重试中</text>
+                <line class="state-divider" x1="690" y1="636" x2="870" y2="636"/>
+                <text class="state-body" x="780" y="652" text-anchor="middle">entry / backoff()</text>
+                <text class="state-body do" x="780" y="668" text-anchor="middle">do / resubmit()</text>
               </g>
 
-              <!-- ⑦ PAID — main success state -->
-              <g class="node state success" data-id="paid" tabindex="0">
-                <rect class="shape state-rect" x="800" y="420" width="120" height="90"/>
-                <text class="t-big" x="860" y="448" text-anchor="middle">PAID</text>
-                <line class="state-divider" x1="816" y1="458" x2="904" y2="458"/>
-                <text class="state-body" x="860" y="476" text-anchor="middle">entry / sendReceipt</text>
-                <text class="state-body" x="860" y="490" text-anchor="middle">exit  / lockAccount</text>
+              <!-- ⑦ REVERSING · 冲正中 -->
+              <g class="node state" data-id="reversing" tabindex="0">
+                <rect class="shape state-rect" x="300" y="760" width="200" height="60"/>
+                <text class="t-title" x="400" y="785" text-anchor="middle">REVERSING 冲正中</text>
+                <line class="state-divider" x1="310" y1="795" x2="490" y2="795"/>
+                <text class="state-body" x="400" y="811" text-anchor="middle">entry / reverse()</text>
               </g>
 
-              <!-- ⑧ Choice junction (dynamic branch) — small hollow diamond -->
-              <g class="node decision" data-id="choice-refund" tabindex="0">
-                <path class="shape" d="M640,580 L660,600 L640,620 L620,600 Z"/>
+              <!-- ⑧ SETTLE_FAILED · 结算失败 (final fail) -->
+              <g class="node state-final fail" data-id="settle-failed" tabindex="0">
+                <circle class="shape" cx="780" cy="760" r="22"/>
+                <circle class="shape-inner" cx="780" cy="760" r="16"/>
+                <text class="t-title" x="780" y="810" text-anchor="middle">SETTLE_FAILED</text>
+                <text class="t-sub" x="780" y="826" text-anchor="middle">结算失败 · 解冻</text>
               </g>
 
-              <!-- ⑨ CANCELLED final (fail) -->
-              <g class="node state-final fail" data-id="cancelled" tabindex="0">
-                <circle class="shape" cx="150" cy="720" r="18"/>
-                <circle class="shape-inner" cx="150" cy="720" r="10"/>
-                <text class="t-title" x="150" y="770" text-anchor="middle">CANCELLED</text>
+              <!-- ⑨ REVERSED · 已冲正 (final neutral) -->
+              <g class="node state-final" data-id="reversed" tabindex="0">
+                <circle class="shape" cx="400" cy="930" r="22"/>
+                <circle class="shape-inner" cx="400" cy="930" r="16"/>
+                <text class="t-title" x="400" y="980" text-anchor="middle">REVERSED</text>
+                <text class="t-sub" x="400" y="996" text-anchor="middle">已冲正 · 反向账本</text>
               </g>
 
-              <!-- ⑩ PACKING — entry + do + defer (UML defer event) -->
-              <g class="node state success" data-id="packing" tabindex="0">
-                <rect class="shape state-rect" x="800" y="620" width="120" height="120"/>
-                <text class="t-big" x="860" y="648" text-anchor="middle">PACKING</text>
-                <line class="state-divider" x1="816" y1="658" x2="904" y2="658"/>
-                <text class="state-body" x="860" y="676" text-anchor="middle">entry / printLabel</text>
-                <text class="state-body do" x="860" y="692" text-anchor="middle">do / scanItems</text>
-                <text class="state-body" x="860" y="708" text-anchor="middle">exit / sealBox</text>
-                <text class="state-body defer" x="860" y="728" text-anchor="middle">defer / cancel.request</text>
+              <!-- Notes (信息自足) -->
+              <g class="annotation" data-id="note-cas">
+                <path class="note" d="M515,545 L670,545 L670,597 L515,597 Z"/>
+                <text class="note-text" x="523" y="562">version CAS 乐观锁</text>
+                <text class="note-text" x="523" y="578">双写账本 ledger</text>
               </g>
 
-              <!-- ⑪ Fork bar (parallel split) -->
-              <g class="node" data-id="fork-bar" tabindex="0">
-                <rect class="fork-bar shape" x="730" y="760" width="260" height="6"/>
+              <g class="annotation" data-id="note-esc">
+                <path class="note" d="M825,740 L1035,740 L1035,800 L825,800 Z"/>
+                <text class="note-text" x="833" y="757">重试 N 次仍失败 → 解冻</text>
+                <text class="note-text" x="833" y="773">告警 + 人工介入</text>
               </g>
-
-              <!-- ⑫ SHIPPED (parallel region) -->
-              <g class="node state success" data-id="shipped" tabindex="0">
-                <rect class="shape state-rect" x="730" y="830" width="120" height="80"/>
-                <text class="t-big" x="790" y="856" text-anchor="middle">SHIPPED</text>
-                <line class="state-divider" x1="740" y1="866" x2="840" y2="866"/>
-                <text class="state-body" x="790" y="883" text-anchor="middle">entry / dispatch</text>
-                <text class="state-body do" x="790" y="898" text-anchor="middle">do / track(carrier)</text>
-              </g>
-
-              <!-- ⑬ NOTIFY (parallel region) -->
-              <g class="node state success" data-id="notify" tabindex="0">
-                <rect class="shape state-rect" x="870" y="830" width="120" height="80"/>
-                <text class="t-big" x="930" y="856" text-anchor="middle">NOTIFY</text>
-                <line class="state-divider" x1="880" y1="866" x2="980" y2="866"/>
-                <text class="state-body" x="930" y="883" text-anchor="middle">entry / sendPush</text>
-                <text class="state-body do" x="930" y="898" text-anchor="middle">do / pollDelivered</text>
-              </g>
-
-              <!-- ⑭ Join bar (parallel merge) -->
-              <g class="node" data-id="join-bar" tabindex="0">
-                <rect class="fork-bar shape" x="730" y="950" width="260" height="6"/>
-              </g>
-
-              <!-- ⑮ DELIVERED — entry + internal transition (UML internal) -->
-              <g class="node state success" data-id="delivered" tabindex="0">
-                <rect class="shape state-rect" x="800" y="1000" width="120" height="80"/>
-                <text class="t-big" x="860" y="1026" text-anchor="middle">DELIVERED</text>
-                <line class="state-divider" x1="810" y1="1036" x2="910" y2="1036"/>
-                <text class="state-body" x="860" y="1053" text-anchor="middle">entry / awaitConfirm</text>
-                <text class="state-body internal" x="860" y="1068" text-anchor="middle">refreshUI / [internal]</text>
-              </g>
-
-              <!-- ⑯ COMPLETED final (success) -->
-              <g class="node state-final success" data-id="completed" tabindex="0">
-                <circle class="shape" cx="860" cy="1160" r="22"/>
-                <circle class="shape-inner" cx="860" cy="1160" r="12"/>
-                <text class="t-title" x="860" y="1208" text-anchor="middle">COMPLETED</text>
-              </g>
-
-              <!-- ⑰ REFUNDING — entry + do (poll bank channel) -->
-              <g class="node state" data-id="refunding" tabindex="0">
-                <rect class="shape state-rect" x="460" y="880" width="120" height="80"/>
-                <text class="t-big" x="520" y="906" text-anchor="middle">REFUNDING</text>
-                <line class="state-divider" x1="470" y1="916" x2="570" y2="916"/>
-                <text class="state-body" x="520" y="933" text-anchor="middle">entry / initiateRefund</text>
-                <text class="state-body do" x="520" y="948" text-anchor="middle">do / pollChannel</text>
-              </g>
-
-              <!-- ⑱ REFUNDED final (neutral) -->
-              <g class="node state-final" data-id="refunded" tabindex="0">
-                <circle class="shape" cx="520" cy="1160" r="22"/>
-                <circle class="shape-inner" cx="520" cy="1160" r="12"/>
-                <text class="t-title" x="520" y="1208" text-anchor="middle">REFUNDED</text>
-              </g>
-
-              <!-- Note (annotation, UML standard) — pushed down + widened -->
-              <g class="annotation" data-id="note-a">
-                <rect class="note" x="40" y="1248" width="360" height="92" rx="2"/>
-                <path class="note" d="M390,1248 L400,1258 L390,1258 Z"/>
-                <text class="note-text" x="52" y="1270">UML 2.5 transition 三段式语法：</text>
-                <text class="note-text" x="52" y="1286">  <tspan fill="#141413">trigger</tspan>  <tspan fill="#788C5D" font-style="italic">[ guard ]</tspan>  <tspan fill="#D97757">/ action</tspan></text>
-                <text class="note-text" x="52" y="1308">状态内部行为：entry · do · exit · defer · internal</text>
-                <text class="note-text" x="52" y="1324">五类 transition：external · self · completion · after() · internal</text>
-              </g>
-
-              <!-- ═══════════════════════════════════════════════════════ -->
             </svg>
           </div>
         </div>
@@ -708,245 +577,168 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
     <aside>
       <div class="panel detail" id="detailPanel">
-        <div class="hint">点击任一元素查看 UML 含义和实现</div>
-        <h3 id="d-title">订单状态机 · UML 2.5 完整覆盖</h3>
-        <div class="meta" id="d-meta"><span>10 元素图鉴</span><span class="dot">·</span><span>9 UML 标准 + 1 [ex]</span><span class="dot">·</span><span>18 业务状态</span></div>
+        <div class="hint">点击状态 / 判断 / 注释查看字段与 SQL</div>
+        <h3 id="d-title">结算单生命周期 · 状态机总览</h3>
+        <div class="meta" id="d-meta"><span>9 节点</span><span class="dot">·</span><span>2 终态</span><span class="dot">·</span><span>3 失败/补偿路径</span></div>
         <div id="d-body">
-          <p><b>A 区 · 订单业务示意主图</b> — 完整覆盖 UML 状态机最常用的元素：起止（initial × 2 + final × 3）/ composite + name-tag / history H / choice 动态分流 / fork+join 并行 / 全部 5 类内部行为（<code>entry · do · exit · defer · internal</code>）/ 全部 5 类 transition（external · self · completion · after() · internal）。主路径用<u>橄榄加粗边</u>串起来 — happy path 一眼可见。</p>
-          <p><b>B 区 · 元素图鉴</b> — 10 张卡片覆盖 UML 2.5 状态机的全部标准元素 + 1 张 [ex] 扩展示例。每张卡右上角挂角标：<b>UML 2.5</b> = 标准元素；<b>主图 ✓</b> = 主图实际使用；<b>主图 ⊘</b> = 仅图鉴示意。</p>
-          <p>本图唯一非 UML 的 <b>[ex] 角标</b>是本图谱约定的视觉标记 — 给业务专属字段（SLA / retry-counter / priority）挂金色 ex 小角标，让阅读者一眼分清"标准 UML"vs"我们自己加的"。</p>
+          <p><b>主路径</b>（橄榄加粗）：<code>待结算 → 结算中 → 已结算</code> —— 冻结 → 提交银行 → 轮询回执 → 扣减冻结 + 双写账本。</p>
+          <p><b>失败路径</b>（rust 虚线）：回执失败 / 超时 → 退避重试（≤3 次）→ 仍失败进 <code>SETTLE_FAILED</code> 终态（解冻 + 人工介入）。</p>
+          <p><b>补偿路径</b>：已结算后退款 → 冲正 → <code>REVERSED</code>（写反向账本）。</p>
+          <p><b>一致性保障</b>：所有写账本走 <code>version CAS</code> 乐观锁 + 幂等键 <code>settlement_id</code>，双写账本同事务 / 本地消息表。</p>
         </div>
         <div class="tags" id="d-tags">
-          <span class="tag t-state">state</span><span class="tag t-decision">choice</span><span class="tag t-event">junction</span><span class="tag t-success">success</span><span class="tag t-fail">fail</span>
+          <span class="tag t-state">settlement</span><span class="tag t-decision">receipt</span><span class="tag t-success">settled</span><span class="tag t-fail">failed</span><span class="tag t-event">reversal</span>
         </div>
       </div>
     </aside>
   </div>
 
-  <!-- ── Bottom legend · 全宽 · 学 04 版式 · 分两组 ── -->
+  <!-- ── Bottom legend · 全宽 · 分两组 ── -->
   <div class="legend-group" aria-label="legend - 节点元素">
     <div class="legend-group-label">节点元素 · NODE SHAPES</div>
     <div class="legend">
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="#141413"/></svg></span><span class="name">initial</span><span class="sub">实心圆</span></div>
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">simple state</span><span class="sub">圆角矩形</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#788C5D11" stroke="#788C5D" stroke-dasharray="3 2"/><rect x="2" y="3" width="10" height="3" fill="#788C5D"/></svg></span><span class="name">composite</span><span class="sub">虚线框+name-tag</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#788C5D11" stroke="#788C5D" stroke-dasharray="3 2"/><line x1="13" y1="3" x2="13" y2="13" stroke="#788C5D" stroke-dasharray="2 1.5"/></svg></span><span class="name">orthogonal</span><span class="sub">并发 region</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/><rect x="18" y="10" width="6" height="4" fill="none" stroke="#3D3D3A"/><line x1="20" y1="10" x2="20" y2="14" stroke="#3D3D3A"/><line x1="22" y1="10" x2="22" y2="14" stroke="#3D3D3A"/></svg></span><span class="name">submachine</span><span class="sub">右下 ⊞</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#788C5D"/><circle cx="13" cy="8" r="3" fill="#788C5D"/></svg></span><span class="name">final</span><span class="sub">同心圆 · 正常</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="5" y1="4" x2="21" y2="12" stroke="#B04A3F" stroke-width="2.5"/><line x1="5" y1="12" x2="21" y2="4" stroke="#B04A3F" stroke-width="2.5"/></svg></span><span class="name">terminate</span><span class="sub">× 异常终止</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="#141413"/></svg></span><span class="name">junction ●</span><span class="sub">静态合流</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M13,2 L20,8 L13,14 L6,8 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">choice ◇</span><span class="sub">动态分流</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="7" width="22" height="3" fill="#141413"/></svg></span><span class="name">fork / join</span><span class="sub">并行粗横线</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#D97757"/><text x="13" y="11.5" text-anchor="middle" font-family="Georgia" font-size="9" fill="#D97757" font-weight="700">H</text></svg></span><span class="name">history H · H*</span><span class="sub">回当前 / 最深</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="9" cy="8" r="4" fill="#FFFFFF" stroke="#141413"/><circle cx="19" cy="8" r="4" fill="#FFFFFF" stroke="#141413"/><line x1="16" y1="5" x2="22" y2="11" stroke="#141413"/><line x1="16" y1="11" x2="22" y2="5" stroke="#141413"/></svg></span><span class="name">entry ○ · exit ⊗</span><span class="sub">命名通道</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="20" height="10" fill="#C4994E22" stroke="#C4994E" stroke-width="1.1"/><path d="M18,3 L22,3 L22,7 Z" fill="#C4994E22" stroke="#C4994E"/></svg></span><span class="name">note</span><span class="sub">折角注释</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#788C5D22" stroke="#788C5D"/></svg></span><span class="name">success state</span><span class="sub">olive 浅底</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M13,2 L20,8 L13,14 L6,8 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">decision ◇</span><span class="sub">动态分流</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#788C5D"/><circle cx="13" cy="8" r="3" fill="#788C5D"/></svg></span><span class="name">final success</span><span class="sub">同心圆 olive</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#B04A3F"/><circle cx="13" cy="8" r="3" fill="#B04A3F"/></svg></span><span class="name">final fail</span><span class="sub">同心圆 rust</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="20" height="10" fill="#C4994E22" stroke="#C4994E" stroke-width="1.1"/></svg></span><span class="name">note</span><span class="sub">金注释</span></div>
     </div>
   </div>
 
   <div class="legend-group" aria-label="legend - transition 与行为">
-    <div class="legend-group-label">迁移与行为 · TRANSITIONS &amp; INTERNAL BEHAVIORS</div>
+    <div class="legend-group-label">迁移与行为 · TRANSITIONS &amp; LABELS</div>
     <div class="legend">
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#87867F"/></svg></span><span class="name">external 迁移</span><span class="sub">触发 exit + entry</span></div>
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.6"/><path d="M22,8 L18,4.5 L18,11.5 z" fill="#788C5D"/></svg></span><span class="name">spine 主路径</span><span class="sub">happy path 加粗</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M 18,4 A 6,5 0 0 0 8,4" fill="none" stroke="#87867F" stroke-width="1.5"/><path d="M8,4 L10.5,2 L10.5,7 z" fill="#87867F" transform="translate(-1 -1)"/></svg></span><span class="name">self-transition</span><span class="sub">自环 · 触发 exit+entry</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#4A8585">[internal]</text></svg></span><span class="name">internal</span><span class="sub">不触发 exit/entry</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#87867F"/><text x="6" y="6" font-family="ui-monospace" font-size="4" fill="#87867F">(无标签)</text></svg></span><span class="name">completion</span><span class="sub">无 trigger · do/ 完成自走</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#141413">trigger</text></svg></span><span class="name">trigger</span><span class="sub">事件名 · 必填</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#788C5D" font-style="italic">[guard]</text></svg></span><span class="name">guard</span><span class="sub">守卫 · 可选 olive 斜体</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#D97757">/ action</text></svg></span><span class="name">action</span><span class="sub">动作 · 可选 clay</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="1.5"/><path d="M22,8 L19,5 L19,11 z" fill="#788C5D"/></svg></span><span class="name">success 边</span><span class="sub">olive 实线</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#B04A3F" stroke-width="1.5" stroke-dasharray="4 3"/><path d="M22,8 L19,5 L19,11 z" fill="#B04A3F"/></svg></span><span class="name">fail 边</span><span class="sub">rust 虚线</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M 18,4 A 6,5 0 0 0 8,4" fill="none" stroke="#87867F" stroke-width="1.5"/><path d="M8,4 L10.5,2 L10.5,7 z" fill="#87867F" transform="translate(-1 -1)"/></svg></span><span class="name">self-transition</span><span class="sub">自环</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#141413">trigger</text></svg></span><span class="name">trigger</span><span class="sub">事件名</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#788C5D" font-style="italic">[guard]</text></svg></span><span class="name">guard</span><span class="sub">守卫 olive 斜体</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#D97757">/ action</text></svg></span><span class="name">action</span><span class="sub">动作 clay</span></div>
       <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#788C5D">do / …</text></svg></span><span class="name">do activity</span><span class="sub">状态内持续活动</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="3" fill="#FFFFFF" stroke="#87867F"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#6B5B95">defer</text></svg></span><span class="name">defer event</span><span class="sub">延迟到离开</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="2" y="11" font-family="ui-monospace" font-size="7" fill="#141413">after(15m)</text></svg></span><span class="name">after(d) · when(c)</span><span class="sub">时间 / 变化事件</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="20" height="8" rx="2" fill="#C4994E33" stroke="#C4994E"/><text x="12" y="10.5" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#C4994E" font-weight="700">ex</text></svg></span><span class="name">[ex] 扩展</span><span class="sub">非 UML 业务字段</span></div>
     </div>
-  </div>
+  </div>  </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 03 / 07 · 状态机 · UML 2.5 全覆盖 · 10 元素图鉴</span>
+    <span>Engineering Diagram Library · 03 / 07 · 状态机 · 结算单生命周期</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 1400 },
-  exportName: '03-state-machine-uml-complete',
+  viewBox: { w: 1080, h: 1080 },
+  exportName: '03-state-machine-settlement',
   nodeData: {
     'initial': {
       type: 'state-initial', tagClass: 't-state',
-      title: '① INITIAL · 起始伪状态',
-      meta: ['pseudo-state', '实心圆', '每图仅一个'],
-      body: `<p>每张状态图<b>有且仅有一个</b>顶层 initial。它不是真正的状态，没有 entry/exit 行为，只表示 "从这里开始"。</p><p>箭头只能从它出发，不能指向它。</p>`,
+      title: 'INITIAL · 起始',
+      meta: ['pseudo-state', '实心圆', '每图一个'],
+      body: `<p>状态机起点，不是真实状态。结算单被创建时进入 <code>CREATED</code>。</p>`,
       tags: ['pseudo-state', 'initial']
     },
     'created': {
       type: 'state', tagClass: 't-state',
-      title: '② CREATED · 已创建',
-      meta: ['simple state', 'duration ~ 2s', '~ 100% pass-through'],
-      body: `<p>订单刚生成、未提交支付的瞬态。</p><pre>entry / reserveCart()
-exit  / —
-transitions:
-  submit()  → PENDING_PAYMENT</pre>`,
-      tags: ['simple state']
+      title: 'CREATED · 待结算',
+      meta: ['simple state', 'entry 冻结', '幂等键'],
+      body: `<p>结算单已创建，冻结对应金额。冻结动作必须<b>幂等</b>（以 <code>settlement_id</code> 为幂等键）。</p><pre>entry / freeze(amount)
+  UPDATE account
+  SET frozen = frozen + :amt,
+      version = version + 1
+  WHERE id = :id AND version = :v</pre><p>version CAS 防止并发冻结超扣。</p>`,
+      tags: ['state', 'freeze', 'idempotent']
     },
-    'composite-initial': {
-      type: 'state-initial', tagClass: 't-state',
-      title: '③ INITIAL (composite 内) · 嵌套起点',
-      meta: ['nested pseudo-state', '局部', '配合 history'],
-      body: `<p>每个 composite 状态<b>可以</b>有自己的 initial。进入 composite 时，若没有 history 或 history 未设置，从这里开始。</p>`,
-      tags: ['pseudo-state', 'nested']
-    },
-    'awaiting': {
+    'settling': {
       type: 'state', tagClass: 't-state',
-      title: '④ Awaiting · 等待支付（子状态）',
-      meta: ['sub-state', 'inside composite', 'TTL 15min'],
-      body: `<p>等待用户完成支付。完整覆盖 UML 内部行为三段式：</p><pre>entry / startTimer(15min)
-do    / pollPaymentStatus  // 持续轮询直到状态变化
-exit  / cancelTimer
+      title: 'SETTLING · 结算中',
+      meta: ['spine state', '异步', 'P99 < 5min'],
+      body: `<p>已组装批次并向银行发起结算。受理返回后进入轮询回执阶段。</p><pre>entry / submitToBank(out_trade_no)
+do    / pollReceipt()  // 每 5s 查一次，≤ 12 次
 
-transitions:
-  payment.succeeded → Paid
-  after(15min)      → Failed
-  retry [n < 3]     → Awaiting (self · 触发 exit+entry)</pre><p><b>注意</b>：UML 标准用 <code>after(d)</code> 表示超时，不要写 <code>timeout(d)</code>。</p>`,
-      tags: ['sub-state', 'do activity', 'after()']
+out_trade_no = settlement_id
+→ 银行侧幂等，重复提交不重复结算</pre>`,
+      tags: ['state', 'async', 'idempotent']
     },
-    'sub-paid': {
-      type: 'state', tagClass: 't-success',
-      title: '⑤ Paid · 已支付（completion transition）',
-      meta: ['sub-state', 'success', 'completion → 无标签'],
-      body: `<p>子状态 Paid 仅做最后清理，通过 <b>completion transition</b>（<u>无标签</u>的箭头）自动退出复合状态 PENDING_PAYMENT，进入外层 PAID。</p><p>UML 2.5 标准：completion transition 表示 "状态完成自身的 do/ 活动后自动迁移"，不需要 trigger。</p>`,
-      tags: ['sub-state', 'completion']
-    },
-    'sub-failed': {
-      type: 'state', tagClass: 't-fail',
-      title: '⑥ Failed · 支付失败（子状态 · fail）',
-      meta: ['sub-state', 'terminal of composite'],
-      body: `<p>支付彻底失败（超时未支付 / after(15min) 触发，或银行拒付）。从子状态跃出，进入终态 CANCELLED。</p><pre>exit  / releaseStock()</pre>`,
-      tags: ['sub-state', 'fail']
-    },
-    'paid': {
-      type: 'state', tagClass: 't-success',
-      title: '⑦ PAID · 主路径起点',
-      meta: ['top-level state', 'duration ~ 5min–24h', '99% 流量'],
-      body: `<p>核心已付款状态 — happy path 第一个 olive 染色状态。</p><pre>entry / sendReceipt(email)
-exit  / lockAccount()
-
-transitions:
-  paid.confirmed   → PACKING
-  refund.request   → choice → REFUNDING</pre>`,
-      tags: ['state', 'success']
-    },
-    'choice-refund': {
+    'receipt': {
       type: 'decision', tagClass: 't-decision',
-      title: '⑧ CHOICE · 退款动态分支',
-      meta: ['dynamic branch', '空心小菱形', 'runtime decision'],
-      body: `<p>UML <b>choice junction</b>（动态选择）— 与 junction（实心圆 · 静态）区别在<u>分流时机</u>：</p><pre>choice    → 运行时根据当前状态变量分流
-junction  → 编译/建模期静态合流（多个进入 + 多个出去）</pre><p>注意小菱形 (choice) ≠ 大菱形 (流程图判断)。前者是 UML 伪状态。</p>`,
-      tags: ['choice', 'pseudo-state']
+      title: '回执结果 · 判断',
+      meta: ['decision', 'SUCCESS / FAIL / TIMEOUT'],
+      body: `<p>根据银行最终回执分流：</p><pre>SUCCESS → SETTLED（正常结清）
+FAIL    → RETRYING（退避重试）
+TIMEOUT → RETRYING（主动查询补单）</pre>`,
+      tags: ['decision', 'receipt']
     },
-    'cancelled': {
-      type: 'state-final', tagClass: 't-fail',
-      title: '⑨ CANCELLED · 失败终态',
-      meta: ['final state', 'fail · rust', '~ 6% 流量'],
-      body: `<p>订单未支付即终止。状态机不可再退出此节点。</p><pre>side-effects:
-· 释放库存
-· 退还优惠券
-· 触发 event: order.cancelled</pre>`,
-      tags: ['final', 'fail']
-    },
-    'packing': {
+    'settled': {
       type: 'state', tagClass: 't-success',
-      title: '⑩ PACKING · 完整内部行为',
-      meta: ['state', 'all 4 internal actions', 'duration ~ 4-24h'],
-      body: `<p>仓库收到订单后开始拣货。覆盖 UML 全部 4 类内部行为：</p><pre>entry  / printLabel(carrier)
-do     / scanItems  // 持续扫描直到全部入箱
-exit   / sealBox
+      title: 'SETTLED · 已结算',
+      meta: ['spine success', '双写账本', 'version CAS'],
+      body: `<p>资金已确认到账。核心副作用：扣减冻结额 + 双写账本（<code>ledger</code>）。</p><pre>entry / deduct &amp; writeLedger()
+  account.frozen -= :amt
+  account.balance -= :amt
+  ledger.insert(dr: account, cr: bank)
 
-defer  / cancel.request
-  ↑ UML defer 事件：在 PACKING 期间收到的 cancel.request
-    不立刻处理，延迟到离开 PACKING 后处理</pre><p><b>defer</b> 是 UML 解决"打包途中用户点取消"的标准方式。</p>`,
-      tags: ['state', 'do', 'defer']
+⚑ 双写必须原子：
+  · 同事务 / 本地消息表
+  · 幂等键 = settlement_id
+  · version CAS 冲突则重试（≤3）</pre><p>已结算后可因用户退款发起冲正（→ REVERSING）。</p>`,
+      tags: ['state', 'success', 'ledger', 'cas']
     },
-    'fork-bar': {
-      type: 'event', tagClass: 't-event',
-      title: '⑪ FORK · 并行分裂',
-      meta: ['fork pseudo-state', '粗横线', '一进多出'],
-      body: `<p>UML fork — 从一个状态<b>并行进入</b>多个状态。PACKING 之后 SHIPPED（运输中）与 NOTIFY（通知用户）同时进行，互不阻塞。</p><p>必须配对 join 使用，否则状态机会"漂"。</p>`,
-      tags: ['fork', 'pseudo-state']
-    },
-    'shipped': {
-      type: 'state', tagClass: 't-success',
-      title: '⑫ SHIPPED · 运输中（并行 region）',
-      meta: ['state', 'parallel region', 'duration ~ 1-3 day'],
-      body: `<p>包裹在运输途中。</p><pre>entry / dispatch
-do    / track(carrier)  // 持续监听 carrier 网点回传</pre><p>当 carrier 标记 "派送成功" 触发 transition → join，但还需等 NOTIFY 也完成才能 join。</p>`,
-      tags: ['state', 'parallel', 'do']
-    },
-    'notify': {
-      type: 'state', tagClass: 't-success',
-      title: '⑬ NOTIFY · 通知（并行 region）',
-      meta: ['state', 'parallel region', 'duration ~ minutes'],
-      body: `<p>并行向用户发 push / sms / email。</p><pre>entry / sendPush
-do    / pollDelivered  // 持续监测确认回执</pre>`,
-      tags: ['state', 'parallel', 'do']
-    },
-    'join-bar': {
-      type: 'event', tagClass: 't-event',
-      title: '⑭ JOIN · 并行汇合',
-      meta: ['join pseudo-state', '粗横线', '多进一出'],
-      body: `<p>UML join — 多个并行状态<b>全部完成</b>后汇合进入下一个状态。</p><p><b>实战陷阱</b>：若其中一条永远不完成（通知全失败），订单会卡在 join — 工程上每条并行支路都要加超时兜底。</p>`,
-      tags: ['join', 'pseudo-state']
-    },
-    'delivered': {
-      type: 'state', tagClass: 't-success',
-      title: '⑮ DELIVERED · 含 internal transition',
-      meta: ['state', 'duration ≤ 7 day', 'internal trans demo'],
-      body: `<p>包裹已送达，等待用户确认。本状态演示了 UML <b>internal transition</b>：</p><pre>entry    / awaitConfirm
-refreshUI / [internal]
-  ↑ 重要：internal trans 不触发 exit/entry
-   （区别于 self-transition）
-
-transitions:
-  user.received     → COMPLETED
-  > 7 days auto     → COMPLETED  [guard]
-  return.requested  → REFUNDING</pre>`,
-      tags: ['state', 'internal']
-    },
-    'completed': {
-      type: 'state-final', tagClass: 't-success',
-      title: '⑯ COMPLETED · 成功终态',
-      meta: ['final state', 'success · olive', '~ 90% 流量'],
-      body: `<p>订单完整生命周期成功结束。</p><pre>side-effects:
-· 释放预占库存
-· 结算商家分账
-· 触发 event: order.completed
-· 解锁评价权限</pre>`,
-      tags: ['final', 'success']
-    },
-    'refunding': {
+    'retrying': {
       type: 'state', tagClass: 't-state',
-      title: '⑰ REFUNDING · 退款中（中性）',
-      meta: ['state', 'async', 'duration ~ 3-7 day'],
-      body: `<p>退款已发起，等待支付通道异步确认。</p><pre>entry / initiateRefund(channel)
-do    / pollChannel  // 持续轮询银行回执
+      title: 'RETRYING · 重试中',
+      meta: ['compensation', 'backoff 1s/2s/4s', 'n < 3'],
+      body: `<p>回执失败或超时，进入退避重试。每次重试重新向银行发起并再次等待回执。</p><pre>self-transition: retry [n &lt; 3] / resubmit()
+  backoff: 1s → 2s → 4s
 
-transitions:
-  refund.completed → REFUNDED</pre>`,
-      tags: ['state', 'async', 'do']
+成功 → 回到 SETTLED
+n ≥ 3 仍失败 → SETTLE_FAILED</pre>`,
+      tags: ['state', 'retry', 'backoff']
     },
-    'refunded': {
+    'settle-failed': {
+      type: 'state-final', tagClass: 't-fail',
+      title: 'SETTLE_FAILED · 结算失败（终态）',
+      meta: ['final · fail', '解冻', '人工介入'],
+      body: `<p>重试 N 次后仍失败，进入失败终态。必须执行：</p><pre>side-effects:
+· 解冻 frozen 余额
+· 写失败流水（供对账）
+· 告警 → 人工介入（查银行原始单）
+· event: settlement.failed</pre>`,
+      tags: ['final', 'fail', '人工介入']
+    },
+    'reversing': {
+      type: 'state', tagClass: 't-state',
+      title: 'REVERSING · 冲正中',
+      meta: ['compensation', '异步', 'P99 < 1min'],
+      body: `<p>已结算后退款 / 对账差异触发冲正。向银行发起冲正交易。</p><pre>entry / reverse(bank, amount)
+  reverse_id 独立幂等键
+  do    / 轮询冲正回执</pre>`,
+      tags: ['state', 'reversal', 'compensation']
+    },
+    'reversed': {
       type: 'state-final', tagClass: 't-state',
-      title: '⑱ REFUNDED · 中性终态',
-      meta: ['final state', 'neutral', '~ 4% 流量'],
-      body: `<p>资金已退回用户。中性终态 — 不在 olive 主路径上也不是 rust 兜底，是合理的另一种结束。</p>`,
-      tags: ['final', 'neutral']
+      title: 'REVERSED · 已冲正（终态）',
+      meta: ['final · neutral', '反向账本'],
+      body: `<p>冲正成功，写入反向账本，资金回到冻结前状态。</p><pre>side-effects:
+· ledger 写反向分录（cr: account, dr: bank）
+· 解冻余额
+· event: settlement.reversed</pre>`,
+      tags: ['final', 'reversed', 'ledger']
     },
-    'note-a': {
+    'note-cas': {
       type: 'event', tagClass: 't-event',
-      title: 'Note · 折角注释',
-      meta: ['UML annotation', 'standard'],
-      body: `<p>UML 标准注释 — 折角矩形 + 引线指向被注释元素。本图把 trigger 三段式语法和所有内部行为/迁移类型作为图例注释放在左下。</p>`,
-      tags: ['annotation']
+      title: 'Note · 账本安全约束',
+      meta: ['version CAS', '双写账本', '幂等键'],
+      body: `<p><b>信息自足</b>：写账本必须满足 —— ① version CAS 乐观锁防并发超扣；② 双写账本同事务 / 本地消息表保原子；③ 幂等键 <code>settlement_id</code> 防重复。</p>`,
+      tags: ['annotation', 'consistency']
+    },
+    'note-esc': {
+      type: 'event', tagClass: 't-event',
+      title: 'Note · 失败兜底',
+      meta: ['人工介入', '对账'],
+      body: `<p>重试 N 次仍失败 → 解冻 + 告警。由人工介入核对银行原始单，确认后补单或冲正。</p>`,
+      tags: ['annotation', 'escalation']
     },
   }
 };

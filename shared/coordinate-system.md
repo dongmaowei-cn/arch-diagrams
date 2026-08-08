@@ -7,7 +7,7 @@ SVG viewBox 宽度    = 1080（永远不变）
 SVG viewBox 高度    = A 区实际占用 + 60 边距
 节点最小 padding    = 14px
 节点间最小 gap      = 20px
-节点圆角            = 8 (常规) / 17 (胶囊) / 10 (gallery card)
+节点圆角            = 8 (常规·--r-sm) / 20 (胶囊·--r-lg) / 12 (容器·--r-md，见 design-system.md)
 节点描边粗细        = 1.5px (常规) / 2.4px (强调) / 2.5px (final state)
 ```
 

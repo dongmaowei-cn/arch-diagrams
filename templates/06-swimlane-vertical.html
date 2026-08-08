@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>垂直泳道图 · API Record Creation — Engineering Diagram Library</title>
+<title>垂直泳道图 · 结算流程纵向阶段 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -421,15 +421,15 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 06 · 垂直泳道图 · Vertical Swimlane</div>
-        <h1>API 记录创建 <em>— vertical swimlane</em></h1>
-        <p class="lead"><b>phase 纵向 · lane 横向</b> 的垂直泳道布局 — 适合时间推进强、参与方少的协作流程。上半区是 API 记录创建主图（4 phase × 4 lane）；下半区是垂直泳道元素图鉴 10 张卡：lane / phase / divider / 节点 4 色 / decision / 4 类边 / 失败终态 / [ex] 扩展。</p>
+        <div class="eyebrow">Diagram type 06 · 垂直泳道图 · 阶段业务流</div>
+        <h1>结算流程 · 纵向阶段 <em>— settlement phased flow</em></h1>
+        <p class="lead">一笔结算按<b>业务阶段纵向推进</b>：受理 → 复核 → 打款 → 结清。纵向 = 时间推进，横向 = 业务领域（商户 / 平台 / 银行）。白盒 + 灰箭头、主路径橄榄加粗、复核不通过走 rust 退回 —— 业务视角，系统层消息时序见 <b>02</b>。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">4</span>phases</div>
-        <div><span class="v">4</span>lanes</div>
-        <div><span class="v">10</span>图鉴元素</div>
-      </div>
+        <div><span class="v">4</span>业务阶段</div>
+        <div><span class="v">3</span>业务领域</div>
+        <div><span class="v">1</span>退回分支</div>
+      </div>      </div>
     </div>
   </header>
 
@@ -439,7 +439,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="1500" viewBox="0 0 1080 1500" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="1180" viewBox="0 0 1080 1180" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
                 <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
@@ -454,246 +454,126 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               </defs>
 
               <!-- ─── Diagram title row ─── -->
-              <text class="diagram-title" x="540" y="32" text-anchor="middle">API 记录创建 · 垂直泳道图 (Vertical Swimlane)</text>
-              <text class="diagram-sub" x="540" y="52" text-anchor="middle">4 phase 纵向 · 4 lane 横向 · 主路径橄榄加粗 = happy path · 失败终态 rust 粗双线</text>
+              <text class="diagram-title" x="540" y="32" text-anchor="middle">结算流程 · 纵向阶段泳道 (Settlement Phased Flow)</text>
+              <text class="diagram-sub" x="540" y="52" text-anchor="middle">受理 → 复核 → 打款 → 结清 · 商户 / 平台 / 银行 · 白盒 + 灰箭头 · 主路径 olive</text>
 
               <!-- ═══════════════════════════════════════════════════════ -->
-              <!-- 区 A · API 记录创建主图                                    -->
+              <!-- 区 A · 结算流程纵向阶段                                   -->
               <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="92">A · API 记录创建主图</text>
-              <text class="section-sub" x="40" y="114">phase 纵向 = 时间推进 · lane 横向 = 职能分工 · 极简白底 + hairline 网格 · 主路径橄榄加粗</text>
+              <text class="section-label" x="40" y="92">A · 结算流程纵向阶段</text>
+              <text class="section-sub" x="40" y="114">纵向 = 业务阶段推进 · 横向 = 业务领域 · 复核判断走 rust 退回 · 到账回执走消息流</text>
 
-              <!-- Pool frame — 白底圆角卡片 (html-eff canvas 风格) -->
-              <rect class="pool-frame" x="40" y="150" width="1000" height="1240"/>
+              <!-- Lane header row -->
+              <text class="lane-kicker" x="270" y="150" text-anchor="middle">LANE 1</text>
+              <text class="lane-label" x="270" y="173" text-anchor="middle">商户</text>
+              <text class="lane-sub" x="270" y="191" text-anchor="middle">Merchant</text>
+              <text class="lane-kicker" x="580" y="150" text-anchor="middle">LANE 2</text>
+              <text class="lane-label" x="580" y="173" text-anchor="middle">平台</text>
+              <text class="lane-sub" x="580" y="191" text-anchor="middle">Trade · Settlement</text>
+              <text class="lane-kicker" x="890" y="150" text-anchor="middle">LANE 3</text>
+              <text class="lane-label" x="890" y="173" text-anchor="middle">银行</text>
+              <text class="lane-sub" x="890" y="191" text-anchor="middle">Bank</text>
+              <line class="lane-header-rule" x1="120" y1="205" x2="1040" y2="205"/>
+              <line class="lane-divider" x1="420" y1="205" x2="420" y2="1130"/>
+              <line class="lane-divider" x1="730" y1="205" x2="730" y2="1130"/>
 
-              <!-- Lane header row 底边 hairline 把 header 和 phase area 分开 -->
-              <line class="lane-header-rule" x1="40" y1="210" x2="1040" y2="210"/>
+              <!-- Phase 01 · 受理 -->
+              <text class="phase-num" x="130" y="245">01</text>
+              <text class="phase-name" x="160" y="245">受理</text>
+              <text class="phase-sub" x="160" y="261">Initiate</text>
+              <line class="phase-divider-rule" x1="120" y1="440" x2="1040" y2="440"/>
 
-              <!-- Phase column 右边 hairline 把 phase 编号列和 lane area 分开 -->
-              <line class="phase-col-rule" x1="120" y1="210" x2="120" y2="1390"/>
+              <!-- Phase 02 · 复核 -->
+              <text class="phase-num" x="130" y="480">02</text>
+              <text class="phase-name" x="160" y="480">复核</text>
+              <text class="phase-sub" x="160" y="496">Review</text>
+              <line class="phase-divider-rule" x1="120" y1="670" x2="1040" y2="670"/>
 
-              <!-- Lane vertical dividers — gray-300 1px hairline (从 header 底到 pool 底) -->
-              <line class="lane-divider" x1="350" y1="210" x2="350" y2="1390"/>
-              <line class="lane-divider" x1="580" y1="210" x2="580" y2="1390"/>
-              <line class="lane-divider" x1="810" y1="210" x2="810" y2="1390"/>
+              <!-- Phase 03 · 打款 -->
+              <text class="phase-num" x="130" y="715">03</text>
+              <text class="phase-name" x="160" y="715">打款</text>
+              <text class="phase-sub" x="160" y="731">Payout</text>
+              <line class="phase-divider-rule" x1="120" y1="900" x2="1040" y2="900"/>
 
-              <!-- Lane header labels — 白底 serif + mono 副标，去掉 4 色顶边 -->
-              <text class="lane-kicker" x="80" y="185" text-anchor="middle">Phase</text>
-              <text class="lane-label" x="235" y="183" text-anchor="middle">Customer</text>
-              <text class="lane-sub" x="235" y="200" text-anchor="middle">external actor</text>
-              <text class="lane-label" x="465" y="183" text-anchor="middle">Frontend</text>
-              <text class="lane-sub" x="465" y="200" text-anchor="middle">web client</text>
-              <text class="lane-label" x="695" y="183" text-anchor="middle">Service</text>
-              <text class="lane-sub" x="695" y="200" text-anchor="middle">backend</text>
-              <text class="lane-label" x="925" y="183" text-anchor="middle">Database</text>
-              <text class="lane-sub" x="925" y="200" text-anchor="middle">persistence</text>
-
-              <!-- ─── Phase 01 · Initiate (y=210 → y=480) ─── -->
-              <text class="phase-num" x="80" y="240" text-anchor="middle">01</text>
-              <text class="phase-name" x="80" y="285" text-anchor="middle">
-                <tspan x="80" dy="0">I</tspan><tspan x="80" dy="14">n</tspan><tspan x="80" dy="14">i</tspan><tspan x="80" dy="14">t</tspan><tspan x="80" dy="14">i</tspan><tspan x="80" dy="14">a</tspan><tspan x="80" dy="14">t</tspan><tspan x="80" dy="14">e</tspan>
-              </text>
-              <!-- empty cell placeholders (Service · DB at phase 1) -->
-              <text class="cell-empty" x="695" y="350" text-anchor="middle">—</text>
-              <text class="cell-empty" x="925" y="350" text-anchor="middle">—</text>
-
-              <!-- divider (between phase 1 & 2) -->
-              <line class="phase-divider-rule" x1="120" y1="480" x2="1040" y2="480"/>
-
-              <!-- ─── Phase 02 · Validate (y=480 → y=750) ─── -->
-              <text class="phase-num" x="80" y="510" text-anchor="middle">02</text>
-              <text class="phase-name" x="80" y="555" text-anchor="middle">
-                <tspan x="80" dy="0">V</tspan><tspan x="80" dy="14">a</tspan><tspan x="80" dy="14">l</tspan><tspan x="80" dy="14">i</tspan><tspan x="80" dy="14">d</tspan><tspan x="80" dy="14">a</tspan><tspan x="80" dy="14">t</tspan><tspan x="80" dy="14">e</tspan>
-              </text>
-              <!-- empty cell placeholders (Customer · Frontend · DB at phase 2) -->
-              <text class="cell-empty" x="235" y="620" text-anchor="middle">—</text>
-              <text class="cell-empty" x="465" y="620" text-anchor="middle">—</text>
-              <text class="cell-empty" x="925" y="620" text-anchor="middle">—</text>
-
-              <line class="phase-divider-rule" x1="120" y1="750" x2="1040" y2="750"/>
-
-              <!-- ─── Phase 03 · Process (y=750 → y=1020) ─── -->
-              <text class="phase-num" x="80" y="780" text-anchor="middle">03</text>
-              <text class="phase-name" x="80" y="825" text-anchor="middle">
-                <tspan x="80" dy="0">P</tspan><tspan x="80" dy="14">r</tspan><tspan x="80" dy="14">o</tspan><tspan x="80" dy="14">c</tspan><tspan x="80" dy="14">e</tspan><tspan x="80" dy="14">s</tspan><tspan x="80" dy="14">s</tspan>
-              </text>
-              <!-- empty cell placeholders (Customer · Frontend at phase 3) -->
-              <text class="cell-empty" x="235" y="890" text-anchor="middle">—</text>
-              <text class="cell-empty" x="465" y="890" text-anchor="middle">—</text>
-
-              <line class="phase-divider-rule" x1="120" y1="1020" x2="1040" y2="1020"/>
-
-              <!-- ─── Phase 04 · Confirm (y=1020 → y=1390) ─── -->
-              <text class="phase-num" x="80" y="1050" text-anchor="middle">04</text>
-              <text class="phase-name" x="80" y="1095" text-anchor="middle">
-                <tspan x="80" dy="0">C</tspan><tspan x="80" dy="14">o</tspan><tspan x="80" dy="14">n</tspan><tspan x="80" dy="14">f</tspan><tspan x="80" dy="14">i</tspan><tspan x="80" dy="14">r</tspan><tspan x="80" dy="14">m</tspan>
-              </text>
+              <!-- Phase 04 · 结清 -->
+              <text class="phase-num" x="130" y="955">04</text>
+              <text class="phase-name" x="160" y="955">结清</text>
+              <text class="phase-sub" x="160" y="971">Settle</text>
 
               <!-- ═══ Edges (drawn first) ═══ -->
-
-              <!-- Start event → n1 -->
-              <circle class="event-start" cx="235" cy="245" r="10"/>
-              <path class="vflow spine" d="M235,255 L235,290"/>
-
-              <!-- n1 → n2 (Customer → Frontend, same phase) -->
-              <path class="vflow spine" d="M310,335 L390,335"/>
-              <rect class="edge-label-bg" x="318" y="319" width="64" height="13"/>
-              <text class="edge-label" x="350" y="329" text-anchor="middle">submit</text>
-
-              <!-- n2 → n3 (Frontend → Service, exit right → drop to top-center) -->
-              <path class="vflow spine" d="M540,335 L695,335 L695,560"/>
-              <rect class="edge-label-bg" x="703" y="442" width="110" height="13"/>
-              <text class="edge-label" x="710" y="452">POST /api/records</text>
-
-              <!-- n3 → n4 (Service → Service decision, same phase) -->
-              <path class="vflow spine" d="M695,605 L695,640"/>
-
-              <!-- n4 yes → n5 (Service → Service, cross phase to Process) -->
-              <path class="vflow spine" d="M695,712 L695,780"/>
-              <rect class="edge-label-bg" x="703" y="730" width="50" height="13"/>
-              <text class="edge-label yes" x="710" y="740">[valid]</text>
-
-              <!-- n4 no → fail end (left) -->
-              <path class="vflow fail" d="M650,680 L380,680 L380,720"/>
-              <rect class="edge-label-bg" x="450" y="664" width="120" height="13"/>
-              <text class="edge-label fail" x="510" y="674" text-anchor="middle">[invalid] HTTP 400</text>
-              <circle class="event-end" cx="380" cy="730" r="10"/>
-              <text class="vlane-body" x="380" y="755" text-anchor="middle" fill="#B04A3F" font-weight="600">400</text>
-
-              <!-- n5 → n6 (Service → Database, same phase, right) -->
-              <path class="vflow spine" d="M770,830 L850,830"/>
-              <rect class="edge-label-bg" x="778" y="814" width="60" height="13"/>
-              <text class="edge-label" x="808" y="824" text-anchor="middle">INSERT</text>
-
-              <!-- n6 → n7 (Database → Service, cross phase to Confirm, left & down) -->
-              <path class="vflow spine" d="M925,880 L925,990 L695,990 L695,1050"/>
-              <rect class="edge-label-bg" x="775" y="974" width="74" height="13"/>
-              <text class="edge-label" x="812" y="984" text-anchor="middle">rec_id</text>
-
-              <!-- n7 → n8 (Service → Frontend, same phase) -->
-              <path class="vflow spine" d="M620,1095 L540,1095"/>
-              <rect class="edge-label-bg" x="528" y="1079" width="80" height="13"/>
-              <text class="edge-label" x="568" y="1089" text-anchor="middle">HTTP 201</text>
-
-              <!-- n8 → n9 (Frontend → Customer) -->
-              <path class="vflow spine" d="M390,1140 L310,1140"/>
-              <rect class="edge-label-bg" x="310" y="1124" width="80" height="13"/>
-              <text class="edge-label" x="350" y="1134" text-anchor="middle">render</text>
-
-              <!-- n9 → end event (happy path terminal — ok green) -->
-              <path class="vflow spine" d="M235,1185 L235,1240"/>
-              <circle class="event-end ok" cx="235" cy="1255" r="10"/>
-
-              <!-- Message flow demo (Service to email — ex extension) -->
-              <path class="vflow msg" d="M770,1095 L920,1095 L920,1230 L860,1230"/>
-              <rect class="edge-label-bg" x="855" y="1209" width="92" height="13"/>
-              <text class="edge-label" x="901" y="1219" text-anchor="middle" fill="#6B5B95">email msg (ex)</text>
-              <rect class="ex-badge-bg" x="938" y="1208" width="22" height="14"/>
-              <text class="ex-badge-text" x="949" y="1219" text-anchor="middle">ex</text>
-
-              <!-- Data flow (Database doc dashed) -->
-              <path class="vflow data" d="M925,880 L1000,950 L1000,1300 L860,1300"/>
+              <!-- start → 商户 P1 -->
+              <circle class="event-start" cx="270" cy="205" r="9"/>
+              <path class="vflow spine" d="M270,214 L270,250"/>
+              <!-- 商户 → 平台 (P1) -->
+              <path class="vflow spine" d="M390,295 L460,295"/>
+              <!-- 平台 P1 → 平台 P2 -->
+              <path class="vflow spine" d="M580,340 L580,480"/>
+              <!-- 平台 P2 → 商户 (退回 · rust) -->
+              <path class="vflow fail" d="M460,525 L284,525"/>
+              <rect class="edge-label-bg" x="330" y="509" width="112" height="13"/>
+              <text class="edge-label fail" x="386" y="519" text-anchor="middle">不通过 · 退回</text>
+              <circle class="event-end" cx="270" cy="525" r="9"/>
+              <!-- 平台 P2 → 平台 P3 -->
+              <path class="vflow spine" d="M580,570 L580,710"/>
+              <!-- 平台 → 银行 (P3 · 打款指令) -->
+              <path class="vflow spine" d="M700,755 L770,755"/>
+              <rect class="edge-label-bg" x="706" y="739" width="52" height="13"/>
+              <text class="edge-label" x="732" y="749" text-anchor="middle">指令</text>
+              <!-- 银行 P3 → 银行 P4 -->
+              <path class="vflow spine" d="M890,800 L890,940"/>
+              <!-- 银行 → 商户 (P4 · 到账回执 msg) -->
+              <path class="vflow msg" d="M770,985 L390,985"/>
+              <rect class="edge-label-bg" x="530" y="969" width="110" height="13"/>
+              <text class="edge-label" x="585" y="979" text-anchor="middle" fill="#6B5B95">到账回执</text>
 
               <!-- ═══ Nodes overlay ═══ -->
-
-              <!-- n1 Customer/Initiate -->
-              <g class="node" data-id="n1" tabindex="0">
-                <rect class="vlane-card customer" x="160" y="290" width="150" height="60"/>
-                <circle class="step-badge-ring" cx="312" cy="288" r="11.5" stroke="#87867F"/>
-                <text class="step-badge-text" x="312" y="291.5" text-anchor="middle" fill="#87867F">1</text>
-                <text class="vlane-title customer" x="170" y="310">Submits request</text>
-                <text class="vlane-body" x="170" y="328">Customer fills form</text>
-                <text class="vlane-body" x="170" y="342">and clicks submit</text>
+              <!-- 商户 P1 · 提交结算申请 -->
+              <g class="node" data-id="submit" tabindex="0">
+                <rect class="vlane-card" x="150" y="250" width="240" height="90"/>
+                <text class="vlane-title" x="270" y="292" text-anchor="middle">提交结算申请</text>
+                <text class="vlane-body" x="270" y="312" text-anchor="middle">商户操作 · 人工</text>
               </g>
-
-              <!-- n2 Frontend/Initiate -->
-              <g class="node" data-id="n2" tabindex="0">
-                <rect class="vlane-card frontend" x="390" y="290" width="150" height="90"/>
-                <circle class="step-badge-ring" cx="542" cy="288" r="11.5" stroke="#5C7CA3"/>
-                <text class="step-badge-text" x="542" y="291.5" text-anchor="middle" fill="#5C7CA3">2</text>
-                <text class="vlane-title frontend" x="400" y="310">Renders form</text>
-                <text class="vlane-body" x="400" y="328">Local validation;</text>
-                <text class="vlane-body" x="400" y="342">POSTs to /api/records</text>
-                <text class="vlane-body" x="400" y="362">on 4xx → inline error</text>
+              <!-- 平台 P1 · 冻结受理 -->
+              <g class="node" data-id="freeze" tabindex="0">
+                <rect class="vlane-card" x="460" y="250" width="240" height="90"/>
+                <text class="vlane-title" x="580" y="292" text-anchor="middle">冻结受理 · 确认订单</text>
+                <text class="vlane-body" x="580" y="312" text-anchor="middle">系统自动 · CAS 防超扣</text>
               </g>
-
-              <!-- n3 Service/Validate -->
-              <g class="node" data-id="n3" tabindex="0">
-                <rect class="vlane-card service" x="620" y="560" width="150" height="60"/>
-                <circle class="step-badge-ring" cx="772" cy="558" r="11.5" stroke="#788C5D"/>
-                <text class="step-badge-text" x="772" y="561.5" text-anchor="middle" fill="#788C5D">3</text>
-                <text class="vlane-title service" x="630" y="580">Auth &amp; validate</text>
-                <text class="vlane-body" x="630" y="598">JWT · rate limit ·</text>
-                <text class="vlane-body" x="630" y="612">JSON schema</text>
+              <!-- 平台 P2 · 双人复核 (decision) -->
+              <g class="node" data-id="review" tabindex="0">
+                <rect class="vlane-card decision" x="460" y="480" width="240" height="90"/>
+                <text class="vlane-title decision" x="580" y="522" text-anchor="middle">双人复核</text>
+                <text class="vlane-body" x="580" y="542" text-anchor="middle">通过 → 打款 · 不通过 → 退回</text>
               </g>
-
-              <!-- n4 Service/Validate (decision diamond) -->
-              <g class="node" data-id="n4" tabindex="0">
-                <polygon class="vlane-card decision" points="695,640 770,675 695,710 620,675"/>
-                <text class="vlane-title decision" x="695" y="673" text-anchor="middle">valid?</text>
-                <text class="vlane-body" x="695" y="688" text-anchor="middle" fill="#D97757">decision · gateway</text>
+              <!-- 平台 P3 · 对账打款 -->
+              <g class="node" data-id="finance" tabindex="0">
+                <rect class="vlane-card" x="460" y="710" width="240" height="90"/>
+                <text class="vlane-title" x="580" y="752" text-anchor="middle">对账 · 生成打款指令</text>
+                <text class="vlane-body" x="580" y="772" text-anchor="middle">财务操作 · 双签留痕</text>
               </g>
-
-              <!-- n5 Service/Process -->
-              <g class="node" data-id="n5" tabindex="0">
-                <rect class="vlane-card service" x="620" y="780" width="150" height="80"/>
-                <circle class="step-badge-ring" cx="772" cy="778" r="11.5" stroke="#788C5D"/>
-                <text class="step-badge-text" x="772" y="781.5" text-anchor="middle" fill="#788C5D">5</text>
-                <text class="vlane-title service" x="630" y="800">Apply business rules</text>
-                <text class="vlane-body" x="630" y="818">Domain logic · lookup</text>
-                <text class="vlane-body" x="630" y="832">related entities;</text>
-                <text class="vlane-body" x="630" y="846">prepare canonical record</text>
+              <!-- 银行 P3 · 划拨资金 -->
+              <g class="node" data-id="payout" tabindex="0">
+                <rect class="vlane-card" x="770" y="710" width="240" height="90"/>
+                <text class="vlane-title" x="890" y="752" text-anchor="middle">银行划拨资金</text>
+                <text class="vlane-body" x="890" y="772" text-anchor="middle">通道结算 · 异步回执</text>
               </g>
-
-              <!-- n6 Database/Process -->
-              <g class="node" data-id="n6" tabindex="0">
-                <rect class="vlane-card database" x="850" y="790" width="150" height="80"/>
-                <circle class="step-badge-ring" cx="1002" cy="788" r="11.5" stroke="#6B5B95"/>
-                <text class="step-badge-text" x="1002" y="791.5" text-anchor="middle" fill="#6B5B95">6</text>
-                <text class="vlane-title database" x="860" y="810">Persist record</text>
-                <text class="vlane-body" x="860" y="828">INSERT in TX;</text>
-                <text class="vlane-body" x="860" y="842">idempotency-key</text>
-                <text class="vlane-body" x="860" y="856">prevents duplicates</text>
+              <!-- 银行 P4 · 回执确认 -->
+              <g class="node" data-id="receipt-bank" tabindex="0">
+                <rect class="vlane-card" x="770" y="940" width="240" height="90"/>
+                <text class="vlane-title" x="890" y="982" text-anchor="middle">回执确认</text>
+                <text class="vlane-body" x="890" y="1002" text-anchor="middle">成功 / 失败 · 幂等去重</text>
               </g>
-
-              <!-- n7 Service/Confirm -->
-              <g class="node" data-id="n7" tabindex="0">
-                <rect class="vlane-card service" x="620" y="1050" width="150" height="70"/>
-                <circle class="step-badge-ring" cx="772" cy="1048" r="11.5" stroke="#788C5D"/>
-                <text class="step-badge-text" x="772" y="1051.5" text-anchor="middle" fill="#788C5D">7</text>
-                <text class="vlane-title service" x="630" y="1070">Return 201</text>
-                <text class="vlane-body" x="630" y="1088">Envelope · new id</text>
-                <text class="vlane-body" x="630" y="1102">+ tracking URL</text>
+              <!-- 商户 P4 · 到账结清 -->
+              <g class="node" data-id="receipt-merchant" tabindex="0">
+                <rect class="vlane-card" x="150" y="940" width="240" height="90"/>
+                <text class="vlane-title" x="270" y="982" text-anchor="middle">到账结清</text>
+                <text class="vlane-body" x="270" y="1002" text-anchor="middle">资金到账 · 流程完成</text>
               </g>
-
-              <!-- n8 Frontend/Confirm -->
-              <g class="node" data-id="n8" tabindex="0">
-                <rect class="vlane-card frontend" x="390" y="1095" width="150" height="60"/>
-                <circle class="step-badge-ring" cx="542" cy="1093" r="11.5" stroke="#5C7CA3"/>
-                <text class="step-badge-text" x="542" y="1096.5" text-anchor="middle" fill="#5C7CA3">8</text>
-                <text class="vlane-title frontend" x="400" y="1115">Renders result</text>
-                <text class="vlane-body" x="400" y="1133">Route to /success;</text>
-                <text class="vlane-body" x="400" y="1147">copy-id affordance</text>
+              <!-- 退回终止 (商户 P2) -->
+              <g class="node" data-id="reject" tabindex="0">
+                <circle class="event-end" cx="270" cy="525" r="9"/>
+                <text class="vlane-body" x="270" y="552" text-anchor="middle" fill="#B04A3F">已退回 · 解冻</text>
               </g>
-
-              <!-- n9 Customer/Confirm -->
-              <g class="node" data-id="n9" tabindex="0">
-                <rect class="vlane-card customer" x="160" y="1140" width="150" height="60"/>
-                <circle class="step-badge-ring" cx="312" cy="1138" r="11.5" stroke="#87867F"/>
-                <text class="step-badge-text" x="312" y="1141.5" text-anchor="middle" fill="#87867F">9</text>
-                <text class="vlane-title customer" x="170" y="1160">Sees confirmation</text>
-                <text class="vlane-body" x="170" y="1178">Success screen +</text>
-                <text class="vlane-body" x="170" y="1192">record id</text>
-              </g>
-
-              <!-- email notification (ex extension) -->
-              <g class="node" data-id="email" tabindex="0">
-                <rect class="vlane-card database" x="710" y="1220" width="150" height="50"/>
-                <text class="vlane-title database" x="720" y="1240">Email notify</text>
-                <text class="vlane-body" x="720" y="1258">msg flow · 异步</text>
-              </g>
-
-              <!-- ═══════════════════════════════════════════════════════ -->
             </svg>
           </div>
         </div>
@@ -711,127 +591,129 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
     <aside>
       <div class="panel detail" id="detailPanel">
-        <div class="hint">点击任一元素查看含义和实现</div>
-        <h3 id="d-title">API 记录创建 · 垂直泳道图</h3>
-        <div class="meta" id="d-meta"><span>4 phases</span><span class="dot">·</span><span>4 lanes</span><span class="dot">·</span><span>10 元素图鉴</span></div>
+        <div class="hint">点击任一业务步骤查看细节</div>
+        <h3 id="d-title">结算流程 · 纵向阶段总览</h3>
+        <div class="meta" id="d-meta"><span>4 阶段</span><span class="dot">·</span><span>3 领域</span><span class="dot">·</span><span>1 退回分支</span></div>
         <div id="d-body">
-          <p><b>A 区 · API 记录创建主图</b> — phase 纵向 (Initiate → Validate → Process → Confirm)，lane 横向 (Customer / Frontend / Service / Database)。9 个 step + 1 [ex] email 异步通知 + 1 失败终态。</p>
-          <p>主路径 olive 加粗 = happy path：客户提交 → 前端 POST → 后端校验通过 → 应用业务规则 → 数据库 INSERT → 返回 201 → 渲染成功页。失败 (HTTP 400) 走 rust 虚线直接到失败终态。</p>
-          <p><b>B 区 · 元素图鉴</b> — 10 张卡覆盖垂直泳道全部元素：lane/pool · phase · phase divider · actor 节点 4 色 · service task · decision · sequence flow 3 类 · message flow · start/end event · [ex] 扩展。</p>
+          <p><b>主路径</b>（olive）：商户提交 → 平台冻结 → 双人复核 → 对账打款 → 银行划拨 → 回执 → 商户到账。</p>
+          <p><b>退回分支</b>（rust）：复核不通过 → 退回商户并解冻。</p>
+          <p><b>消息流</b>（plum）：打款指令 平台→银行；到账回执 银行→商户（幂等去重）。</p>
+          <p>纵向泳道 = 业务阶段（时间推进）；横向 = 业务领域。系统层的消息时序见 02 时序图。</p>
         </div>
         <div class="tags" id="d-tags">
-          <span class="tag t-state">lane</span><span class="tag t-event">phase</span><span class="tag t-gate">decision</span><span class="tag t-process">flow</span>
-        </div>
+          <span class="tag t-state">phase</span><span class="tag t-event">商户</span><span class="tag t-decision">平台</span><span class="tag t-gate">银行</span>
+        </div>        </div>
       </div>
     </aside>
   </div>
 
   <!-- ── Bottom legend · 全宽 · 分两组 ── -->
-  <div class="legend-group" aria-label="legend - 流程对象">
-    <div class="legend-group-label">流程对象 · FLOW OBJECTS</div>
+  <div class="legend-group" aria-label="legend - 节点">
+    <div class="legend-group-label">节点 · 业务步骤</div>
     <div class="legend">
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#87867F" stroke-width="1.4"/><line x1="2" y1="3" x2="24" y2="3" stroke="#87867F" stroke-width="2"/></svg></span><span class="name">lane / pool</span><span class="sub">顶边 3px lane 色</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="#F7F6F1" stroke="#D1CFC5"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#D97757" font-weight="700">01</text></svg></span><span class="name">phase column</span><span class="sub">编号 + 竖排名</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="10" y2="8" stroke="#D1CFC5" stroke-dasharray="2 2"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#D97757">↓</text><line x1="16" y1="8" x2="24" y2="8" stroke="#D1CFC5" stroke-dasharray="2 2"/></svg></span><span class="name">phase divider</span><span class="sub">虚线 + clay ↓</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="rgba(135,134,127,0.10)" stroke="#87867F"/></svg></span><span class="name">customer 节点</span><span class="sub">external · gray</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="rgba(92,124,163,0.10)" stroke="#5C7CA3"/></svg></span><span class="name">frontend 节点</span><span class="sub">client · blue</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="rgba(120,140,93,0.10)" stroke="#788C5D"/></svg></span><span class="name">service 节点</span><span class="sub">backend · olive</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="rgba(107,91,149,0.10)" stroke="#6B5B95"/></svg></span><span class="name">database 节点</span><span class="sub">persist · plum</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><polygon points="13,2 22,8 13,14 4,8" fill="rgba(217,119,87,0.06)" stroke="#D97757" stroke-dasharray="3 2"/></svg></span><span class="name">decision</span><span class="sub">clay 虚线菱形</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="rgba(120,140,93,0.22)" stroke="#788C5D" stroke-width="1.4"/></svg></span><span class="name">start event</span><span class="sub">olive 细圆</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="rgba(176,74,63,0.22)" stroke="#B04A3F" stroke-width="2.5"/></svg></span><span class="name">end event</span><span class="sub">rust 粗双线</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="8" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.3"/></svg></span><span class="name">业务步骤</span><span class="sub">白盒 · 商户/平台/银行</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="8" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.5"/></svg></span><span class="name">判断</span><span class="sub">深边 · 复核分支</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#F0EEE6" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">起止事件</span><span class="sub">起始 / 退回终止</span></div>
     </div>
   </div>
 
-  <div class="legend-group" aria-label="legend - 连接与标记">
-    <div class="legend-group-label">连接 &amp; 标记 · CONNECTING &amp; ANNOTATIONS</div>
+  <div class="legend-group" aria-label="legend - 连线">
+    <div class="legend-group-label">连线 · 流向</div>
     <div class="legend">
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.6"/><path d="M22,8 L18,5 L18,11 z" fill="#788C5D"/></svg></span><span class="name">spine</span><span class="sub">happy path · olive 加粗</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#3D3D3A" stroke-width="1.4"/><path d="M22,8 L18,5 L18,11 z" fill="#3D3D3A"/></svg></span><span class="name">sequence flow</span><span class="sub">次要 · slate 实线</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#B04A3F" stroke-width="1.4" stroke-dasharray="5 3"/><path d="M22,8 L18,5 L18,11 z" fill="#B04A3F"/></svg></span><span class="name">fail flow</span><span class="sub">失败 · rust 虚线</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="3" cy="8" r="2" fill="#FFFFFF" stroke="#6B5B95"/><line x1="6" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M22,8 L18,5 L18,11 z" fill="#6B5B95"/></svg></span><span class="name">message flow</span><span class="sub">跨业务方 · plum 虚线圆头</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#87867F" stroke-width="1.1" stroke-dasharray="2 2"/></svg></span><span class="name">data flow</span><span class="sub">数据关联 · 灰点线</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="18" height="10" fill="rgba(120,140,93,0.10)" stroke="#788C5D"/><circle cx="22" cy="3" r="2.5" fill="#FAF9F5" stroke="#788C5D" stroke-width="1.2"/></svg></span><span class="name">step badge</span><span class="sub">节点右上角编号</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><text x="3" y="11" font-family="serif" font-size="9" fill="#D97757" font-weight="600">[yes]</text></svg></span><span class="name">guard</span><span class="sub">条件 olive 斜体</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="#FAF9F5" stroke="#D1CFC5" stroke-width="0.6"/><text x="13" y="11" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#3D3D3A">POST</text></svg></span><span class="name">edge label</span><span class="sub">白底 paper badge</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="20" height="8" rx="2" fill="#C4994E33" stroke="#C4994E"/><text x="12" y="10.5" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#C4994E" font-weight="700">ex</text></svg></span><span class="name">[ex] 扩展</span><span class="sub">非标 BPMN · gold 角标</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.2"/><path d="M22,8 L18,5 L18,11 z" fill="#788C5D"/></svg></span><span class="name">主路径</span><span class="sub">happy path · olive</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#B04A3F" stroke-width="1.4" stroke-dasharray="5 3"/><path d="M22,8 L18,5 L18,11 z" fill="#B04A3F"/></svg></span><span class="name">退回</span><span class="sub">rust 虚线</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="3" cy="8" r="2" fill="#FFFFFF" stroke="#6B5B95"/><line x1="6" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M22,8 L18,5 L18,11 z" fill="#6B5B95"/></svg></span><span class="name">消息流</span><span class="sub">指令 / 回执 · plum</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="1" width="22" height="14" rx="3" fill="#FAF9F5" stroke="#D1CFC5" stroke-width="1.2"/><line x1="13" y1="1" x2="13" y2="15" stroke="#D1CFC5" stroke-dasharray="2 2"/></svg></span><span class="name">阶段泳道</span><span class="sub">纵向阶段 · 横向领域</span></div>
     </div>
-  </div>
+  </div>  </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 06-vertical · 垂直泳道图 · 4 phase × 4 lane · 10 元素图鉴</span>
+    <span>Engineering Diagram Library · 06-vertical · 垂直泳道图 · 结算阶段业务流</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 1500 },
+  viewBox: { w: 1080, h: 1180 },
   exportName: '06-swimlane-vertical',
   nodeData: {
-    'n1': { type: 'process', tagClass: 't-process', title: '① Customer · Submits request',
-      meta: ['phase 01 Initiate', 'lane Customer', 'external actor'],
-      body: `<p>Customer 在公开站点填表后点击 submit。表单数据在客户端被采集和必填校验。</p><pre>UI: form#create-record (name, email)
-on submit: POST /api/records</pre>` },
-    'n2': { type: 'process', tagClass: 't-process', title: '② Frontend · Renders form',
-      meta: ['phase 01 Initiate', 'lane Frontend', 'web client'],
-      body: `<p>Frontend 做本地校验 (必填、邮箱格式)，然后 POST 到 API。4xx 响应时显示 inline error，不跳转。</p><pre>fetch('/api/records', {
-  method: 'POST',
-  headers: { 'Idempotency-Key': uuid() },
-  body: JSON.stringify(form)
-})</pre>` },
-    'n3': { type: 'process', tagClass: 't-process', title: '③ Service · Auth & validate',
-      meta: ['phase 02 Validate', 'lane Service', 'backend'],
-      body: `<p>Service 校验 Bearer token + 限流 + JSON schema。三层校验任一失败 → 直接 400。</p><pre>1. verify JWT signature
-2. rate-limit: 30 req/min per user
-3. ajv validate(schema, payload)</pre>` },
-    'n4': { type: 'gateway', tagClass: 't-gate', title: '④ Decision · valid?',
-      meta: ['phase 02 Validate', 'lane Service', 'gateway'],
-      body: `<p>三层校验结果汇聚决策点。[valid] 走 happy path 进 Process 阶段；[invalid] 走 rust 虚线直接到 400 失败终态。</p><pre>if (authOk && !rateLimited && schemaOk) {
-  → continue (n5)
-} else {
-  return 400 + error envelope
-}</pre>` },
-    'n5': { type: 'process', tagClass: 't-process', title: '⑤ Service · Apply business rules',
-      meta: ['phase 03 Process', 'lane Service', 'backend'],
-      body: `<p>跑领域逻辑、查关联实体、组装 canonical record 对象准备落库。</p><pre>const record = await prepare({
-  user_id, payload,
-  resolved_refs: await lookup(),
-  status: 'pending'
-})</pre>` },
-    'n6': { type: 'database', tagClass: 't-state', title: '⑥ Database · Persist record',
-      meta: ['phase 03 Process', 'lane Database', 'persistence'],
-      body: `<p>事务内 INSERT。idempotency-key 映射唯一约束，重试不会插重复记录。</p><pre>BEGIN;
-INSERT INTO records (id, payload, idem_key, ...)
-VALUES ($1, $2, $3, ...)
-ON CONFLICT (idem_key) DO NOTHING
-RETURNING id;
-COMMIT;</pre>` },
-    'n7': { type: 'process', tagClass: 't-process', title: '⑦ Service · Return 201',
-      meta: ['phase 04 Confirm', 'lane Service', 'backend'],
-      body: `<p>包成功 envelope，含新 record id + tracking URL。</p><pre>HTTP/1.1 201 Created
-{
-  "id": "rec_142",
-  "href": "/records/rec_142",
-  "created_at": "2026-05-24T..."
-}</pre>` },
-    'n8': { type: 'process', tagClass: 't-process', title: '⑧ Frontend · Renders result',
-      meta: ['phase 04 Confirm', 'lane Frontend', 'web client'],
-      body: `<p>Client 路由跳转 /success/:id，渲染成功页 + 一键复制 record id。</p><pre>router.push(\`/success/\${id}\`)
-&lt;CopyButton text={id}/&gt;</pre>` },
-    'n9': { type: 'process', tagClass: 't-process', title: '⑨ Customer · Sees confirmation',
-      meta: ['phase 04 Confirm', 'lane Customer', 'external actor'],
-      body: `<p>Customer 看到成功页 + record id，可选收到邮件通知 (msg flow [ex])。</p>` },
-    'email': { type: 'process', tagClass: 't-process', title: '[ex] Email notify · 异步通知',
-      meta: ['phase 04 Confirm', 'msg flow', '[ex] 扩展'],
-      body: `<p>非主流程的异步通知：Service 在 201 返回的同时投递 email 队列。失败不阻塞主路径。</p><pre>// fire-and-forget
-queue.publish('email.record_created', {
-  to: customer.email,
-  record_id: id
-})</pre>` },
+    'submit': {
+      type: 'process', tagClass: 't-process',
+      title: '提交结算申请 · 商户',
+      meta: ['阶段 01 受理', '商户', '人工'],
+      body: `<p>商户在结算平台提交结算申请（金额、收款账户、结算周期）。</p><pre>输入: 金额 + 收款账户
+约束: 在可结算余额内
+幂等: settlement_id 防重复</pre>`,
+      tags: ['merchant', 'submit', 'idempotent']
+    },
+    'freeze': {
+      type: 'process', tagClass: 't-process',
+      title: '冻结受理 · 平台',
+      meta: ['阶段 01 受理', '平台', '系统自动'],
+      body: `<p>平台确认订单并冻结对应资金，受理结算申请。</p><pre>动作: 冻结可用余额
+并发: version CAS 防超扣
+幂等: settlement_id</pre>`,
+      tags: ['platform', 'freeze', 'cas']
+    },
+    'review': {
+      type: 'decision', tagClass: 't-decision',
+      title: '双人复核 · 平台',
+      meta: ['阶段 02 复核', '平台', '判断'],
+      body: `<p><b>业务判断</b>：风控双人复核（合规 / 黑名单 / 额度）。</p><pre>通过 → 打款阶段
+不通过 → 退回商户并解冻
 
-    // ─── Gallery cards ───
+规则: 任一复核员拒绝即拒绝
+SLA: P95 < 2h</pre>`,
+      tags: ['review', 'decision', '双签']
+    },
+    'finance': {
+      type: 'process', tagClass: 't-process',
+      title: '对账 · 生成打款指令 · 平台',
+      meta: ['阶段 03 打款', '平台', '财务'],
+      body: `<p>财务对账确认后生成打款指令，发送给银行。</p><pre>动作: 对账 → 生成打款指令
+发送: 打款指令 → 银行 (消息流)
+留痕: 指令号 + 双签记录</pre>`,
+      tags: ['finance', 'reconcile', 'manual']
+    },
+    'payout': {
+      type: 'process', tagClass: 't-process',
+      title: '银行划拨资金 · 银行',
+      meta: ['阶段 03 打款', '银行', '异步'],
+      body: `<p>银行按打款指令划拨资金，异步回执确认。</p><pre>通道: 对公打款
+回执: 成功 / 失败 (幂等去重)
+超时: 补单对账兜底</pre>`,
+      tags: ['bank', 'payout', 'async']
+    },
+    'receipt-bank': {
+      type: 'process', tagClass: 't-process',
+      title: '回执确认 · 银行',
+      meta: ['阶段 04 结清', '银行', '异步'],
+      body: `<p>银行回执确认资金已划拨，进入结清阶段。</p><pre>状态: 成功 / 失败
+幂等: 按回执单号去重
+触发: 到账回执通知商户</pre>`,
+      tags: ['bank', 'receipt', 'async']
+    },
+    'receipt-merchant': {
+      type: 'process', tagClass: 't-process',
+      title: '到账结清 · 商户',
+      meta: ['阶段 04 结清', '商户', '终态'],
+      body: `<p>商户确认资金到账，结算流程完成。</p><pre>事件: settlement.completed
+产物: 对账单 + 回执存档
+终态: 流程结束</pre>`,
+      tags: ['merchant', 'settled', 'completed']
+    },
+    'reject': {
+      type: 'event', tagClass: 't-fail',
+      title: '已退回 · 解冻',
+      meta: ['阶段 02 复核', '失败分支', 'rust'],
+      body: `<p>复核不通过 → 退回商户并解冻冻结资金。</p><pre>动作: 解冻 + 通知商户
+原因: 合规 / 风控拒绝
+事件: settlement.rejected</pre>`,
+      tags: ['reject', '解冻', 'fail']
+    },
   }
+
 };
 </script>
 <script>

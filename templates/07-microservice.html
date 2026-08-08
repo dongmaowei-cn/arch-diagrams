@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>微服务架构图 · 电商全景 — Engineering Diagram Library</title>
+<title>微服务架构图 · 运行时拓扑 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -198,7 +198,7 @@ svg.diagram { display: block; }
 .edge.db { stroke: var(--clay); stroke-dasharray: 3 3; marker-end: url(#arrow-clay); }
 .edge.async { stroke-dasharray: 6 3; }
 .edge.return { stroke: var(--gray-500); stroke-dasharray: 4 3; marker-end: url(#arrow-open); }
-.edge.sync { stroke: var(--slate); marker-end: url(#arrow-slate); }
+.edge.sync { stroke: var(--gray-700); marker-end: url(#arrow-sync); }
 .edge.msg { stroke: var(--plum); marker-end: url(#arrow-plum); }
 .edge.thick { stroke-width: 2.2; }
 .edge.bidir { marker-start: url(#arrow-rev); marker-end: url(#arrow); }
@@ -352,7 +352,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
 
   /* architecture edges — 04 canonical set */
   .diagram .edge.spine { stroke: var(--olive); stroke-width: 2.6; fill: none; marker-end: url(#arrow-olive-bold); }
-  .diagram .edge.sync-arch { stroke: var(--slate); stroke-width: 1.4; fill: none; marker-end: url(#arrow-slate); }
+  .diagram .edge.sync-arch { stroke: var(--gray-700); stroke-width: 1.4; fill: none; marker-end: url(#arrow-sync); }
   .diagram .edge.rpc { stroke: var(--clay); stroke-width: 1.4; fill: none; marker-end: url(#arrow-clay); }
   .diagram .edge.async-event { stroke: var(--plum); stroke-width: 1.4; stroke-dasharray: 6 4; fill: none; marker-end: url(#arrow-plum); }
   .diagram .edge.cache-edge { stroke: var(--gold); stroke-width: 1.2; stroke-dasharray: 3 3; fill: none; marker-end: url(#arrow-gold); }
@@ -446,14 +446,14 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 07 · 微服务架构图 · Microservice Architecture</div>
-        <h1>电商微服务全景 <em>— microservice landscape</em></h1>
-        <p class="lead">完整覆盖 <b>Spring Cloud / Service Mesh / Cloud Native 标准模式</b>：上半区是电商微服务全景（6 tier × 5 核心服务 + sidecar 注入 + 平台横切服务），主路径 olive 加粗 = 下单核心链；下半区 10 张元素卡覆盖 microservice / API Gateway / Service Registry / Config Center / Service Mesh / Circuit Breaker / Saga / Event Bus / BFF + 横切 <b>[ex]</b>。</p>
+        <div class="eyebrow">Diagram type 07 · 微服务架构图 · Runtime Topology · v2</div>
+        <h1>电商微服务运行时拓扑 <em>— microservice runtime topology</em></h1>
+        <p class="lead">这张图讲微服务<b>怎么跑起来、怎么被找到、流量怎么穿</b>：<code>K8s namespace</code> 边界内的 6 个服务 pod，每个都<b>注入 Envoy sidecar</b>；服务间流量经 <b>istio 网格</b>转发（数据面 sidecar↔sidecar，控制面 <code>istiod</code> 下发 xDS / mTLS），通过<b>注册中心</b>寻址、<b>配置中心</b>热下发、<b>Sentinel</b> 熔断、<b>Saga</b> 补偿、<b>Kafka</b> 解耦。主路径橄榄加粗 = 下单链 —— 这是<b>运行时部署形态</b>，区别于 04 的抽象分层。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">5</span>核心服务</div>
-        <div><span class="v">6</span>平台横切</div>
-        <div><span class="v">10</span>图鉴元素</div>
+        <div><span class="v">6</span>服务 pod</div>
+        <div><span class="v">6</span>Envoy sidecar</div>
+        <div><span class="v">7</span>平台横切</div>
       </div>
     </div>
   </header>
@@ -474,18 +474,18 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C4994E"/></marker>
                 <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A8585"/></marker>
                 <marker id="arrow-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
-                <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#141413"/></marker>
+                <marker id="arrow-sync" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
               </defs>
 
               <!-- ─── Diagram title row ─── -->
-              <text class="diagram-title" x="540" y="32" text-anchor="middle">电商微服务全景 · Microservice Architecture</text>
-              <text class="diagram-sub" x="540" y="52" text-anchor="middle">Spring Cloud + Service Mesh + Cloud Native · 5 核心 + 6 平台 · sidecar 注入</text>
+              <text class="diagram-title" x="540" y="32" text-anchor="middle">电商微服务运行时拓扑 · Microservice Runtime Topology</text>
+              <text class="diagram-sub" x="540" y="52" text-anchor="middle">K8s namespace 边界 · Envoy sidecar 网格 · 服务发现 / 配置 / 熔断 / 补偿 · 运行时部署形态</text>
 
               <!-- ═══════════════════════════════════════════════════════ -->
               <!-- 区 A · 电商微服务全景主图 · K8s-namespace + sidecar 模板       -->
               <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="92">A · 电商微服务全景示意主图</text>
-              <text class="section-sub" x="40" y="114">Clients → CDN → API Gateway → BFF → K8s namespace (services + sidecar) · 主路径 olive 加粗 · 右侧 EXTERNAL/INFRA 列</text>
+              <text class="section-label" x="40" y="92">A · 电商微服务运行时拓扑</text>
+              <text class="section-sub" x="40" y="114">K8s namespace 边界 · 每 pod 注入 Envoy sidecar → istio 网格（数据面 sidecar↔sidecar / 控制面 istiod）· 注册中心寻址 · 配置中心下发 · 区别于 04 抽象分层</text>
 
               <!-- ============================================================== -->
               <!-- ROW 1 · 客户端 (3 cards) · y 140-220                            -->
@@ -573,13 +573,18 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               <!-- ============================================================== -->
               <g id="k8s-namespace">
                 <rect x="30" y="560" width="720" height="580" rx="10"
-                      fill="none" stroke="#6B5B95" stroke-width="1.4" stroke-dasharray="8 4" opacity="0.6"/>
+                      fill="#6B5B9510" stroke="#6B5B95" stroke-width="1.8" stroke-dasharray="8 4"/>
                 <rect x="46" y="568" width="262" height="20" rx="3"
                       fill="#FAF9F5" stroke="#6B5B95" stroke-width="0.8"/>
                 <text x="58" y="583" font-family="ui-monospace, monospace" font-size="9.5" fill="#6B5B95"
-                      font-weight="700" letter-spacing="0.08em">K8S NAMESPACE: production</text>
+                      font-weight="700" letter-spacing="0.08em">K8S NAMESPACE · production</text>
                 <text x="46" y="606" font-family="ui-monospace, monospace" font-size="9" fill="#87867F"
-                      letter-spacing="0.06em">istio mesh enabled · sidecar 自动注入 · mTLS · 6 pods × 2-12 replicas</text>
+                      letter-spacing="0.06em">DEPLOYMENT BOUNDARY · 6 pods × 2-12 replicas · sidecar 自动注入 · mTLS</text>
+                <g class="node infra" data-id="istiod" tabindex="0">
+                  <rect class="shape" x="545" y="572" width="190" height="34" rx="6" ry="6"/>
+                  <text class="t-cn" x="640" y="584" text-anchor="middle">istiod · control plane</text>
+                  <text class="t-en" x="640" y="600" text-anchor="middle">xDS · mTLS CA · 网格控制面</text>
+                </g>
               </g>
 
               <!-- ============================================================== -->
@@ -826,7 +831,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
                 <!-- ── Service-mesh internal RPC (rpc · gRPC) ── -->
                 <path class="edge rpc" d="M 160,797 L 160,810 L 380,810 L 380,820"/>
                 <rect class="edge-label-bg" x="218" y="800" width="98" height="14"/>
-                <text class="edge-label clay" x="223" y="810">lockStock · gRPC</text>
+                <text class="edge-label clay" x="223" y="810">lockStock · mesh gRPC</text>
 
                 <path class="edge rpc" d="M 260,690 L 280,690"/>
                 <path class="edge rpc" d="M 480,690 L 500,690"/>
@@ -996,7 +1001,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 07 / 07 · 微服务架构图 · Cloud Native · 10 元素图鉴</span>
+    <span>Engineering Diagram Library · 07 / 07 · 微服务架构图 · 运行时拓扑 · K8s ns + sidecar mesh</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
@@ -1207,6 +1212,20 @@ TTL:  默认 10 min · session 24h
 心跳: 5s 间隔 · 失效 15s 摘除
 配合: API Gateway 动态拉路由表</pre>`,
       tags: ['registry', 'nacos', 'discovery']
+    },
+    'istiod': {
+      type: 'server', tagClass: 't-event',
+      title: 'istiod · 网格控制面',
+      meta: ['service mesh', 'xDS 下发', 'mTLS CA'],
+      body: `<p>istio 控制面，管理网格内所有 Envoy sidecar —— 这是 07 区别于 04 抽象分层的核心（运行时网格形态）：</p><pre>控制面功能:
+· xDS 下发路由 / 监听 / 集群配置
+· mTLS 证书签发与轮换 (CA)
+· 遥测 / 访问日志策略
+
+与数据面关系:
+· 每个 pod 的 Envoy sidecar 从 istiod 拉配置
+· 服务间流量经 sidecar 转发（sidecar↔sidecar）</pre>`,
+      tags: ['istio', 'control-plane', 'mesh']
     },
     'platform-config': {
       type: 'server', tagClass: 't-state',
@@ -1537,7 +1556,7 @@ discover  灰点线           服务发现注册</pre>`,
       .edge.db { stroke: ${p.clay}; stroke-dasharray: 3 3; }
       .edge.async { stroke-dasharray: 6 3; }
       .edge.return { stroke: ${p.gray500}; stroke-dasharray: 4 3; }
-      .edge.sync { stroke: ${p.slate}; }
+      .edge.sync { stroke: ${p.gray700}; }
       .edge.msg { stroke: ${p.plum}; }
       .edge.relation { stroke: ${p.clay}; }
       .edge.lane { stroke: ${p.gray300}; stroke-width: 1; }

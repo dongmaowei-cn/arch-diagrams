@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>泳道图 · 电商订单跨部门 — Engineering Diagram Library</title>
+<title>泳道图 · 结算对账跨领域流程 — Engineering Diagram Library</title>
 <style>
 /* ─── Shared design tokens + chrome for Engineering Diagram Library
        v1 · paired with diagram-shared.js
@@ -425,14 +425,14 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   <header>
     <div class="title-row">
       <div class="title-block">
-        <div class="eyebrow">Diagram type 06 · 泳道图 · BPMN 2.0 Cross-functional</div>
-        <h1>电商订单跨部门 <em>— cross-functional swimlane</em></h1>
-        <p class="lead">完整覆盖 <b>BPMN 2.0 全部核心元素</b>：上半区是电商「下单 → 支付 → 拣货 → 配送」6 泳道协作图（含 start/end/intermediate 事件、4 类 task、3 类 gateway、sequence + message flow、data object/store、subprocess、SLA <b>[ex]</b>）；下半区是 BPMN 元素图鉴 10 张卡，覆盖所有标准符号 + 常用扩展。</p>
+        <div class="eyebrow">Diagram type 06 · 泳道图 · 跨领域业务流程</div>
+        <h1>结算对账跨领域流程 <em>— settlement cross-domain flow</em></h1>
+        <p class="lead">一笔结算从<b>商户发起 → 交易冻结 → 结算入批 → 风控复核 → 财务对账 → 银行划拨</b>的跨领域协作。泳道 = <b>业务领域 / 角色</b>，回答"这笔业务谁负责哪一步"（业务视角）；复核不通过走 rust 退回，打款指令与到账回执走消息流。系统层的消息时序（谁调谁）请见 <b>02 时序图</b> —— 一图讲业务，一图讲实现。</p>
       </div>
       <div class="stat-row">
-        <div><span class="v">6</span>泳道</div>
-        <div><span class="v">13</span>节点</div>
-        <div><span class="v">10</span>图鉴元素</div>
+        <div><span class="v">6</span>业务领域</div>
+        <div><span class="v">1</span>复核判断</div>
+        <div><span class="v">2</span>退回/回执</div>
       </div>
     </div>
   </header>
@@ -443,7 +443,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
         <div class="canvas-stage" id="stage">
           <div class="canvas-grid"></div>
           <div class="canvas-inner" id="canvasInner">
-            <svg class="diagram" id="diagram" width="1080" height="1300" viewBox="0 0 1080 1300" xmlns="http://www.w3.org/2000/svg">
+            <svg class="diagram" id="diagram" width="1080" height="1000" viewBox="0 0 1080 1000" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D3D3A"/></marker>
                 <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
@@ -459,352 +459,141 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               </defs>
 
               <!-- ─── Diagram title row ─── -->
-              <text class="diagram-title" x="540" y="32" text-anchor="middle">电商订单跨部门 · 泳道图 (BPMN 2.0 Cross-functional)</text>
-              <text class="diagram-sub" x="540" y="52" text-anchor="middle">BPMN 2.0 · 6 泳道 · 13 节点 · 4 类 task · 3 类 gateway · sequence + message flow</text>
+              <text class="diagram-title" x="540" y="32" text-anchor="middle">结算对账跨领域流程 · 泳道图 (Cross-domain Swimlane)</text>
+              <text class="diagram-sub" x="540" y="52" text-anchor="middle">6 业务领域 · 人工 / 系统 / 判断 / 消息 · 主路径 olive 加粗 · 系统层时序见 02</text>
 
               <!-- ═══════════════════════════════════════════════════════ -->
               <!-- 区 A · 电商订单跨部门主图                                  -->
               <!-- ═══════════════════════════════════════════════════════ -->
-              <text class="section-label" x="40" y="92">A · 电商订单跨部门示意主图</text>
-              <text class="section-sub" x="40" y="114">电商场景 · 主路径橄榄加粗 = happy path · 6 泳道 = 用户 / 订单服务 / 支付网关 / 仓库 / 配送 / 财务</text>
+                                          <text class="section-label" x="40" y="92">A · 结算对账跨领域业务流程</text>
+              <text class="section-sub" x="40" y="114">商户 → 交易 → 结算 → 风控 → 财务 → 银行 · 业务视角 · 泳道 = 业务领域 · 系统消息时序见 02</text>
 
-              <!-- ─── Pool + Lanes (horizontal lanes) ─── -->
-              <!-- pool header (vertical strip on left) -->
+              <!-- ============================================================== -->
+              <!-- 6 lanes (each 120 high) · 业务领域 · y 140-860                   -->
+              <!-- ============================================================== -->
               <rect class="pool-header" x="40" y="140" width="40" height="720"/>
-              <text class="pool-label" x="60" y="500" text-anchor="middle" transform="rotate(-90 60 500)">电商订单业务 · ORDER FULFILLMENT POOL</text>
-
-              <!-- 6 lanes (each 120 high) -->
+              <text class="pool-label" x="60" y="500" text-anchor="middle" transform="rotate(-90 60 500)">结算业务 · SETTLEMENT POOL</text>
               <rect class="pool" x="80" y="140" width="960" height="720" fill="none"/>
 
-              <!-- Lane 1: 用户 (User) -->
+              <!-- Lane 1: 商户 -->
               <rect class="lane-header" x="80" y="140" width="120" height="120"/>
-              <text class="lane-label" x="140" y="196" text-anchor="middle">用户</text>
-              <text class="task-sub" x="140" y="214" text-anchor="middle">User</text>
+              <text class="lane-label" x="140" y="196" text-anchor="middle">商户</text>
+              <text class="task-sub" x="140" y="214" text-anchor="middle">Merchant</text>
               <line class="lane-divider" x1="200" y1="140" x2="200" y2="860"/>
 
-              <!-- Lane 2: 订单服务 (Order Service) -->
+              <!-- Lane 2: 交易域 -->
               <line class="lane-divider" x1="80" y1="260" x2="1040" y2="260"/>
               <rect class="lane-header" x="80" y="260" width="120" height="120"/>
-              <text class="lane-label" x="140" y="316" text-anchor="middle">订单服务</text>
-              <text class="task-sub" x="140" y="334" text-anchor="middle">Order Service</text>
+              <text class="lane-label" x="140" y="316" text-anchor="middle">交易域</text>
+              <text class="task-sub" x="140" y="334" text-anchor="middle">Trade</text>
 
-              <!-- Lane 3: 支付网关 (Payment Gateway) -->
+              <!-- Lane 3: 结算域 -->
               <line class="lane-divider" x1="80" y1="380" x2="1040" y2="380"/>
               <rect class="lane-header" x="80" y="380" width="120" height="120"/>
-              <text class="lane-label" x="140" y="436" text-anchor="middle">支付网关</text>
-              <text class="task-sub" x="140" y="454" text-anchor="middle">Payment GW</text>
+              <text class="lane-label" x="140" y="436" text-anchor="middle">结算域</text>
+              <text class="task-sub" x="140" y="454" text-anchor="middle">Settlement</text>
 
-              <!-- Lane 4: 仓库 (Warehouse) -->
+              <!-- Lane 4: 风控 -->
               <line class="lane-divider" x1="80" y1="500" x2="1040" y2="500"/>
               <rect class="lane-header" x="80" y="500" width="120" height="120"/>
-              <text class="lane-label" x="140" y="556" text-anchor="middle">仓库</text>
-              <text class="task-sub" x="140" y="574" text-anchor="middle">Warehouse</text>
+              <text class="lane-label" x="140" y="556" text-anchor="middle">风控</text>
+              <text class="task-sub" x="140" y="574" text-anchor="middle">Compliance</text>
 
-              <!-- Lane 5: 配送 (Logistics) -->
+              <!-- Lane 5: 财务 -->
               <line class="lane-divider" x1="80" y1="620" x2="1040" y2="620"/>
               <rect class="lane-header" x="80" y="620" width="120" height="120"/>
-              <text class="lane-label" x="140" y="676" text-anchor="middle">配送</text>
-              <text class="task-sub" x="140" y="694" text-anchor="middle">Logistics</text>
+              <text class="lane-label" x="140" y="676" text-anchor="middle">财务</text>
+              <text class="task-sub" x="140" y="694" text-anchor="middle">Finance</text>
 
-              <!-- Lane 6: 财务 (Finance) -->
+              <!-- Lane 6: 银行 -->
               <line class="lane-divider" x1="80" y1="740" x2="1040" y2="740"/>
               <rect class="lane-header" x="80" y="740" width="120" height="120"/>
-              <text class="lane-label" x="140" y="796" text-anchor="middle">财务</text>
-              <text class="task-sub" x="140" y="814" text-anchor="middle">Finance</text>
+              <text class="lane-label" x="140" y="796" text-anchor="middle">银行</text>
+              <text class="task-sub" x="140" y="814" text-anchor="middle">Bank</text>
 
               <!-- ─── Flow edges (drawn first) ─── -->
-
-              <!-- start → submit-order (lane 1) -->
-              <path class="seq-flow spine" d="M255,200 L295,200"/>
-
-              <!-- submit-order (lane 1) → validate (lane 2) -->
-              <path class="seq-flow spine" d="M340,225 L340,310 L385,310"/>
-
-              <!-- validate → gw-stock (XOR) (lane 2) -->
-              <path class="seq-flow spine" d="M470,310 L505,310"/>
-
-              <!-- gw-stock yes → reserve (lane 2) -->
-              <path class="seq-flow spine" d="M540,310 L585,310"/>
-              <rect class="flow-label-bg" x="540" y="293" width="36" height="13"/>
-              <text class="flow-label" x="556" y="303" text-anchor="middle">yes</text>
-
-              <!-- gw-stock no → end-fail (down + right) -->
-              <path class="seq-flow" d="M523,328 L523,790 L120,790 L120,490" />
-              <!-- end-fail in lane 4 right edge?  Actually let me draw end-fail somewhere accessible -->
-
-              <!-- reserve → invoke-payment (cross to payment lane) -->
-              <path class="seq-flow spine" d="M670,310 L670,430"/>
-
-              <!-- invoke-payment (lane 3) → timer intermediate -->
-              <path class="seq-flow spine" d="M720,430 L770,430"/>
-
-              <!-- timer → gw-parallel-split (back up to lane 2) -->
-              <path class="seq-flow spine" d="M810,430 L835,430 L835,310 L860,310"/>
-
-              <!-- and-split → warehouse pick (down to lane 4) -->
-              <path class="seq-flow spine" d="M878,328 L878,505 L878,560 L825,560"/>
-
-              <!-- and-split → finance accrue (down to lane 6) -->
-              <path class="seq-flow" d="M896,328 L896,800 L825,800"/>
-              <rect class="flow-label-bg" x="900" y="568" width="92" height="13"/>
-              <text class="flow-label" x="946" y="578" text-anchor="middle">async-accrue</text>
-
-              <!-- warehouse pick → and-join (lane 2) -->
-              <path class="seq-flow spine" d="M740,560 L640,560 L640,310 L660,310"/>
-
-              <!-- finance → and-join (lane 2) -->
-              <path class="seq-flow" d="M740,800 L620,800 L620,310 L660,310"/>
-
-              <!-- and-join → ship (lane 5) -->
-              <path class="seq-flow spine" d="M700,328 L700,680 L745,680"/>
-
-              <!-- ship → user-receive (back to lane 1) -->
-              <path class="seq-flow spine" d="M870,680 L905,680 L905,200 L905,200"/>
-
-              <!-- user-receive → end -->
-              <path class="seq-flow spine" d="M950,200 L985,200"/>
-
-              <!-- Message flow: User ←→ Payment GW (independent customer-side payment notification) -->
-              <path class="msg-flow" d="M340,180 L340,160 L770,160 L770,415"/>
-              <rect class="flow-label-bg" x="500" y="143" width="120" height="13"/>
-              <text class="flow-label" x="560" y="153" text-anchor="middle">银行回执 (msg flow)</text>
-
-              <!-- Data flow / data object connector (Order doc → Warehouse) -->
-              <path class="seq-flow" stroke-dasharray="3 3" marker-end="url(#arrow)" d="M340,250 L240,485 L260,500"/>
-              <rect class="flow-label-bg" x="200" y="378" width="80" height="13"/>
-              <text class="flow-label" x="240" y="388" text-anchor="middle">order doc</text>
+              <!-- start → 提交结算申请 (L1) -->
+              <path class="seq-flow spine" d="M248,200 L300,200"/>
+              <!-- 提交 → 冻结确认 (L1→L2 · 底部出边直下再右拐) -->
+              <path class="seq-flow spine" d="M355,228 L355,320 L425,320"/>
+              <!-- 冻结 → 生成结算单 (L2→L3) -->
+              <path class="seq-flow spine" d="M480,348 L480,440 L545,440"/>
+              <!-- 生成 → 复核判断 (L3→L4) -->
+              <path class="seq-flow spine" d="M600,468 L600,560 L690,560"/>
+              <!-- 复核通过 → 财务 (L4→L5) -->
+              <path class="seq-flow spine" d="M730,560 L730,680 L775,680"/>
+              <rect class="flow-label-bg" x="742" y="670" width="30" height="13"/>
+              <text class="flow-label" x="757" y="680" text-anchor="middle">通过</text>
+              <!-- 复核不通过 → 退回 (L4 内 · 短 rust 边) -->
+              <path class="seq-flow" stroke="#B04A3F" stroke-dasharray="5 4" marker-end="url(#arrow-rust)" d="M710,580 L710,591"/>
+              <!-- 财务 → 银行 (打款指令 · message) -->
+              <path class="msg-flow" d="M830,708 L830,800 L865,800"/>
+              <rect class="flow-label-bg" x="774" y="760" width="110" height="13"/>
+              <text class="flow-label" x="829" y="770" text-anchor="middle" fill="#6B5B95">打款指令</text>
+              <!-- 银行 → 商户 (到账回执 · message · 走画布上方) -->
+              <path class="msg-flow" d="M975,800 L1005,800 L1005,160 L560,160 L560,184"/>
+              <rect class="flow-label-bg" x="840" y="152" width="120" height="13"/>
+              <text class="flow-label" x="900" y="162" text-anchor="middle" fill="#6B5B95">到账回执 (msg)</text>
 
               <!-- ─── Nodes overlay ─── -->
-
-              <!-- start event (lane 1) -->
+              <!-- 起始事件 (L1) -->
               <g class="node" data-id="start" tabindex="0">
-                <circle class="event-start shape" cx="235" cy="200" r="18"/>
+                <circle class="event-start shape" cx="230" cy="200" r="18"/>
               </g>
-
-              <!-- submit-order: User Task (lane 1) -->
-              <g class="node" data-id="submit-order" tabindex="0">
-                <rect class="task-rect user shape" x="295" y="172" width="92" height="56"/>
-                <text class="task-name" x="341" y="194" text-anchor="middle">提交订单</text>
-                <text class="task-sub" x="341" y="208" text-anchor="middle">User Task</text>
-                <text class="task-icon-mini" x="304" y="186">👤</text>
+              <!-- 提交结算申请 (L1 · 商户) -->
+              <g class="node" data-id="submit" tabindex="0">
+                <rect class="task-rect user shape" x="300" y="172" width="110" height="56"/>
+                <text class="task-name" x="355" y="194" text-anchor="middle">提交结算申请</text>
+                <text class="task-sub" x="355" y="208" text-anchor="middle">商户操作 · 人工</text>
+                <text class="task-icon-mini" x="309" y="186">👤</text>
               </g>
-
-              <!-- validate-inventory: Service Task (lane 2) -->
-              <g class="node" data-id="validate" tabindex="0">
-                <rect class="task-rect service shape" x="385" y="282" width="92" height="56"/>
-                <text class="task-name" x="431" y="304" text-anchor="middle">校验库存</text>
-                <text class="task-sub" x="431" y="318" text-anchor="middle">Service Task</text>
-                <text class="task-icon-mini" x="394" y="296">⚙</text>
+              <!-- 冻结资金·确认订单 (L2 · 系统) -->
+              <g class="node" data-id="freeze" tabindex="0">
+                <rect class="task-rect service shape" x="425" y="292" width="110" height="56"/>
+                <text class="task-name" x="480" y="314" text-anchor="middle">冻结资金</text>
+                <text class="task-sub" x="480" y="328" text-anchor="middle">确认订单 · 系统自动</text>
+                <text class="task-icon-mini" x="434" y="306">⚙</text>
               </g>
-
-              <!-- XOR gateway: stock available? (lane 2) -->
-              <g class="node" data-id="gw-stock" tabindex="0">
-                <path class="gateway-shape shape" d="M505,310 L523,288 L541,310 L523,332 Z"/>
-                <text class="gateway-mark" x="523" y="316" text-anchor="middle">×</text>
-                <text class="gateway-label" x="523" y="276" text-anchor="middle">stock?</text>
+              <!-- 生成结算单·入批次 (L3 · 系统) -->
+              <g class="node" data-id="settle-gen" tabindex="0">
+                <rect class="task-rect service shape" x="545" y="412" width="110" height="56"/>
+                <text class="task-name" x="600" y="434" text-anchor="middle">生成结算单</text>
+                <text class="task-sub" x="600" y="448" text-anchor="middle">入批次 · 系统自动</text>
+                <text class="task-icon-mini" x="554" y="426">⚙</text>
               </g>
-
-              <!-- reserve-stock: Service Task (lane 2) -->
-              <g class="node" data-id="reserve" tabindex="0">
-                <rect class="task-rect service shape" x="585" y="282" width="92" height="56"/>
-                <text class="task-name" x="631" y="304" text-anchor="middle">锁库存</text>
-                <text class="task-sub" x="631" y="318" text-anchor="middle">Service Task</text>
-                <text class="task-icon-mini" x="594" y="296">⚙</text>
+              <!-- 双人复核 (L4 · 判断) -->
+              <g class="node" data-id="review" tabindex="0">
+                <path class="gateway-shape shape" d="M710,540 L730,560 L710,580 L690,560 Z"/>
+                <text class="gateway-mark" x="710" y="566" text-anchor="middle">×</text>
+                <text class="gateway-label" x="710" y="524" text-anchor="middle">双人复核</text>
               </g>
-
-              <!-- invoke-payment: Send Task (lane 3) -->
-              <g class="node" data-id="invoke-payment" tabindex="0">
-                <rect class="task-rect send shape" x="628" y="402" width="92" height="56"/>
-                <text class="task-name" x="674" y="424" text-anchor="middle">发起扣款</text>
-                <text class="task-sub" x="674" y="438" text-anchor="middle">Send Task</text>
-                <text class="task-icon-mini" x="637" y="416">✉</text>
+              <!-- 对账·生成打款指令 (L5 · 财务) -->
+              <g class="node" data-id="finance" tabindex="0">
+                <rect class="task-rect manual shape" x="775" y="652" width="110" height="56"/>
+                <text class="task-name" x="830" y="674" text-anchor="middle">对账复核</text>
+                <text class="task-sub" x="830" y="688" text-anchor="middle">生成打款指令 · 财务</text>
+                <text class="task-icon-mini" x="784" y="666">✋</text>
               </g>
-
-              <!-- intermediate timer event (lane 3) -->
-              <g class="node" data-id="timer-event" tabindex="0">
-                <circle class="event-intermediate shape" cx="790" cy="430" r="14"/>
-                <circle class="event-intermediate" cx="790" cy="430" r="10" fill="none"/>
-                <path class="event-icon" d="M790,422 L790,430 L796,432" fill="none" stroke="#3D3D3A" stroke-width="1.3"/>
-                <text class="task-sub" x="790" y="466" text-anchor="middle">10s timer</text>
-                <rect class="ex-badge-bg" x="800" y="448" width="20" height="13"/>
-                <text class="ex-badge-text" x="810" y="457" text-anchor="middle">ex</text>
+              <!-- 银行划拨资金 (L6 · 通道) -->
+              <g class="node" data-id="payout" tabindex="0">
+                <rect class="task-rect service shape" x="865" y="772" width="110" height="56"/>
+                <text class="task-name" x="920" y="794" text-anchor="middle">银行划拨资金</text>
+                <text class="task-sub" x="920" y="808" text-anchor="middle">通道结算 · 回执确认</text>
+                <text class="task-icon-mini" x="874" y="786">⚙</text>
               </g>
-
-              <!-- AND parallel split gateway (lane 2) -->
-              <g class="node" data-id="gw-parallel-split" tabindex="0">
-                <path class="gateway-shape shape" d="M860,310 L887,288 L914,310 L887,332 Z"/>
-                <text class="gateway-mark" x="887" y="318" text-anchor="middle">+</text>
-                <text class="gateway-label" x="887" y="276" text-anchor="middle">parallel</text>
+              <!-- 退回商户·解冻 (L4 · 终止事件) -->
+              <g class="node" data-id="reject" tabindex="0">
+                <circle class="event-end-bpmn shape" cx="710" cy="605" r="14"/>
+                <line x1="701" y1="596" x2="719" y2="614" stroke="#B04A3F" stroke-width="2.5"/>
+                <line x1="701" y1="614" x2="719" y2="596" stroke="#B04A3F" stroke-width="2.5"/>
+                <text class="task-sub" x="730" y="609">退回商户 · 解冻</text>
               </g>
-
-              <!-- warehouse-pick: Manual Task (lane 4) -->
-              <g class="node" data-id="warehouse-pick" tabindex="0">
-                <rect class="task-rect manual shape" x="735" y="532" width="92" height="56"/>
-                <text class="task-name" x="781" y="554" text-anchor="middle">拣货打包</text>
-                <text class="task-sub" x="781" y="568" text-anchor="middle">Manual Task</text>
-                <text class="task-icon-mini" x="744" y="546">✋</text>
+              <!-- 到账回执 (L1 · 异步消息) -->
+              <g class="node event-msg" data-id="receipt" tabindex="0">
+                <circle class="shape" cx="560" cy="200" r="16"/>
+                <text class="task-sub" x="560" y="234" text-anchor="middle">到账回执</text>
               </g>
-
-              <!-- finance-accrue: Script Task (lane 6) -->
-              <g class="node" data-id="finance-accrue" tabindex="0">
-                <rect class="task-rect script shape" x="735" y="772" width="92" height="56"/>
-                <text class="task-name" x="781" y="794" text-anchor="middle">记账</text>
-                <text class="task-sub" x="781" y="808" text-anchor="middle">Script Task</text>
-                <text class="task-icon-mini" x="744" y="786">⌗</text>
-              </g>
-
-              <!-- AND parallel join (lane 2) -->
-              <g class="node" data-id="gw-parallel-join" tabindex="0">
-                <path class="gateway-shape shape" d="M660,310 L687,288 L714,310 L687,332 Z"/>
-                <text class="gateway-mark" x="687" y="318" text-anchor="middle">+</text>
-                <text class="gateway-label" x="687" y="276" text-anchor="middle">join</text>
-              </g>
-
-              <!-- ship: Subprocess (lane 5) -->
-              <g class="node" data-id="ship" tabindex="0">
-                <rect class="task-rect subprocess shape" x="745" y="650" width="120" height="64"/>
-                <text class="task-name" x="805" y="676" text-anchor="middle">发货配送</text>
-                <text class="task-sub" x="805" y="690" text-anchor="middle">Subprocess</text>
-                <!-- + collapsed indicator -->
-                <rect x="797" y="700" width="16" height="10" fill="none" stroke="#3D3D3A" stroke-width="1"/>
-                <line x1="805" y1="702" x2="805" y2="708" stroke="#3D3D3A" stroke-width="1"/>
-                <line x1="800" y1="705" x2="810" y2="705" stroke="#3D3D3A" stroke-width="1"/>
-              </g>
-
-              <!-- user-receive: User Task (lane 1) -->
-              <g class="node" data-id="user-receive" tabindex="0">
-                <rect class="task-rect user shape" x="858" y="172" width="92" height="56"/>
-                <text class="task-name" x="904" y="194" text-anchor="middle">签收订单</text>
-                <text class="task-sub" x="904" y="208" text-anchor="middle">User Task</text>
-                <text class="task-icon-mini" x="867" y="186">👤</text>
-              </g>
-
-              <!-- end event (lane 1) -->
-              <g class="node" data-id="end" tabindex="0">
-                <circle class="event-end-bpmn shape" cx="1003" cy="200" r="18"/>
-              </g>
-
-              <!-- end-fail (in lane 4, left side — out-of-stock terminate) -->
-              <g class="node" data-id="end-fail" tabindex="0">
-                <circle class="event-end-bpmn shape" cx="120" cy="490" r="14"/>
-                <line x1="111" y1="481" x2="129" y2="499" stroke="#B04A3F" stroke-width="2.5"/>
-                <line x1="111" y1="499" x2="129" y2="481" stroke="#B04A3F" stroke-width="2.5"/>
-                <text class="task-sub" x="120" y="516" text-anchor="middle">no-stock</text>
-                <text class="task-sub" x="120" y="528" text-anchor="middle">terminate</text>
-              </g>
-
-              <!-- ─── Data object: 订单文档 (lane boundary) ─── -->
-              <g class="node" data-id="data-order" tabindex="0">
-                <path class="data-obj shape" d="M230,440 L262,440 L274,452 L274,500 L230,500 Z M262,440 L262,452 L274,452" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.2"/>
-                <text class="task-sub" x="252" y="478" text-anchor="middle">Order</text>
-                <text class="task-sub" x="252" y="490" text-anchor="middle">.doc</text>
-              </g>
-
-              <!-- ─── Data store: 订单库 (lane 2 right) ─── -->
-              <g class="node" data-id="data-store" tabindex="0">
-                <ellipse class="data-store-top shape" cx="990" cy="312" rx="22" ry="6"/>
-                <path class="data-store-side shape" d="M968,312 L968,348 Q968,354 990,354 Q1012,354 1012,348 L1012,312"/>
-                <ellipse cx="990" cy="312" rx="22" ry="6" fill="none" stroke="#3D3D3A" stroke-width="1.2"/>
-                <text class="task-sub" x="990" y="346" text-anchor="middle">orders</text>
-              </g>
-
-              <!-- ─── Annotation note (top of canvas) ─── -->
-              <g class="annotation" data-id="note-a">
-                <rect class="note" x="40" y="900" width="380" height="92" rx="2"/>
-                <path class="note" d="M410,900 L420,910 L410,910 Z"/>
-                <text class="note-text" x="52" y="922">BPMN 2.0 三类核心元素：</text>
-                <text class="note-text" x="52" y="938">  · <tspan fill="#788C5D" font-weight="600">流程对象</tspan> events · activities · gateways</text>
-                <text class="note-text" x="52" y="954">  · <tspan fill="#3D3D3A" font-weight="600">连接对象</tspan> sequence flow · message flow · association</text>
-                <text class="note-text" x="52" y="970">  · <tspan fill="#D97757" font-weight="600">协作对象</tspan> pool · lane · data object · data store</text>
-                <text class="note-text" x="52" y="986">主图主路径 olive 加粗 = happy path · message flow 紫色虚线带圆头</text>
-              </g>
-
-              <!-- ─── Task types mini-key ─── -->
-              <g data-id="task-types-key">
-                <rect x="460" y="900" width="580" height="92" fill="#FAF9F5" stroke="#D1CFC5" stroke-dasharray="4 3" stroke-width="1" rx="6"/>
-                <text x="470" y="918" font-family="ui-serif" font-size="13" fill="#141413">BPMN Task 类型速查</text>
-
-                <!-- User Task -->
-                <rect x="475" y="930" width="80" height="28" rx="6" fill="color-mix(in oklab, #6B5B95, transparent 92%)" stroke="#6B5B95" stroke-width="1.2"/>
-                <text class="task-name" x="515" y="948" text-anchor="middle" font-size="11">User</text>
-                <text class="task-icon-mini" x="481" y="940">👤</text>
-                <text class="task-sub" x="475" y="976">人工执行</text>
-
-                <!-- Service Task -->
-                <rect x="565" y="930" width="80" height="28" rx="6" fill="color-mix(in oklab, #788C5D, transparent 92%)" stroke="#788C5D" stroke-width="1.2"/>
-                <text class="task-name" x="605" y="948" text-anchor="middle" font-size="11">Service</text>
-                <text class="task-icon-mini" x="571" y="940">⚙</text>
-                <text class="task-sub" x="565" y="976">自动 API</text>
-
-                <!-- Send Task -->
-                <rect x="655" y="930" width="80" height="28" rx="6" fill="color-mix(in oklab, #C4994E, transparent 88%)" stroke="#C4994E" stroke-width="1.2"/>
-                <text class="task-name" x="695" y="948" text-anchor="middle" font-size="11">Send</text>
-                <text class="task-icon-mini" x="661" y="940">✉</text>
-                <text class="task-sub" x="655" y="976">外发消息</text>
-
-                <!-- Manual Task -->
-                <rect x="745" y="930" width="80" height="28" rx="6" fill="color-mix(in oklab, #4A8585, transparent 90%)" stroke="#4A8585" stroke-width="1.2"/>
-                <text class="task-name" x="785" y="948" text-anchor="middle" font-size="11">Manual</text>
-                <text class="task-icon-mini" x="751" y="940">✋</text>
-                <text class="task-sub" x="745" y="976">线下操作</text>
-
-                <!-- Script Task -->
-                <rect x="835" y="930" width="80" height="28" rx="6" fill="color-mix(in oklab, #D97757, transparent 90%)" stroke="#D97757" stroke-width="1.2"/>
-                <text class="task-name" x="875" y="948" text-anchor="middle" font-size="11">Script</text>
-                <text class="task-icon-mini" x="841" y="940">⌗</text>
-                <text class="task-sub" x="835" y="976">引擎内脚本</text>
-
-                <!-- Receive Task (placeholder for completeness) -->
-                <rect x="925" y="930" width="80" height="28" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.2" stroke-dasharray="3 2"/>
-                <text class="task-name" x="965" y="948" text-anchor="middle" font-size="11">Receive</text>
-                <text class="task-icon-mini" x="931" y="940">📥</text>
-                <text class="task-sub" x="925" y="976">外收消息</text>
-              </g>
-
-              <!-- Gateway types mini-row -->
-              <g data-id="gateway-types-key">
-                <text x="40" y="1040" font-family="ui-serif" font-size="13" fill="#141413">BPMN Gateway 类型速查</text>
-
-                <!-- Exclusive XOR -->
-                <path d="M70,1080 L92,1058 L114,1080 L92,1102 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
-                <text class="gateway-mark" x="92" y="1086" text-anchor="middle">×</text>
-                <text class="task-name" x="130" y="1078" font-size="12">XOR · Exclusive</text>
-                <text class="task-sub" x="130" y="1094">恰好一条出路 (if/else)</text>
-                <text class="task-sub" x="130" y="1106">主图: stock? (yes/no)</text>
-
-                <!-- Parallel AND -->
-                <path d="M310,1080 L332,1058 L354,1080 L332,1102 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
-                <text class="gateway-mark" x="332" y="1086" text-anchor="middle">+</text>
-                <text class="task-name" x="370" y="1078" font-size="12">AND · Parallel</text>
-                <text class="task-sub" x="370" y="1094">同时走所有支路</text>
-                <text class="task-sub" x="370" y="1106">主图: 拣货 ∥ 记账</text>
-
-                <!-- Inclusive OR -->
-                <path d="M550,1080 L572,1058 L594,1080 L572,1102 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
-                <circle cx="572" cy="1080" r="8" fill="none" stroke="#C4994E" stroke-width="1.4"/>
-                <text class="task-name" x="610" y="1078" font-size="12">OR · Inclusive</text>
-                <text class="task-sub" x="610" y="1094">满足条件的支路</text>
-                <text class="task-sub" x="610" y="1106">主图: ⊘ 仅图鉴</text>
-
-                <!-- Event-based -->
-                <path d="M790,1080 L812,1058 L834,1080 L812,1102 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/>
-                <circle cx="812" cy="1080" r="8" fill="none" stroke="#C4994E" stroke-width="1.4"/>
-                <polygon points="807,1075 817,1075 819,1083 814,1088 805,1083" fill="none" stroke="#C4994E" stroke-width="1"/>
-                <text class="task-name" x="850" y="1078" font-size="12">Event-based</text>
-                <text class="task-sub" x="850" y="1094">等多个事件择一</text>
-                <text class="task-sub" x="850" y="1106">主图: ⊘ 仅图鉴</text>
-              </g>
-
-              <!-- ─── note about SLA [ex] ─── -->
-              <g class="annotation" data-id="sla-note">
-                <rect class="note" x="40" y="1140" width="1000" height="64" rx="2"/>
-                <text class="note-text" x="52" y="1162">SLA / 自动 vs 人工 / 异步并行  是工程实践对 BPMN 的扩展，挂金色 <tspan fill="#C4994E" font-weight="600">[ex]</tspan> 角标：</text>
-                <text class="note-text" x="52" y="1180">  · <tspan fill="#C4994E">[ex]</tspan> 10s timer 超时阈值（主图支付超时） · <tspan fill="#C4994E">[ex]</tspan> async-accrue 异步分支</text>
-                <text class="note-text" x="52" y="1196">  · 角色泳道用<u>颜色</u>而非<u>形状</u>区分 task type — 形状区分更标准（User / Service / Send / Manual / Script）</text>
-              </g>
-
-              <!-- ═══════════════════════════════════════════════════════ -->
-            </svg>
+</svg>
           </div>
         </div>
         <div class="canvas-controls">
@@ -837,240 +626,118 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   </div>
 
   <!-- ── Bottom legend · 全宽 · 分两组 ── -->
-  <div class="legend-group" aria-label="legend - 流程对象">
-    <div class="legend-group-label">流程对象 · FLOW OBJECTS</div>
+  <div class="legend-group" aria-label="legend - 节点">
+    <div class="legend-group-label">节点 · 业务动作</div>
     <div class="legend">
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#788C5D33" stroke="#788C5D" stroke-width="1.4"/></svg></span><span class="name">start event</span><span class="sub">单细圆 olive</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#B04A3F33" stroke="#B04A3F" stroke-width="2.5"/></svg></span><span class="name">end event</span><span class="sub">粗双线 rust</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/><circle cx="13" cy="8" r="4" fill="none" stroke="#C4994E" stroke-width="1.4"/></svg></span><span class="name">intermediate</span><span class="sub">双圈 gold</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="#6B5B9522" stroke="#6B5B95" stroke-width="1.2"/></svg></span><span class="name">User Task</span><span class="sub">👤 人工</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="#788C5D22" stroke="#788C5D" stroke-width="1.2"/></svg></span><span class="name">Service Task</span><span class="sub">⚙ 自动</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="#C4994E33" stroke="#C4994E" stroke-width="1.2"/></svg></span><span class="name">Send Task</span><span class="sub">✉ 外发</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="#4A858522" stroke="#4A8585" stroke-width="1.2"/></svg></span><span class="name">Manual Task</span><span class="sub">✋ 线下</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" rx="3" fill="#D9775722" stroke="#D97757" stroke-width="1.2"/></svg></span><span class="name">Script Task</span><span class="sub">⌗ 引擎内</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M13,2 L22,8 L13,14 L4,8 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/><text x="13" y="11" text-anchor="middle" font-family="Georgia" font-size="9" fill="#C4994E" font-weight="700">×</text></svg></span><span class="name">XOR gateway</span><span class="sub">if/else</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M13,2 L22,8 L13,14 L4,8 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/><text x="13" y="11" text-anchor="middle" font-family="Georgia" font-size="9" fill="#C4994E" font-weight="700">+</text></svg></span><span class="name">AND gateway</span><span class="sub">parallel</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M13,2 L22,8 L13,14 L4,8 Z" fill="#FFFFFF" stroke="#C4994E" stroke-width="1.4"/><circle cx="13" cy="8" r="3" fill="none" stroke="#C4994E"/></svg></span><span class="name">OR gateway</span><span class="sub">inclusive</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="20" height="10" rx="2" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.6"/><rect x="9" y="11" width="6" height="2" fill="none" stroke="#3D3D3A"/></svg></span><span class="name">Subprocess</span><span class="sub">底部 [+]</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#6B5B95">👤</text></svg></span><span class="name">人工操作</span><span class="sub">商户 / 财务</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" rx="6" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="#788C5D">⚙</text></svg></span><span class="name">系统自动</span><span class="sub">交易/结算域</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M13,2 L20,8 L13,14 L6,8 Z" fill="#FFFFFF" stroke="#87867F" stroke-width="1.3"/></svg></span><span class="name">业务判断</span><span class="sub">复核 / 分支</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="#788C5D22" stroke="#788C5D" stroke-width="1.3"/></svg></span><span class="name">起止事件</span><span class="sub">流程边界</span></div>
     </div>
   </div>
 
-  <div class="legend-group" aria-label="legend - 连接与协作对象">
-    <div class="legend-group-label">连接 &amp; 协作对象 · CONNECTING &amp; SWIMLANE OBJECTS</div>
+  <div class="legend-group" aria-label="legend - 连线">
+    <div class="legend-group-label">连线 · 流向</div>
     <div class="legend">
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#3D3D3A" stroke-width="1.4"/><path d="M22,8 L18,5 L18,11 z" fill="#3D3D3A"/></svg></span><span class="name">sequence flow</span><span class="sub">同 pool · 实线</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><circle cx="3" cy="8" r="2" fill="#FFFFFF" stroke="#6B5B95"/><line x1="6" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M22,8 L18,5 L18,11 z" fill="#6B5B95"/></svg></span><span class="name">message flow</span><span class="sub">跨 pool · 虚线圆头</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#3D3D3A" stroke-width="1.2" stroke-dasharray="3 3"/></svg></span><span class="name">association</span><span class="sub">数据/注释关联</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#3D3D3A" stroke-width="1.3"/><line x1="4" y1="5" x2="8" y2="11" stroke="#3D3D3A"/><path d="M22,8 L18,5 L18,11 z" fill="#3D3D3A"/></svg></span><span class="name">default flow</span><span class="sub">/ 标 · else</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M3,8 L6,5 L9,8 L6,11 Z" fill="#FFFFFF" stroke="#3D3D3A"/><line x1="9" y1="8" x2="22" y2="8" stroke="#3D3D3A" stroke-width="1.3"/></svg></span><span class="name">conditional flow</span><span class="sub">起点小菱形</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="22" height="8" fill="#14141344" stroke="#3D3D3A" stroke-width="1.2"/></svg></span><span class="name">pool</span><span class="sub">业务参与方</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="#F0EEE6" stroke="#87867F" stroke-width="1.2"/><line x1="9" y1="3" x2="9" y2="13" stroke="#87867F"/></svg></span><span class="name">lane</span><span class="sub">pool 内角色</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><path d="M3,3 L18,3 L21,6 L21,13 L3,13 Z M18,3 L18,6 L21,6" fill="#FFFFFF" stroke="#3D3D3A" stroke-width="1.1"/></svg></span><span class="name">data object</span><span class="sub">临时单据</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><ellipse cx="13" cy="5" rx="9" ry="2" fill="#FFFFFF" stroke="#3D3D3A"/><path d="M4,5 L4,12 Q4,14 13,14 Q22,14 22,12 L22,5" fill="#FFFFFF" stroke="#3D3D3A"/></svg></span><span class="name">data store</span><span class="sub">持久库</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="#C4994E22" stroke="#C4994E"/><path d="M18,3 L22,3 L22,7 Z" fill="#C4994E22" stroke="#C4994E"/></svg></span><span class="name">annotation</span><span class="sub">折角注释</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="3" width="22" height="10" fill="none" stroke="#87867F" stroke-width="1.4" stroke-dasharray="4 2" rx="3"/></svg></span><span class="name">group</span><span class="sub">圆角虚框</span></div>
-      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="4" width="20" height="8" rx="2" fill="#C4994E33" stroke="#C4994E"/><text x="12" y="10.5" text-anchor="middle" font-family="ui-monospace" font-size="6" fill="#C4994E" font-weight="700">ex</text></svg></span><span class="name">[ex] 扩展</span><span class="sub">SLA / 异步</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#788C5D" stroke-width="2.6"/><path d="M22,8 L18,4.5 L18,11.5 z" fill="#788C5D"/></svg></span><span class="name">主路径</span><span class="sub">happy path 加粗</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#B04A3F" stroke-width="1.5" stroke-dasharray="4 3"/><path d="M22,8 L19,5 L19,11 z" fill="#B04A3F"/></svg></span><span class="name">退回 / 失败</span><span class="sub">rust 虚线</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><line x1="2" y1="8" x2="22" y2="8" stroke="#6B5B95" stroke-width="1.5" stroke-dasharray="6 3"/><circle cx="2" cy="8" r="2" fill="#6B5B95"/><path d="M22,8 L19,5 L19,11 z" fill="#6B5B95"/></svg></span><span class="name">消息流</span><span class="sub">打款指令 / 回执</span></div>
+      <div class="legend-item"><span class="chip"><svg viewBox="0 0 26 16"><rect x="2" y="1" width="22" height="14" rx="3" fill="#F0EEE6" stroke="#87867F" stroke-width="1.3"/><text x="13" y="11.5" text-anchor="middle" font-family="ui-monospace" font-size="7" fill="#87867F">泳道</text></svg></span><span class="name">业务领域</span><span class="sub">泳道 = 谁负责</span></div>
     </div>
-  </div>
+  </div>  </div>
 
   <div class="footer-note">
-    <span>Engineering Diagram Library · 06 / 07 · 泳道图 · BPMN 2.0 全覆盖 · 10 元素图鉴</span>
+    <span>Engineering Diagram Library · 06 / 07 · 泳道图 · 跨领域业务流程 · 结算协作</span>
     <span><a href="index.html">← 返回图谱总览</a></span>
   </div>
 </div>
 
 <script>
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 1300 },
-  exportName: '06-swimlane-bpmn',
+  viewBox: { w: 1080, h: 1000 },
+  exportName: '06-swimlane-settlement',
   nodeData: {
     'start': {
       type: 'event', tagClass: 't-event',
-      title: '① START · 流程起点',
-      meta: ['BPMN none start', '单细圆', 'lane 1 用户'],
-      body: `<p>BPMN 起始事件 — 单细圆 olive 色。<u>none</u> 类型 = 无触发器，由用户在 UI 上手动启动。</p><pre>触发: 用户点击"提交订单"按钮</pre>`,
-      tags: ['start', 'none']
+      title: 'START · 起始事件',
+      meta: ['商户', '发起', '人工'],
+      body: `<p>结算流程起点。商户在结算平台发起一笔结算申请。</p><pre>触发: 商户提交 / 定时批次
+产物: 结算申请单 (settlement_id)</pre>`,
+      tags: ['start', 'merchant']
     },
-    'submit-order': {
+    'submit': {
       type: 'process', tagClass: 't-process',
-      title: '② 提交订单 · User Task',
-      meta: ['User Task', 'lane 用户', '👤 人工执行'],
-      body: `<p>用户在 App / Web 上提交订单 — 标准 User Task（人工操作）。</p><pre>输入: 购物车 + 收货地址 + 支付方式
-输出: order_id 临时单据 (data object)
-SLA: 用户体验 &lt; 3s 响应</pre><p><b>视觉</b>：圆角矩形 + 左上角 👤 图标 + plum 色填充表示"人工角色"。</p>`,
-      tags: ['user-task', 'manual']
+      title: '提交结算申请 · 商户',
+      meta: ['商户', '人工操作', '业务入口'],
+      body: `<p>商户提交结算申请（金额、结算周期、收款账户）。<b>业务动作</b>，由人工/商户侧发起。</p><pre>输入: 结算金额 + 收款账户
+约束: 金额在可结算余额内
+幂等: settlement_id 防重复提交</pre>`,
+      tags: ['merchant', 'submit', 'idempotent']
     },
-    'validate': {
+    'freeze': {
       type: 'process', tagClass: 't-process',
-      title: '③ 校验库存 · Service Task',
-      meta: ['Service Task', 'lane 订单服务', '⚙ 自动 API'],
-      body: `<p>订单服务调用 inventory-service 查询 SKU 库存 — Service Task（系统自动调用）。</p><pre>RPC: GET /inventory/{sku}/quantity
-输出: 数量 + 库存可用性 boolean
-P99: &lt; 50ms (含 cache 命中)</pre><p><b>区别于 User Task</b>：Service Task = 流程引擎触发系统执行，无人工参与。</p>`,
-      tags: ['service-task', 'auto']
+      title: '冻结资金 · 交易域',
+      meta: ['交易域', '系统自动', 'CAS'],
+      body: `<p>交易域确认订单并冻结对应资金 —— <b>系统自动</b>，非人工。</p><pre>动作: 冻结可用余额
+并发: version CAS 防超扣
+幂等: settlement_id</pre><p>业务上"资金被锁定待结算"。</p>`,
+      tags: ['trade', 'freeze', 'system']
     },
-    'gw-stock': {
-      type: 'gateway', tagClass: 't-gate',
-      title: '④ GW · 库存够? · XOR Gateway',
-      meta: ['XOR / Exclusive', '菱形 ×', 'if-else 分流'],
-      body: `<p>BPMN XOR 排他网关 — 根据条件<u>恰好走一条</u>支路。</p><pre>yes → 锁库存 (主路径 spine)
-no  → end-fail × 缺货终止</pre><p><b>区别 AND</b>：XOR 走 1 条；AND 走全部；OR 走满足条件的所有。<u>不要把 XOR 当 if/else 写出 3 个 yes 分支</u> — 应该用 OR 或拆成两个 XOR。</p>`,
-      tags: ['xor', 'gateway']
-    },
-    'reserve': {
+    'settle-gen': {
       type: 'process', tagClass: 't-process',
-      title: '⑤ 锁库存 · Service Task',
-      meta: ['Service Task', 'lane 订单服务'],
-      body: `<p>原子锁库存 — 防止并发下单超卖。</p><pre>SQL: UPDATE inventory 
-     SET locked = locked + qty
-   WHERE sku = ? AND (stock - locked &gt;= qty)
-约束: locked &lt;= stock (CHECK)
-TTL: 30 min — 支付未完成自动释放</pre>`,
-      tags: ['service-task', 'lock']
+      title: '生成结算单 · 结算域',
+      meta: ['结算域', '系统自动', '批次'],
+      body: `<p>结算域汇总冻结资金，生成结算单并加入结算批次 —— 系统自动。</p><pre>动作: 建结算单 + 入批次
+批次: 按结算周期聚合
+产出: settlement_record</pre>`,
+      tags: ['settlement', 'batch', 'system']
     },
-    'invoke-payment': {
+    'review': {
+      type: 'decision', tagClass: 't-decision',
+      title: '双人复核 · 风控',
+      meta: ['风控', '判断', '双签'],
+      body: `<p><b>业务判断</b>：风控对结算单做双人复核（合规检查 / 黑名单 / 额度）。</p><pre>通过 → 财务对账
+不通过 → 退回商户并解冻
+
+规则: 任一复核员拒绝即拒绝
+SLA: P95 < 2h</pre>`,
+      tags: ['compliance', 'decision', '双签']
+    },
+    'finance': {
       type: 'process', tagClass: 't-process',
-      title: '⑥ 发起扣款 · Send Task',
-      meta: ['Send Task', 'lane 支付网关', '✉ 外发消息'],
-      body: `<p>调用支付网关发起扣款 — Send Task 表示<u>必然产生外发消息</u>。</p><pre>POST  /payment-gateway/charge
-body: { order_id, amount, channel }
-→ 返回 pending，等待 timer/message</pre><p><b>Send vs Service</b>：Service 同步等返回；Send 发完即走，等下游异步回调。</p>`,
-      tags: ['send-task', 'external']
+      title: '对账·生成打款指令 · 财务',
+      meta: ['财务', '人工操作', '对账'],
+      body: `<p>财务核对结算单与账面（对账），确认后生成打款指令。</p><pre>动作: 对账 → 生成打款指令
+发送: 打款指令 → 银行 (消息流)
+留痕: 指令号 + 双签记录</pre>`,
+      tags: ['finance', 'reconcile', 'manual']
     },
-    'timer-event': {
+    'payout': {
+      type: 'process', tagClass: 't-process',
+      title: '银行划拨资金 · 通道',
+      meta: ['银行', '通道结算', '异步'],
+      body: `<p>银行按打款指令划拨资金，异步回执确认。资金从银行账户到商户账户。</p><pre>通道: 对公打款
+回执: 成功 / 失败 (幂等去重)
+超时: 补单对账兜底</pre>`,
+      tags: ['bank', 'payout', 'async']
+    },
+    'reject': {
+      type: 'process', tagClass: 't-fail',
+      title: '退回商户 · 解冻',
+      meta: ['商户', '失败分支', '解冻'],
+      body: `<p>复核不通过的结算单退回商户并解冻冻结资金。</p><pre>动作: 解冻 + 通知商户
+原因: 合规 / 风控拒绝
+事件: settlement.rejected</pre>`,
+      tags: ['merchant', 'reject', '解冻']
+    },
+    'receipt': {
       type: 'event', tagClass: 't-event',
-      title: '⑦ 10s Timer · Intermediate Event',
-      meta: ['Intermediate Timer', '双细圈 gold', '主图 [ex] 超时阈值'],
-      body: `<p>BPMN 中间事件 · timer 类型 — 等支付回调 <u>最多 10 秒</u>，超时强制走下一步（视为成功，待对账纠错）。</p><pre>等待: payment.confirmed message
-超时: 10s 后 default → continue
-对账: 后台 job 每 5min 拉取真实状态对齐</pre><p><b>[ex]</b> 角标因 10s 是业务 SLA，非 BPMN 标准；事件本身是标准 timer。</p>`,
-      tags: ['intermediate', 'timer', 'ex']
-    },
-    'gw-parallel-split': {
-      type: 'gateway', tagClass: 't-gate',
-      title: '⑧ AND Split · 并行分裂',
-      meta: ['AND / Parallel', '菱形 +', '同时走所有出路'],
-      body: `<p>BPMN AND 并行网关 — 复制 token 到<u>所有</u>出路。</p><pre>支路 1 → 仓库拣货 (Manual Task, lane 4)
-支路 2 → 财务记账 (Script Task, lane 6)
-        ↑ [ex] async-accrue 异步分支</pre><p>必须配对一个 AND-join；没 join 流程会"漂"（多个 token 永远不汇合）。</p>`,
-      tags: ['and', 'parallel', 'split']
-    },
-    'warehouse-pick': {
-      type: 'process', tagClass: 't-process',
-      title: '⑨ 拣货打包 · Manual Task',
-      meta: ['Manual Task', 'lane 仓库', '✋ 线下操作'],
-      body: `<p>仓库人员拿 PDA 扫码拣货 — Manual Task = 流程系统<u>记录</u>这一步存在，但<u>不自动驱动</u>。</p><pre>操作: 仓库员工
-工具: WMS APP / PDA
-SLA: 工作日 8h 内</pre><p><b>Manual vs User</b>：User Task 在系统 UI 内做（点击按钮）；Manual Task 在系统<u>外</u>做（搬箱子、打电话），系统只 know 进行到这一步。</p>`,
-      tags: ['manual-task']
-    },
-    'finance-accrue': {
-      type: 'process', tagClass: 't-process',
-      title: '⑩ 记账 · Script Task',
-      meta: ['Script Task', 'lane 财务', '⌗ 引擎内脚本'],
-      body: `<p>财务记账规则用流程引擎内嵌脚本实现 — Script Task = 引擎里跑 Groovy / JavaScript。</p><pre>script:
-  debit:  应收账款 += order.total
-  credit: 收入       += order.total
-output → 凭证号</pre><p><b>vs Service Task</b>：Service 调外部 API；Script 在引擎内运行短小逻辑（不离开流程进程）。</p>`,
-      tags: ['script-task']
-    },
-    'gw-parallel-join': {
-      type: 'gateway', tagClass: 't-gate',
-      title: '⑪ AND Join · 并行汇合',
-      meta: ['AND / Parallel Join', '菱形 +'],
-      body: `<p>BPMN AND join — 等待<u>所有</u>并行支路完成才继续。</p><p><b>实战陷阱</b>：若其中一条永远不完成（仓库系统挂了），流程会卡在 join → 工程上每条支路都要加超时兜底（timer boundary event）。</p>`,
-      tags: ['and', 'join']
-    },
-    'ship': {
-      type: 'subprocess', tagClass: 't-subprocess',
-      title: '⑫ 发货配送 · Subprocess',
-      meta: ['Collapsed Subprocess', '底部 [+] 标', 'lane 配送'],
-      body: `<p>整段发货配送是子流程（collapsed，底部 [+] 小框） — 内部展开是 3 步：分单 → 派送 → 签收。</p><pre>内部细节:
-  分单 (Service)
-  → 派送 (Manual)  ← 异常 boundary: 派件失败
-  → 签收回执 (Receive)</pre><p><b>folded vs expanded</b>：图面占用小，内部可单独打开查看。子流程<u>有自己的 start/end</u>。</p>`,
-      tags: ['subprocess', 'collapsed']
-    },
-    'user-receive': {
-      type: 'process', tagClass: 't-process',
-      title: '⑬ 签收订单 · User Task',
-      meta: ['User Task', 'lane 用户', '👤'],
-      body: `<p>用户在 App 点击"已签收"或快递员代签 — User Task。</p><pre>after this: 7 day 自动确认收货 (timer)
-触发: 评价权限解锁 · 商家分账</pre>`,
-      tags: ['user-task']
-    },
-    'end': {
-      type: 'event-end', tagClass: 't-event',
-      title: '⑭ END · 正常结束',
-      meta: ['BPMN none end', '粗双线圆', 'lane 用户'],
-      body: `<p>BPMN 终止事件 — 粗双线圆 rust 色。<u>none</u> 类型 = 流程正常结束，所有 token 收回。</p><pre>触发: 用户签收完成
-后续: 触发 order.completed 事件 → 评价/分账系统</pre>`,
-      tags: ['end', 'none']
-    },
-    'end-fail': {
-      type: 'event-end', tagClass: 't-event',
-      title: '⑮ END · 缺货终止 (Terminate)',
-      meta: ['BPMN terminate end', '粗双线 + 实心圆', 'lane 仓库左侧'],
-      body: `<p>BPMN <u>terminate end</u> 事件 — 强制立刻终止<b>所有</b>支路（包括并行的）。</p><pre>触发: gw-stock 走 no 支路
-副作用:
-  · 取消订单 (CANCELLED)
-  · 退还优惠券
-  · 通知用户 "缺货退单"</pre><p><b>vs 普通 end</b>：普通 end 只是这条支路结束（其他并行还会继续）；terminate 是全流程立即停。</p>`,
-      tags: ['end', 'terminate']
-    },
-    'data-order': {
-      type: 'document', tagClass: 't-document',
-      title: 'Data Object · 订单单据',
-      meta: ['BPMN data object', '折角文档', '临时单据'],
-      body: `<p>BPMN 数据对象 — 文档形（左上折角）。表示流程<u>中流转的临时单据</u>。</p><pre>名称: order.doc
-跨步骤: 提交 → 校验 → 锁库存 都引用同一份</pre><p>用<b>association 虚线</b>连到 task，<u>不是</u> sequence flow。</p>`,
-      tags: ['data-object', 'document']
-    },
-    'data-store': {
-      type: 'db', tagClass: 't-db',
-      title: 'Data Store · 订单持久库',
-      meta: ['BPMN data store', 'cylinder', '持久数据库'],
-      body: `<p>BPMN 数据库 — cylinder（圆柱形）。表示<u>持久化</u>的数据源。</p><pre>orders 表 · MySQL
-读: 校验时拉
-写: 锁库存后落</pre><p><b>vs data object</b>：object 是<u>临时</u>的单据；store 是<u>持久</u>的库表。</p>`,
-      tags: ['data-store', 'database']
-    },
-    'note-a': {
-      type: 'event', tagClass: 't-event',
-      title: 'Note · BPMN 三类对象说明',
-      meta: ['annotation'],
-      body: `<p>BPMN 2.0 元素分三大类：</p><ul><li><b>流程对象</b>：events · activities · gateways</li><li><b>连接对象</b>：sequence flow · message flow · association</li><li><b>协作对象</b>：pool · lane · data object · data store</li></ul><p>泳道图 = swimlane = "带泳道的 BPMN 流程图"，强调跨角色协作。</p>`,
-      tags: ['annotation']
-    },
-    'task-types-key': {
-      type: 'process', tagClass: 't-process',
-      title: 'Task 类型速查 (in-canvas)',
-      meta: ['quick reference', '5 + 2 types'],
-      body: `<p>BPMN 2.0 标准 task 类型：</p><pre>User      👤  人工 UI 操作      (主图 ✓)
-Service   ⚙  自动 API 调用      (主图 ✓)
-Send      ✉  外发消息            (主图 ✓)
-Manual    ✋  线下操作（系统外）  (主图 ✓)
-Script    ⌗  引擎内脚本          (主图 ✓)
-Receive   📥  外收消息            (仅图鉴)
-Business  ⚙  Rule (DMN)         (仅图鉴)</pre>`,
-      tags: ['task', 'types']
-    },
-    'gateway-types-key': {
-      type: 'gateway', tagClass: 't-gate',
-      title: 'Gateway 类型速查 (in-canvas)',
-      meta: ['quick reference', '4 types'],
-      body: `<p>BPMN 2.0 标准 gateway 类型：</p><pre>XOR  ×    if/else 恰好一条 (主图 ✓ stock?)
-AND  +    parallel 全走  (主图 ✓ 拣货+记账)
-OR   ○+◇  inclusive 满足走 (仅图鉴)
-Event ✦   等多事件择一  (仅图鉴)</pre><p><b>口诀</b>：×恰一 +全走 ○满足 ✦等事件。</p>`,
-      tags: ['gateway', 'types']
-    },
-    'sla-note': {
-      type: 'event', tagClass: 't-event',
-      title: 'SLA / [ex] 扩展说明',
-      meta: ['ex extensions', '业务标注'],
-      body: `<p>主图金色 <b>[ex]</b> 角标标注的是<u>非 BPMN 标准</u>的业务字段：</p><ul><li>10s timer 超时阈值（具体数字属业务）</li><li>async-accrue 异步分支提示</li><li>SLA / 优先级 / 流量占比 等</li></ul><p>角标视觉与标准 BPMN 元素区分开 — 让阅读者一眼分清"标准元素"vs"我们自己加的"。</p>`,
-      tags: ['ex', 'extension']
+      title: '到账回执 · 异步消息',
+      meta: ['银行→商户', '异步', '幂等'],
+      body: `<p>银行划拨成功后的到账回执，异步通知商户。业务上结算完成。</p><pre>通道: webhook / 对账
+幂等: 按回执单号去重
+终态: settlement.completed</pre>`,
+      tags: ['receipt', 'async', 'completed']
     },
   }
 };

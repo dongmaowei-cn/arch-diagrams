@@ -77,18 +77,13 @@ t-lbl           : 9.5~11px mono（边标签）
 5. **数据流方向**：架构图一般 **从上到下**；流程图 **从上到下**；时序图 **从左到右**
 6. **状态机建模**：判断分支用菱形 choice；主终态用 `state-final success`（橄榄 ⊙）而非普通矩形（矩形暗示"还能继续走"）；起始态出边 ≥ 30px
 
-## 删 B 区后调整 SVG 高度
+## 内容变多/变少时调整 SVG 高度
 
-每张图的 catalog 卡片给了"删除 B 区后推荐 height"。一般规律：
+v2 模板不再内嵌 B 区教学图鉴，所以**不存在"删 B 区"这一步**——每张模板的默认 viewBox 就是 A 区主图的实际尺寸，直接在此基础上改内容即可，通常不需要动 viewBox。
 
-| 图型 | B 区前最末 y | 推荐 svg height |
-|---|---|---|
-| 02 sequence       | 约 1200 | 1280 |
-| 03 state-machine  | A 区主图约 1318；保留 B/C 子状态机则 1660 | 1480（仅主图）/ 1660（带子状态机） |
-| 04 architecture   | 约 1700 | 1780 |
-| 05 ER             | 约 1100 | 1180 |
-| 06 swimlane       | 约 1700 | 1780 |
-| 06 vertical       | 约 1450 | 1530 |
-| 07 microservice   | 约 1800 | 1880 |
+只有当你的场景让内容明显变多/变少（层数、lane 数、节点数、子状态数偏离模板默认场景）时，才需要同步收紧/放宽 `height` 和 `viewBox`。默认场景的 viewBox 见 `catalog/INDEX.md` 的"每图速查"表（该表已核对到与模板一致，但仍建议用 `grep viewBox` 现场确认一次，避免模板后续再迭代产生偏差）。
 
-> 具体看 catalog 卡片 "A 区结束 y 坐标" 字段。
+调整方法：
+1. 算出新内容的最大 y（最下方节点 / 泳道 / 边标签的 y + 自身高度），再加 30-60px 底部留白
+2. 同步改 `<svg ... height="H" viewBox="0 0 1080 H">` 和 `window.DIAGRAM_CONFIG.viewBox.h`（或 01-flowchart 里等价的 `NODE_DATA` 相关尺寸字段）两处，两者必须一致——这也是 selftest.sh 第 2 项检查的内容
+3. 改完用 `bash shared/selftest.sh <file>` 确认 "viewBox 与 svg height 一致" 仍然通过

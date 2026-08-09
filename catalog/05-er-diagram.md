@@ -139,7 +139,7 @@ cp $SKILL_DIR/templates/05-er-diagram.html \
 | class | 视觉 | 用途 |
 |---|---|---|
 | `cell pk` / `tag-pk` | gold #C4994E · 加粗 | 主键 |
-| `cell fk` / `tag-fk` | purple #6B5B95 · 斜体 | 外键 |
+| `cell fk` / `tag-fk` | plum #6B5B95 · 斜体 | 外键 |
 | `tag-uq`            | olive #788C5D | UNIQUE 唯一 |
 | `tag-idx`           | teal #4A8585  | 索引 |
 | `tag-nn`            | clay #D97757  | NOT NULL |

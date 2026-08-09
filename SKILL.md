@@ -7,6 +7,10 @@ description: >
   业务流程图 · flowchart · 时序图 · sequence diagram · 状态机 · state machine ·
   系统架构图 · architecture · ER 图 · entity relationship · 泳道图 · swimlane ·
   微服务架构图 · microservices topology.
+  Also trigger when the user provides PlantUML source (`@startuml`/`@enduml`,
+  or PlantUML-flavored snippets) and asks to render, convert, or visualize it —
+  this skill turns that logical source into the richer interactive HTML output;
+  see `shared/plantuml-mapping.md` for the conversion step.
   Workflow is fully automatic once the user has named the diagram type and
   scenario — do NOT ask follow-up questions unless the request is truly
   ambiguous (e.g. "画个图" with no scenario).
@@ -35,6 +39,8 @@ TEMPLATES_DIR = $SKILL_DIR/templates
 所有 8 张模板文件在此目录下（skill 自包含，无外部依赖）。
 
 ## 1 · 选型矩阵（先判断图型）
+
+> **输入是 PlantUML 源码（`@startuml`…`@enduml`）时**：判型逻辑不一样，别用下表的"用户在讲…"硬套——PlantUML 的语法特征本身就能定图型，且有几个反直觉的地方（比如 `\|Lane\|` 泳道语法默认对应**纵向**泳道，不是横向）。先读 `shared/plantuml-mapping.md` 的「Step 0 判定图型」，再按该文档给的元素映射表提取节点/边清单，之后走和下面完全一样的 Step 1-3。
 
 | 用户在讲… | 图型 | 模板文件 |
 |---|---|---|
@@ -165,11 +171,12 @@ bash $SKILL_DIR/shared/selftest.sh <output.html>
 ## 5 · 共享词汇表
 
 - `shared/node-data-schema.md` — aside 详情面板的 JSON 协议
-- `shared/edge-types.md` — 8 种边 + 9 个 markers 的语义清单
+- `shared/edge-types.md` — 语义边 class 清单 + marker 对照（**marker id 因模板而异，不是全部通用，用前先看目标模板自己的 `<defs>`**）
 - `shared/color-semantics.md` — 颜色语义（clay 动作 / olive 成功 / rust 失败 …）
 - `shared/coordinate-system.md` — viewBox / 节点尺寸 / 间距 通用约定（含连线纪律）
 - `shared/edge-check.py` — 边几何自检（selftest 第 8 项，4 端点 + 5 内部子检查）
 - `shared/selftest.sh` — 8 项输出自检
+- `shared/plantuml-mapping.md` — **输入是 PlantUML 源码时**，语法元素 → 图型判定 + node/edge class 映射
 
 ## 6 · 每图卡片（读对应一张就能改）
 

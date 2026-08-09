@@ -8,7 +8,7 @@ aside 详情面板（点击 SVG 节点弹出的右侧详情）由
 
 ```js
 window.DIAGRAM_CONFIG = {
-  viewBox: { w: 1080, h: 1500 },           // SVG 自然尺寸；删 B 区后改 h
+  viewBox: { w: 1080, h: 1500 },           // 必须和 <svg> 的 height/viewBox 一致；改了内容高度就要同步改这里
   exportName: 'user-login-sequence',       // 导出的 SVG/PNG 文件名（不含扩展名）
   svgStyle: '',                            // 可选；通常留空
   nodeData: {

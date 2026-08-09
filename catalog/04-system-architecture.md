@@ -11,11 +11,11 @@
 
 - **模板文件**：`04-system-architecture.html`
 - **viewBox**：`1080 × 1500`
-- **关键行号**
+- **关键行号**（如与实际文件不符，以 `grep -n 'DIAGRAM_CONFIG\|</svg>' 04-system-architecture.html` 现场核实为准，行号会随模板迭代漂移）
   - SVG 开始：420
   - A 区主图：434–889
-  - `</svg>`：1146
-  - `window.DIAGRAM_CONFIG`：1247
+  - `</svg>`：891
+  - `window.DIAGRAM_CONFIG`：978
 
 
 
@@ -104,16 +104,15 @@ tier 之间垂直 gap=20
 节点 y = tier-band y + 30
 ```
 
-## 改造步骤（3 步）（5 步）
+## 改造步骤（3 步）
 
 ### Step 1 · 复制
 ```bash
-cp ~/.claude/skills/arch-diagrams/templates/04-system-architecture.html \
+cp $SKILL_DIR/templates/04-system-architecture.html \
    <output-dir>/<scenario>-architecture.html
 ```
 
-
-### Step 2 · 改 A 区主图
+### Step 2 · 改 A 区主图 + 同步 nodeData
 
 1. **规划层数**：常见 4-7 层。最少应包含：client / edge / service / data-store
 2. **改 section-label**：`A · <场景名> · N 层分层架构`
@@ -123,9 +122,7 @@ cp ~/.claude/skills/arch-diagrams/templates/04-system-architecture.html \
 4. **每层放节点**：按业务挑 class，4 行文字填充
 5. **画 spine 主路径**：用 `edge spine` 自上而下串起核心节点
 6. **画其它边**：DB 用 `edge db-edge`，cache 用 `edge cache-edge` 等
-
-### Step 2 · 同步 nodeData
-每个节点都要有 nodeData 项，meta 三件套：tier 信息 / 技术栈 / 关键指标。
+7. **同步 nodeData**：每个节点都要有 nodeData 项，meta 三件套：tier 信息 / 技术栈 / 关键指标
 
 ### Step 3 · 改外壳 + 自检
 - `<title>` / `.eyebrow` / `<h1>` / `.lead`

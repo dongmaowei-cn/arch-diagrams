@@ -82,7 +82,7 @@ Edit  nodeData = { ... }
 bash $SKILL_DIR/shared/selftest.sh online-order-flowchart.html
 ```
 
-7 项检查一次全过（模板态 #6 自动跳过；产物必须 #6 PASS）。
+8 项检查一次全过（模板态 #6 自动跳过；产物必须 #6 PASS）。
 
 ### Phase 6 · 报告（一行）
 

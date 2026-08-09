@@ -335,9 +335,9 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
   /* BPMN flows */
   .diagram .seq-flow { stroke: var(--gray-700); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
   .diagram .seq-flow.spine { stroke: var(--olive); stroke-width: 2.6; marker-end: url(#arrow-olive-bold); }
+  .diagram .seq-flow.yes { stroke: var(--olive); marker-end: url(#arrow-olive); }
+  .diagram .seq-flow.no { stroke: var(--rust); stroke-dasharray: 5 4; marker-end: url(#arrow-rust); }
   .diagram .msg-flow { stroke: var(--plum); stroke-width: 1.2; stroke-dasharray: 6 3; fill: none; marker-end: url(#arrow-plum-msg); marker-start: url(#circle-open); }
-  .diagram .seq-flow.default-flow { stroke: var(--gray-700); stroke-width: 1.2; }
-  .diagram .seq-flow.cond { stroke: var(--gray-700); stroke-width: 1.2; }
   .diagram text.flow-label { font-family: var(--mono); font-size: 10px; fill: var(--gray-700); }
   .diagram .flow-label-bg { fill: var(--paper); stroke: var(--gray-300); stroke-width: 0.6; rx: 3; ry: 3; }
 
@@ -525,7 +525,7 @@ aside { position: sticky; top: 88px; display: flex; flex-direction: column; gap:
               <rect class="flow-label-bg" x="742" y="670" width="30" height="13"/>
               <text class="flow-label" x="757" y="680" text-anchor="middle">通过</text>
               <!-- 复核不通过 → 退回 (L4 内 · 短 rust 边) -->
-              <path class="seq-flow" stroke="#B04A3F" stroke-dasharray="5 4" marker-end="url(#arrow-rust)" d="M710,580 L710,591"/>
+              <path class="seq-flow no" d="M710,580 L710,591"/>
               <!-- 财务 → 银行 (打款指令 · message) -->
               <path class="msg-flow" d="M830,708 L830,800 L865,800"/>
               <rect class="flow-label-bg" x="774" y="760" width="110" height="13"/>

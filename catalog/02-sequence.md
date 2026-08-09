@@ -59,7 +59,7 @@
 
 | class | 视觉 | 何时用 |
 |---|---|---|
-| `edge sync`      | slate 实线 + arrow-slate | 同步调用 |
+| `edge sync`      | slate 实线 + arrow-sync  | 同步调用 |
 | `edge async msg` | plum 虚线 + arrow-plum   | 异步消息 |
 | `edge return`    | gray 虚线 + arrow-open   | 返回值 |
 | `edge`（U 形 self-message） | slate 实线折角 | 自调用 / 内部处理 |
@@ -104,7 +104,7 @@ cp $SKILL_DIR/templates/02-sequence.html \
    <output-dir>/<scenario>-sequence.html
 ```
 
-### Step 2 · 改 A 区主图
+### Step 2 · 改 A 区主图 + 同步 nodeData
 1. 定 actor 列表与列位置（lifeline 间距 200~240，模板 170 起步）
 2. 画 actor 头（顶端 y=80-130）
 3. 画 lifeline 虚线
@@ -112,9 +112,7 @@ cp $SKILL_DIR/templates/02-sequence.html \
 5. 画 activation rect：**覆盖所有消息 + 端点贴条边 + 嵌套正确**
 6. 画消息边 + 序号 ①-⑮ + 标签
 7. 需要时加底部折角注释（右缘对齐 frame）
-
-### Step 2 · 同步 nodeData
-为每个 actor 添加 nodeData：
+8. 为每个 actor 添加 nodeData：
 ```js
 'clearing': {
   type: 'actor-system', tagClass: 't-actor',

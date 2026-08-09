@@ -26,7 +26,7 @@
 |---|---|
 | 默认边 / 箭头 | `gray-500` #87867F（1.5px）|
 | 主路径 / 成功 | `olive` #788C5D |
-| 失败 / 拒绝 | `danger` #B04A4A |
+| 失败 / 拒绝 | `rust` #B04A3F |
 | 消息 / 异步 | `plum` #6B5B95（本图谱扩展）|
 
 ## 颜色 token（与 design system 对齐）
@@ -43,8 +43,8 @@
 | gray-500（线条）| `#87867F` | 边线 |
 | gray-700（次级文字）| `#3D3D3A` | 一致 |
 | success（成功）| `#788C5D` | = olive |
-| danger（失败）| `#B04A4A` | ≈ 原 rust #B04A3F |
-| warning（警告）| `#C78E3F` | ≈ 原 gold #C4994E |
+| danger（失败，对应本图谱的 rust）| `#B04A3F` | design system 抽象角色名是 danger，本图谱模板里实际的变量名/hex 是 rust |
+| warning（警告，对应本图谱的 gold）| `#C4994E` | design system 抽象角色名是 warning，本图谱模板里实际的变量名/hex 是 gold |
 
 ## 语义扩展（design system 之外，本图谱保留）
 

@@ -10,12 +10,12 @@
 ## 模板信息
 
 - **模板文件**：`06-swimlane.html`
-- **viewBox**：`1080 × 1300`
-- **关键行号**
+- **viewBox**：`1080 × 1000`（对应模板默认的 6 条 lane；lane 数变化时需重算，见「坐标约定」）
+- **关键行号**（如与实际文件不符，以 `grep -n 'DIAGRAM_CONFIG\|</svg>' 06-swimlane.html` 现场核实为准，行号会随模板迭代漂移）
   - SVG 开始：446
-  - A 区主图：465–805
-  - `</svg>`：1164
-  - `window.DIAGRAM_CONFIG`：1255
+  - A 区主图：465–595
+  - `</svg>`：596
+  - `window.DIAGRAM_CONFIG`：656
 
 
 
@@ -49,13 +49,16 @@
 
 ## 节点（任务/事件）
 
-| class | 何时用 |
+外层 `<g class="node" data-id="...">` 统一，内层 shape 元素的 class 决定形状/颜色（精确 class 名，别按感觉拼写——拼错一个字都会静默不生效）：
+
+| class（写在内层 shape 元素上） | 何时用 |
 |---|---|
-| `node` 默认           | 任务（rect 圆角） |
-| `gateway` shape       | XOR 网关（菱形） |
-| `event` shape         | 触发事件（圆） |
-| `event-end` shape     | 结束事件（粗圆） |
-| `event-msg` shape     | 消息事件 |
+| `task-rect shape`（+ user/service/send/receive，见下方「任务类型速查」） | 任务（圆角矩形） |
+| `gateway-shape shape` | XOR/AND 网关（菱形） |
+| `event-start shape` | 触发/起始事件（圆） |
+| `event-end-bpmn shape` | 结束事件（粗圆，注意不是 `event-end`） |
+
+`event-msg` 是例外——它不是内层 shape class，是**外层 `<g class="node event-msg">` 上的修饰类**，靠 `.node.event-msg .shape` 后代选择器给里面不管哪种 shape 上色（用于"这个节点代表一条消息"的场景，如收款回执），写的时候加在 `<g>` 上而不是内层 shape 元素上，和上面几个正好相反。
 
 ## 边
 
@@ -63,16 +66,18 @@
 |---|---|---|
 | `seq-flow`        | gray 实线     | 默认顺序流 |
 | `seq-flow spine`  | olive 加粗   | 主路径（happy path） |
-| `seq-flow yes`    | olive        | YES 分支 |
-| `seq-flow no`     | rust         | NO 分支 |
+| `seq-flow yes`    | olive        | 网关 YES / 通过分支 |
+| `seq-flow no`     | rust 虚线    | 网关 NO / 拒绝分支 |
+| `msg-flow`        | plum 虚线 + 空心圆起点 | 跨 lane 异步消息（如"打款指令"“到账回执”） |
 
 ## 坐标约定
 
 ```
-viewBox 1080 × 1300
+viewBox 1080 × 1000（模板默认 6 lane；lane 数变化按下式重算）
 pool-header x=40, w=40
 lane 区域 x=80, w=960
 每个 lane 高 120 (默认)，pool 总高 = 140 + 120 × lane 数
+viewBox 高 = pool 总高 + ~140 留白（放跨 lane message flow 和标签）
 节点矩形 90 × 50（横向密排）
 任务节点 cy = lane 中心 y（lane_y + 60）
 ```
@@ -90,7 +95,7 @@ cp $SKILL_DIR/templates/06-swimlane.html \
 2. 计算 pool 总高 = 140 起点 + 120 × N
 3. 改每个 lane-header 的 y 和 label；重画 lane-divider
 4. 节点按时间从左到右排，跨 lane 用直角路径
-5. 同步 nodeData（默认 h=1300）
+5. 同步 nodeData；若 lane 数变化，按「坐标约定」公式重算并同步 viewBox（模板默认 h=1000）
 
 ### Step 3 · 改外壳 + 自检
 - `<title>` / `<h1>` / `.lead` / `.stat-row`
@@ -155,5 +160,5 @@ cp $SKILL_DIR/templates/06-swimlane.html \
 | `task-rect receive`  | plum 虚边     | 接收消息任务 |
 | `event-start`        | olive 实心圆  | 起始事件 |
 | `event-intermediate` | 双圈          | 中间事件（timer / message） |
-| `event-end`          | rust 粗圆     | 结束事件 |
+| `event-end-bpmn`     | rust 粗圆     | 结束事件 |
 | `gateway-shape`      | 菱形 + × 或 + | XOR / AND 网关 |

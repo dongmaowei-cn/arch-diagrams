@@ -10,11 +10,11 @@
 
 - **模板文件**：`07-microservice.html`
 - **viewBox**：`1080 × 1500`
-- **关键行号**
+- **关键行号**（如与实际文件不符，以 `grep -n 'DIAGRAM_CONFIG\|</svg>' 07-microservice.html` 现场核实为准，行号会随模板迭代漂移）
   - SVG 开始：467
   - A 区主图：484–930
-  - `</svg>`：1250
-  - `window.DIAGRAM_CONFIG`：1339
+  - `</svg>`：936
+  - `window.DIAGRAM_CONFIG`：1010
 
 
 

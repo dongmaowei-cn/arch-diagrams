@@ -17,6 +17,14 @@ if [[ ! -f "$FILE" ]]; then
   exit 2
 fi
 
+# 优先用 PATH 里的 grep；/usr/bin/grep 只作为找不到时的兜底，
+# 避免在没有该绝对路径的沙盒/容器环境里直接整个脚本报错退出。
+GREP="$(command -v grep || echo /usr/bin/grep)"
+if ! command -v "$GREP" >/dev/null 2>&1; then
+  echo "✗ 找不到可用的 grep，无法自检" >&2
+  exit 2
+fi
+
 PASS=0
 FAIL=0
 
@@ -39,8 +47,8 @@ fail() {
 echo "═══ arch-diagrams selftest: $FILE ═══"
 
 # 1. SVG data-id ↔ nodeData key 双向对齐
-SVG_IDS=$(/usr/bin/grep -oE 'data-id="[^${}"]+"' "$FILE" | sed -E 's/data-id="(.*)"/\1/' | sort -u)
-DATA_IDS=$(/usr/bin/grep -oE "^ +'[a-zA-Z0-9_-]+': \{" "$FILE" | sed -E "s/^ +'(.*)': \{/\1/" | sort -u)
+SVG_IDS=$($GREP -oE 'data-id="[^${}"]+"' "$FILE" | sed -E 's/data-id="(.*)"/\1/' | sort -u)
+DATA_IDS=$($GREP -oE "^ +'[a-zA-Z0-9_-]+': \{" "$FILE" | sed -E "s/^ +'(.*)': \{/\1/" | sort -u)
 
 ORPHAN_SVG=$(comm -23 <(echo "$SVG_IDS") <(echo "$DATA_IDS") || true)
 ORPHAN_DATA=$(comm -13 <(echo "$SVG_IDS") <(echo "$DATA_IDS") || true)
@@ -57,9 +65,9 @@ else
 fi
 
 # 2. viewBox 与 svg height 一致
-SVG_LINE=$(/usr/bin/grep -m1 -E 'class="(diagram|flow)" id="diagram"' "$FILE" || true)
-SVG_H=$(echo "${SVG_LINE:-}" | /usr/bin/grep -oE 'height="[0-9]+"' | /usr/bin/grep -oE '[0-9]+' || true)
-VB_H=$(echo "${SVG_LINE:-}" | /usr/bin/grep -oE 'viewBox="0 0 [0-9]+ [0-9]+"' | /usr/bin/grep -oE '[0-9]+' | tail -1 || true)
+SVG_LINE=$($GREP -m1 -E 'class="(diagram|flow)" id="diagram"' "$FILE" || true)
+SVG_H=$(echo "${SVG_LINE:-}" | $GREP -oE 'height="[0-9]+"' | $GREP -oE '[0-9]+' || true)
+VB_H=$(echo "${SVG_LINE:-}" | $GREP -oE 'viewBox="0 0 [0-9]+ [0-9]+"' | $GREP -oE '[0-9]+' | tail -1 || true)
 
 if [[ -n "${SVG_H:-}" && "${SVG_H:-}" == "${VB_H:-}" ]]; then
   echo "  ✓ viewBox 与 svg height 一致 (${SVG_H})"
@@ -69,8 +77,8 @@ else
 fi
 
 # 3. B 区已删（搜不到 B 区注释、且无 SVG 节点使用 gallery-card-node）
-if /usr/bin/grep -qE '<!-- B ·|<!-- 区 B' "$FILE" \
-   || /usr/bin/grep -qE 'class="node gallery-card-node"|class="gallery-card-node"' "$FILE"; then
+if $GREP -qE '<!-- B ·|<!-- 区 B' "$FILE" \
+   || $GREP -qE 'class="node gallery-card-node"|class="gallery-card-node"' "$FILE"; then
   fail "B 区元素图鉴未清理 (搜到 B 区注释或 gallery-card-node 节点)"
 else
   echo "  ✓ B 区已删 (无 gallery-card-node 节点)"
@@ -78,8 +86,8 @@ else
 fi
 
 # 4. nodeData 中无残留 g-* 伪节点
-if /usr/bin/grep -qE "^ +'g-[a-z-]+': \{" "$FILE"; then
-  LEFT=$(/usr/bin/grep -oE "'g-[a-z-]+':" "$FILE" | sort -u | tr '\n' ' ')
+if $GREP -qE "^ +'g-[a-z-]+': \{" "$FILE"; then
+  LEFT=$($GREP -oE "'g-[a-z-]+':" "$FILE" | sort -u | tr '\n' ' ')
   fail "nodeData 残留 g- 前缀伪节点：$LEFT"
 else
   echo "  ✓ nodeData 无 g- 前缀残留"
@@ -88,7 +96,7 @@ fi
 
 # 5. ER 模板特定残留（pk-marker/fk-marker 等）
 ER_PSEUDO="pk-marker|fk-marker|crows-foot|one-to-many|many-to-many|self-ref|field-markers"
-if /usr/bin/grep -qE "^ +'($ER_PSEUDO)': \{" "$FILE" 2>/dev/null && /usr/bin/grep -q "er-diagram\|crowfoot\|er-edge" "$FILE"; then
+if $GREP -qE "^ +'($ER_PSEUDO)': \{" "$FILE" 2>/dev/null && $GREP -q "er-diagram\|crowfoot\|er-edge" "$FILE"; then
   fail "ER nodeData 残留教学伪节点"
 else
   echo "  ✓ ER 教学伪节点无残留"
@@ -110,11 +118,11 @@ fi
 if [[ "$IS_TEMPLATE" -eq 1 ]]; then
   echo "  ○ 外壳文字检查 (跳过 · 模板态)"
 else
-  OUT_TITLE=$(/usr/bin/grep -m1 -oE '<title>[^<]+' "$FILE" | sed -E 's/<title>//' || true)
+  OUT_TITLE=$($GREP -m1 -oE '<title>[^<]+' "$FILE" | sed -E 's/<title>//' || true)
   COLLIDED=""
   for t in "$SCRIPT_DIR"/../templates/0?-*.html; do
     [[ -f "$t" ]] || continue
-    t_title=$(/usr/bin/grep -m1 -oE '<title>[^<]+' "$t" | sed -E 's/<title>//' || true)
+    t_title=$($GREP -m1 -oE '<title>[^<]+' "$t" | sed -E 's/<title>//' || true)
     if [[ -n "$OUT_TITLE" && "$OUT_TITLE" == "$t_title" ]]; then
       COLLIDED="$(basename "$t")"
       break
@@ -129,8 +137,8 @@ else
 fi
 
 # 7. 不可见崩裂检查（基础 HTML/SVG 结构）
-SVG_OPEN=$(/usr/bin/grep -c '<svg ' "$FILE" || true)
-SVG_CLOSE=$(/usr/bin/grep -c '</svg>' "$FILE" || true)
+SVG_OPEN=$($GREP -c '<svg ' "$FILE" || true)
+SVG_CLOSE=$($GREP -c '</svg>' "$FILE" || true)
 if [[ "$SVG_OPEN" -eq "$SVG_CLOSE" ]]; then
   echo "  ✓ <svg> 开闭标签对称 (${SVG_OPEN} 对)"
   PASS=$((PASS + 1))

@@ -52,8 +52,14 @@ Phase 3│          │          │          │  [任务]  │
 
 ## 节点与边
 
-节点和 06H 一致：默认 `node` + `gateway` 菱形 + `event` 圆。
-边类型：`seq-flow` / `seq-flow spine` / `seq-flow yes` / `seq-flow fail` + `edge-label yes` / `edge-label fail`。
+节点和 06H 语义上一致（任务/网关/事件三类），但 class 写法不完全一样，别直接照抄 06H 的写法：
+- 任务：`<rect class="task-rect ... shape">`，同 06H
+- 事件：起始 `<circle class="event-start">`、结束 `<circle class="event-end">`——**06V 没有 `shape` 这个次级 class，也没有 06H 的 `-bpmn` 后缀**，直接 `event-start`/`event-end` 即可
+- 网关：`gateway`（及强调用的 `gateway-api`）是**外层 `<g class="node gateway">` 上的修饰类**，通过 `.node.gateway .shape` 后代选择器给内部 `class="shape"` 的菱形 path 上色（金色描边）——这一点和 06H 的 `gateway-shape` 直接写在内层元素上不同；模板自带范例没有实际画出网关节点，需要自己按"外层 g 加 gateway 类 + 内层菱形 path 加 shape 类"补一个
+
+边基类是 `vflow`（注意不是 06H 的 `seq-flow`——垂直/水平两个泳道模板边类名不同，照抄会导致边不着色）：
+`vflow` 默认 gray / `vflow spine` 主路径 olive 加粗 / `vflow fail` 失败 rust 虚线 / `vflow msg` 消息 plum 虚线 / `vflow data` 弱数据流 gray-300 虚线。
+文字标签走 `edge-label`（默认 gray）/ `edge-label yes`（olive，标注成功分支）/ `edge-label fail`（rust，标注失败分支）——这两个是标签文字颜色，本身不改变边的颜色，边的颜色仍由 `vflow` 的 modifier 决定。
 
 ## 坐标约定
 
@@ -80,7 +86,7 @@ cp $SKILL_DIR/templates/06-swimlane-vertical.html \
 2. 改 lane-header 与 phase-band 容器
 3. 每个 phase × lane 格子里放任务
 4. 跨格子边走直角，主路径 spine 加粗
-5. 同步 nodeData（默认 h=1500）
+5. 同步 nodeData（默认 h=1540）
 
 ### Step 3 · 改外壳 + 自检
 - `<title>` / `<h1>` / `.lead` / `.stat-row`
